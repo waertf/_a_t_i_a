@@ -18,6 +18,36 @@ namespace ATIA_2
             static ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
             static string returnData;
 
+            enum Block_Command_Type_Values
+            {
+                Flexible_Radio_Command=101,
+                Flexible_Command_Status=102,
+                Flexible_Command_Control=103,
+                Flexible_Database_Request=104,
+                Flexible_Database_Response=105,
+                Flexible_Call_Activity_Update=106,
+                Flexible_End_of_Call=107,
+                Flexible_Radio_Status_Traffic=108,
+                Flexible_System_Activity_Update=111,
+                Flexible_System_Activity_Request=112,
+                Flexible_DFB_Channel_Update =113,
+                Flexible_Controlling_Zone_Update=114,
+                Flexible_Resource_Removed=115,
+                Flexible_Mobility_Update=116,
+                Flexible_Access_Method_Type_Update =117,
+                Flexible_Call_Termination=131,
+                Flexible_ZC_Link_Status=132,
+                Flexible_Secure_Key_Acknowledgement=133,
+                Flexible_Authentication_Logging=134,
+                Flexible_Conventional_Call_Activity_Update=135,
+                Flexible_Conventional_End_of_Call_Update=136,
+                Flexible_Conventional_Mobility_Update=137,
+                Flexible_Conventional_Radio_Status_Traffic_Update=138,
+                Flexible_Subscriber_Tagging_Activity=140,
+                Flexible_Dynamic_Config_Update=141,
+                Flexible_Site_Monitor_Update=142
+
+            };
             [StructLayout(LayoutKind.Explicit, Size = 22, CharSet = CharSet.Ansi)]
             public struct ATIA_PACKAGE_Header_and_NumOffset
             {
