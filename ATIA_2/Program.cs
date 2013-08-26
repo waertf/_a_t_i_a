@@ -200,7 +200,7 @@ namespace ATIA_2
                     Console.WriteLine("receive_length=" + receiveBytes.Length);
                     array_reverse_ATIA_PACKAGE_Header_and_NumOffset(ref receiveBytes);
                     struct_header = (ATIA_PACKAGE_Header_and_NumOffset)BytesToStruct(receiveBytes, struct_header.GetType());
-                    //Console.WriteLine(BitConverter.ToUInt16(receiveBytes.Skip(0).Take(4).ToArray(), 0)); 
+                    Console.WriteLine(BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0)); 
 
                     // Uses the IPEndPoint object to determine which of these two hosts responded.
                     Console.WriteLine("This is the message you received :" +
