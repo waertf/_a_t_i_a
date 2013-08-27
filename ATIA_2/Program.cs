@@ -248,8 +248,8 @@ namespace ATIA_2
                     {
                         case "Flexible_Controlling_Zone_Update":
                             {
-                                uint Offset_to_Call_Section = BitConverter.ToUInt16(receiveBytes.Skip(20).Take(2).Reverse().ToArray(), 0);
-                                uint Offset_to_Requester_section = BitConverter.ToUInt16(receiveBytes.Skip(24).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Call_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS+2).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Requester_section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS+6).Take(2).Reverse().ToArray(), 0);
                                 const int offset_to_call_section_Timestamp = 0;
                                 const int offset_to_req_section_Primary_ID = 0;
                                 byte[] timestamp = new byte[8];
@@ -259,6 +259,17 @@ namespace ATIA_2
                             }
                             break;
                         case "Flexible_Mobility_Update":
+                            {
+                                uint Offset_to_Status_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 2).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Unit_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 4).Take(2).Reverse().ToArray(), 0);
+                                const int Offset_to_Status_Section_Timestamp = 0;
+                                const int Offset_to_Unit_Section_Operating_Unit_ID = 0;
+                                byte[] timestamp = new byte[8];
+                                byte[] uid = new byte[4];
+                                timestamp = receiveBytes.Skip((int)Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Status_Section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
+                                uid = receiveBytes.Skip((int)Offset_to_Unit_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Unit_Section_Operating_Unit_ID).Take(uid.Length).Reverse().ToArray();
+                            
+                            }
                             break;
      
                     }
