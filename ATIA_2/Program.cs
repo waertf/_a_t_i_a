@@ -19,7 +19,9 @@ namespace ATIA_2
             static Byte[] receiveBytes;
             static ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
             static string returnData;
-            static Hashtable parse_package= new Hashtable();
+            static Hashtable parse_package = new Hashtable();//cmd,opcode,result,uid,timestamp
+            const int OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS = 18;
+            const int DEVIATION_OF_OFFSET_FIELDS_OF_VALUES = -1;
 
             enum Block_Command_Type_Values
             {
@@ -214,6 +216,11 @@ namespace ATIA_2
                 {
                     // Blocks until a message returns on this socket from a remote host.
                     receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
+                    if (receiveBytes.Length != BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0) + 4)
+                    {
+                        Console.WriteLine("size embedded in the packet does not match bytes received");
+                        continue;
+                    }
                     returnData = Encoding.ASCII.GetString(receiveBytes);
                     Console.WriteLine("receive_length=" + receiveBytes.Length);
                     array_reverse_ATIA_PACKAGE_Header_and_NumOffset(ref receiveBytes);
@@ -224,11 +231,38 @@ namespace ATIA_2
                     Console.WriteLine("This is the message you received :" +
                                                  returnData.ToString());
                     parse_header_and_numoffset_package(struct_header);
+                    parse_data_section(receiveBytes.Skip(4).ToArray());//skip first 4 package_length byte
 
                     parse_package.Clear();
                     Thread.Sleep(300);
                 }
 
+            }
+
+            private static void parse_data_section(byte[] p)
+            {
+                //get unique id and timestamp(uid,timestamp)
+                if(parse_package.ContainsKey("cmd"))
+                {
+                    switch (parse_package["cmd"].ToString())
+                    {
+                        case "Flexible_Controlling_Zone_Update":
+                            {
+                                uint Offset_to_Call_Section = BitConverter.ToUInt16(receiveBytes.Skip(20).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Requester_section = BitConverter.ToUInt16(receiveBytes.Skip(24).Take(2).Reverse().ToArray(), 0);
+                                const int offset_to_call_section_Timestamp = 0;
+                                const int offset_to_req_section_Primary_ID = 0;
+                                byte[] timestamp = new byte[8];
+                                byte[] uid = new byte[4];
+                                timestamp = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
+                                uid = receiveBytes.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
+                            }
+                            break;
+                        case "Flexible_Mobility_Update":
+                            break;
+     
+                    }
+                }
             }
 
             private static void parse_header_and_numoffset_package(ATIA_PACKAGE_Header_and_NumOffset struct_header)
