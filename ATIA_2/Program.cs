@@ -9,6 +9,7 @@ using System.Configuration;
 using System.Net;
 using System.ComponentModel;
 using System.IO;
+using System.Collections;
 
 namespace ATIA_2
 {
@@ -18,6 +19,7 @@ namespace ATIA_2
             static Byte[] receiveBytes;
             static ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
             static string returnData;
+            static Hashtable parse_package= new Hashtable();
 
             enum Block_Command_Type_Values
             {
@@ -51,8 +53,18 @@ namespace ATIA_2
             };
             enum Flexible_Controlling_Zone_Update_opcode
             {
-                Star_to_fCall=1,
+                Start_of_Call = 1,
                 End_of_Call=7
+            };
+            enum Flexible_Mobility_Update_opcode
+            {
+                //power on
+                Unit_Registration=1,
+                Console_Registration=2,
+                Request_for_Registration=3,
+                Location_Registration=6,
+                //power off
+                Deregistration=7
             };
             [StructLayout(LayoutKind.Explicit, Size = 22, CharSet = CharSet.Ansi)]
             public struct ATIA_PACKAGE_Header_and_NumOffset
@@ -212,6 +224,8 @@ namespace ATIA_2
                     Console.WriteLine("This is the message you received :" +
                                                  returnData.ToString());
                     parse_header_and_numoffset_package(struct_header);
+
+                    parse_package.Clear();
                     Thread.Sleep(300);
                 }
 
@@ -224,18 +238,48 @@ namespace ATIA_2
                 {
                     case (ushort)Block_Command_Type_Values.Flexible_Controlling_Zone_Update:
                         command = Block_Command_Type_Values.Flexible_Controlling_Zone_Update.ToString("G");
+                        parse_package.Add("cmd", "Flexible_Controlling_Zone_Update");
                         switch (struct_header.BlockOpcode)
                         {
-                            case (ushort)Flexible_Controlling_Zone_Update_opcode.Star_to_fCall:
-                                opcode = Flexible_Controlling_Zone_Update_opcode.Star_to_fCall.ToString("G");
+                            case (ushort)Flexible_Controlling_Zone_Update_opcode.Start_of_Call:
+                                opcode = Flexible_Controlling_Zone_Update_opcode.Start_of_Call.ToString("G");
+                                parse_package.Add("opcode", "Start_of_Call");
+                                parse_package.Add("result", "start_call");
                                 break;
                             case (ushort)Flexible_Controlling_Zone_Update_opcode.End_of_Call:
                                 opcode = Flexible_Controlling_Zone_Update_opcode.End_of_Call.ToString("G");
+                                parse_package.Add("opcode", "End_of_Call");
+                                parse_package.Add("result", "end_call");
                                 break;
                         }
                         break;
                     case (ushort)Block_Command_Type_Values.Flexible_Mobility_Update:
                         command = Block_Command_Type_Values.Flexible_Mobility_Update.ToString("G");
+                        parse_package.Add("cmd", "Flexible_Mobility_Update");
+                        switch (struct_header.BlockOpcode)
+                        {
+                            case (ushort)Flexible_Mobility_Update_opcode.Unit_Registration:
+                                parse_package.Add("opcode", "Unit_Registration");
+                                parse_package.Add("result", "power_on");
+                                break;
+                            case (ushort)Flexible_Mobility_Update_opcode.Request_for_Registration:
+                                parse_package.Add("opcode", "Request_for_Registration");
+                                parse_package.Add("result", "power_on");
+                                break;
+                            case (ushort)Flexible_Mobility_Update_opcode.Location_Registration:
+                                parse_package.Add("opcode", "Location_Registration");
+                                parse_package.Add("result", "power_on");
+                                break;
+                            case (ushort)Flexible_Mobility_Update_opcode.Console_Registration:
+                                parse_package.Add("opcode", "Console_Registration");
+                                parse_package.Add("result", "power_on");
+                                break;
+
+                            case (ushort)Flexible_Mobility_Update_opcode.Deregistration:
+                                parse_package.Add("opcode", "Deregistration");
+                                parse_package.Add("result", "power_off");
+                                break;
+                        }
                         break;
                 }
             }
