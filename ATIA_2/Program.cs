@@ -18,7 +18,7 @@ namespace ATIA_2
             static ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
             static string returnData;
 
-            enum Block_Command_Type_Values
+            static enum Block_Command_Type_Values
             {
                 Flexible_Radio_Command=101,
                 Flexible_Command_Status=102,
@@ -205,9 +205,15 @@ namespace ATIA_2
                     // Uses the IPEndPoint object to determine which of these two hosts responded.
                     Console.WriteLine("This is the message you received :" +
                                                  returnData.ToString());
+                    parse_header_and_numoffset_package(struct_header);
                     Thread.Sleep(300);
                 }
 
+            }
+
+            private static void parse_header_and_numoffset_package(ATIA_PACKAGE_Header_and_NumOffset struct_header)
+            {
+                Block_Command_Type_Values select;
             }
             //3. byte 轉成 struct
             static object BytesToStruct(byte[] bytes, Type strcutType)
