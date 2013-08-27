@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Configuration;
 using System.Net;
 using System.ComponentModel;
+using System.IO;
 
 namespace ATIA_2
 {
@@ -18,7 +19,7 @@ namespace ATIA_2
             static ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
             static string returnData;
 
-            static enum Block_Command_Type_Values
+            enum Block_Command_Type_Values
             {
                 Flexible_Radio_Command=101,
                 Flexible_Command_Status=102,
@@ -47,6 +48,11 @@ namespace ATIA_2
                 Flexible_Dynamic_Config_Update=141,
                 Flexible_Site_Monitor_Update=142
 
+            };
+            enum Flexible_Controlling_Zone_Update_opcode
+            {
+                Star_to_fCall=1,
+                End_of_Call=7
             };
             [StructLayout(LayoutKind.Explicit, Size = 22, CharSet = CharSet.Ansi)]
             public struct ATIA_PACKAGE_Header_and_NumOffset
@@ -200,7 +206,7 @@ namespace ATIA_2
                     Console.WriteLine("receive_length=" + receiveBytes.Length);
                     array_reverse_ATIA_PACKAGE_Header_and_NumOffset(ref receiveBytes);
                     struct_header = (ATIA_PACKAGE_Header_and_NumOffset)BytesToStruct(receiveBytes, struct_header.GetType());
-                    Console.WriteLine(BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0)); 
+                    //Console.WriteLine("package lenght exclude first 4 byte :"+BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0)); 
 
                     // Uses the IPEndPoint object to determine which of these two hosts responded.
                     Console.WriteLine("This is the message you received :" +
@@ -213,7 +219,25 @@ namespace ATIA_2
 
             private static void parse_header_and_numoffset_package(ATIA_PACKAGE_Header_and_NumOffset struct_header)
             {
-                Block_Command_Type_Values select;
+                string command,opcode;
+                switch (struct_header.BlockCommandType)
+                {
+                    case (ushort)Block_Command_Type_Values.Flexible_Controlling_Zone_Update:
+                        command = Block_Command_Type_Values.Flexible_Controlling_Zone_Update.ToString("G");
+                        switch (struct_header.BlockOpcode)
+                        {
+                            case (ushort)Flexible_Controlling_Zone_Update_opcode.Star_to_fCall:
+                                opcode = Flexible_Controlling_Zone_Update_opcode.Star_to_fCall.ToString("G");
+                                break;
+                            case (ushort)Flexible_Controlling_Zone_Update_opcode.End_of_Call:
+                                opcode = Flexible_Controlling_Zone_Update_opcode.End_of_Call.ToString("G");
+                                break;
+                        }
+                        break;
+                    case (ushort)Block_Command_Type_Values.Flexible_Mobility_Update:
+                        command = Block_Command_Type_Values.Flexible_Mobility_Update.ToString("G");
+                        break;
+                }
             }
             //3. byte 轉成 struct
             static object BytesToStruct(byte[] bytes, Type strcutType)
@@ -251,6 +275,17 @@ namespace ATIA_2
                 Array.Reverse(receive, 16, 4);
                 Array.Reverse(receive, 20, 2);
 
+            }
+            public static void Log(String logMessage, TextWriter w)
+            {
+                w.Write("\r\nLog Entry : ");
+                w.WriteLine("{0} {1}", DateTime.Now.ToLongTimeString(),
+                    DateTime.Now.ToLongDateString());
+                w.WriteLine("  :");
+                w.WriteLine("  :{0}", logMessage);
+                w.WriteLine("-------------------------------");
+                // Update the underlying file.
+                w.Flush();
             }
         
     }
