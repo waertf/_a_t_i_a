@@ -216,6 +216,16 @@ namespace ATIA_2
                 {
                     // Blocks until a message returns on this socket from a remote host.
                     receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
+                    if (bool.Parse(ConfigurationManager.AppSettings["log_raw_data"]))
+                    {
+                        using (StreamWriter w = File.AppendText("raw.txt"))
+                        {
+                            Log_raw(receiveBytes, w);
+
+                            // Close the writer and underlying file.
+                            w.Close();
+                        }
+                    }
                     if (receiveBytes.Length != BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0) + 4)
                     {
                         Console.WriteLine("size embedded in the packet does not match bytes received");
@@ -256,6 +266,8 @@ namespace ATIA_2
                                 byte[] uid = new byte[4];
                                 timestamp = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
                                 uid = receiveBytes.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
+                                parse_timestamp(timestamp);
+                                parse_uid(uid);
                             }
                             break;
                         case "Flexible_Mobility_Update":
@@ -268,12 +280,23 @@ namespace ATIA_2
                                 byte[] uid = new byte[4];
                                 timestamp = receiveBytes.Skip((int)Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Status_Section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
                                 uid = receiveBytes.Skip((int)Offset_to_Unit_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Unit_Section_Operating_Unit_ID).Take(uid.Length).Reverse().ToArray();
-                            
+                                parse_timestamp(timestamp);
+                                parse_uid(uid);
                             }
                             break;
      
                     }
                 }
+            }
+
+            private static void parse_uid(byte[] uid)
+            {
+                throw new NotImplementedException();
+            }
+
+            private static void parse_timestamp(byte[] timestamp)
+            {
+                throw new NotImplementedException();
             }
 
             private static void parse_header_and_numoffset_package(ATIA_PACKAGE_Header_and_NumOffset struct_header)
@@ -372,6 +395,17 @@ namespace ATIA_2
                     DateTime.Now.ToLongDateString());
                 w.WriteLine("  :");
                 w.WriteLine("  :{0}", logMessage);
+                w.WriteLine("-------------------------------");
+                // Update the underlying file.
+                w.Flush();
+            }
+            public static void Log_raw(byte[] logMessage, TextWriter w)
+            {
+                w.Write("\r\nLog Entry : ");
+                w.WriteLine("{0} {1}", DateTime.Now.ToLongTimeString(),
+                    DateTime.Now.ToLongDateString());
+                w.WriteLine("  :");
+                w.WriteLine(logMessage);
                 w.WriteLine("-------------------------------");
                 // Update the underlying file.
                 w.Flush();
