@@ -291,12 +291,25 @@ namespace ATIA_2
 
             private static void parse_uid(byte[] uid)
             {
-                throw new NotImplementedException();
+                //This the individual ID received from the radio unit. It is right justified and padded with leading zeros.
+                //For the Type II case, thefield would have the format 0x0000nnnn where the n’s represent the 16-bit
+                //individual ID. If this field is unused, it will be set to the hexadecimal value 0.
+                uint id= BitConverter.ToUInt32(uid.Take(uid.Length).Reverse().ToArray(), 0);
+                parse_package.Add("uid", id.ToString());
+                
             }
 
             private static void parse_timestamp(byte[] timestamp)
             {
-                throw new NotImplementedException();
+                int year = BitConverter.ToInt32(timestamp.Take(2).Reverse().ToArray(), 0);
+                int month = (int)timestamp[2];
+                int day = (int)timestamp[3];
+                int hour = (int)timestamp[4];
+                int minute = (int)timestamp[5];
+                int second = (int)timestamp[6];
+                int deciSecond = (int)timestamp[7];
+                DateTime date_time = new DateTime(year, month, day, hour, minute, second, deciSecond / 100);
+                parse_package.Add("timestamp", date_time.ToString("yyyy/MM/dd H:mm:ss.ffff"));
             }
 
             private static void parse_header_and_numoffset_package(ATIA_PACKAGE_Header_and_NumOffset struct_header)
@@ -391,7 +404,7 @@ namespace ATIA_2
             public static void Log(String logMessage, TextWriter w)
             {
                 w.Write("\r\nLog Entry : ");
-                w.WriteLine("{0} {1}", DateTime.Now.ToLongTimeString(),
+                w.WriteLine("{0} {1}", DateTime.Now.ToString("H:mm:ss.fffffff"),
                     DateTime.Now.ToLongDateString());
                 w.WriteLine("  :");
                 w.WriteLine("  :{0}", logMessage);
@@ -402,7 +415,7 @@ namespace ATIA_2
             public static void Log_raw(byte[] logMessage, TextWriter w)
             {
                 w.Write("\r\nLog Entry : ");
-                w.WriteLine("{0} {1}", DateTime.Now.ToLongTimeString(),
+                w.WriteLine("{0} {1}", DateTime.Now.ToString("H:mm:ss.fffffff"),
                     DateTime.Now.ToLongDateString());
                 w.WriteLine("  :");
                 w.WriteLine(logMessage);
