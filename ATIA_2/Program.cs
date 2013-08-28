@@ -211,6 +211,7 @@ namespace ATIA_2
                 UdpClient udpClient = new UdpClient(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT"]));
                 //IPEndPoint object will allow us to read datagrams sent from any source.
                 IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
+                //int c = int.Parse(ConfigurationManager.AppSettings["raw_log_counter"].ToString());
 
                 while (true)
                 {
@@ -218,12 +219,11 @@ namespace ATIA_2
                     receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
                     if (bool.Parse(ConfigurationManager.AppSettings["log_raw_data"]))
                     {
-                        using (StreamWriter w = File.AppendText("raw.txt"))
+                        //using (var stream = new FileStream("raw" + c + ".txt", FileMode.Append))
+                        using (var stream = new FileStream("raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".txt", FileMode.Append))
                         {
-                            Log_raw(receiveBytes, w);
-
-                            // Close the writer and underlying file.
-                            w.Close();
+                            stream.Write(receiveBytes, 0, receiveBytes.Length);
+                            stream.Close();
                         }
                     }
                     if (receiveBytes.Length != BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0) + 4)
@@ -231,6 +231,13 @@ namespace ATIA_2
                         Console.WriteLine("size embedded in the packet does not match bytes received");
                         continue;
                     }
+
+                    //c++;
+                    //Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                    //configuration.AppSettings.Settings["raw_log_counter"].Value = c.ToString();
+                    //configuration.Save();
+                    //ConfigurationManager.RefreshSection("appSettings");
+
                     returnData = Encoding.ASCII.GetString(receiveBytes);
                     Console.WriteLine("receive_length=" + receiveBytes.Length);
                     array_reverse_ATIA_PACKAGE_Header_and_NumOffset(ref receiveBytes);
