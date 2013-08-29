@@ -85,6 +85,20 @@ namespace ATIA_2
                 Talkgroup_and_Multigroup_Contention=3,
                 No_Busy=8
             };
+            enum Flexible_Call_Activity_Update_opcode
+            {
+                Start_of_Call = 1,
+                PTT_ID_Update_Active = 2,
+                PTT_ID_Update_Active_No_Control = 3,
+                PTT_ID_Update_Busy = 4,
+                PTT_ID_Update_Busy_No_Control=5,
+                //End_of_Call = 7
+            };
+            enum Flexible_End_of_Call_opcode
+            { 
+            End_of_Call=1
+            };
+
             [StructLayout(LayoutKind.Explicit, Size = 22, CharSet = CharSet.Ansi)]
             public struct ATIA_PACKAGE_Header_and_NumOffset
             {
@@ -329,7 +343,16 @@ namespace ATIA_2
                                 parse_uid(uid);
                             }
                             break;
-     
+                        case "Flexible_Call_Activity_Update":
+                            {
+ 
+                            }
+                            break;
+                        case "Flexible_End_of_Call":
+                            {
+
+                            }
+                            break;
                     }
                 }
             }
@@ -472,12 +495,43 @@ namespace ATIA_2
                         {
                             command = Block_Command_Type_Values.Flexible_Call_Activity_Update.ToString("G");
                             parse_package.Add("cmd", "Flexible_Call_Activity_Update");
+                            switch (struct_header.BlockOpcode)
+                            {
+                                case (ushort)Flexible_Call_Activity_Update_opcode.PTT_ID_Update_Active:
+                                    parse_package.Add("opcode", "PTT_ID_Update_Active");
+                                    parse_package.Add("result", "PTT_ID_Update_Active");
+                                    break;
+                                case (ushort)Flexible_Call_Activity_Update_opcode.PTT_ID_Update_Active_No_Control:
+                                    parse_package.Add("opcode", "PTT_ID_Update_Active_No_Control");
+                                    parse_package.Add("result", "PTT_ID_Update_Active_No_Control");
+                                    break;
+                                case (ushort)Flexible_Call_Activity_Update_opcode.PTT_ID_Update_Busy:
+                                    parse_package.Add("opcode", "PTT_ID_Update_Busy");
+                                    parse_package.Add("result", "PTT_ID_Update_Active");
+                                    break;
+                                case (ushort)Flexible_Call_Activity_Update_opcode.PTT_ID_Update_Busy_No_Control:
+                                    parse_package.Add("opcode", "PTT_ID_Update_Busy_No_Control");
+                                    parse_package.Add("result", "PTT_ID_Update_Busy_No_Control");
+                                    break;
+                                case (ushort)Flexible_Call_Activity_Update_opcode.Start_of_Call:
+                                    parse_package.Add("opcode", "Start_of_Call");
+                                    parse_package.Add("result", "Start_of_Call");
+                                    break;
+                            }
                         }
                         break;
                     case (ushort)Block_Command_Type_Values.Flexible_End_of_Call:
                         {
                             command = Block_Command_Type_Values.Flexible_End_of_Call.ToString("G");
                             parse_package.Add("cmd", "Flexible_End_of_Call");
+                            switch (struct_header.BlockOpcode)
+                            {
+                                case (ushort)Flexible_End_of_Call_opcode.End_of_Call:
+                                    parse_package.Add("opcode", "End_of_Call");
+                                    parse_package.Add("result", "End_of_Call");
+                                    break;
+                                
+                            }
                         }
                         break;
                 }
