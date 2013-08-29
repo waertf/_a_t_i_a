@@ -56,6 +56,9 @@ namespace ATIA_2
             enum Flexible_Controlling_Zone_Update_opcode
             {
                 Start_of_Call = 1,
+                PTT_ID_Active_Control=2,
+                PTT_ID_Active_No_Control=3,
+                PTT_ID_Busy_Control=4,
                 End_of_Call=7
             };
             enum Flexible_Mobility_Update_opcode
@@ -67,6 +70,20 @@ namespace ATIA_2
                 Location_Registration=6,
                 //power off
                 Deregistration=7
+            };
+            enum Call_Status
+            {
+                Global_Active=1,
+                Global_Busy=2,
+                Active_and_Busy=3,
+                Not_Active_or_Busy=4,
+                Active_and_Busy_from_FastStart=5
+            };
+            enum Reason_for_Busy
+            {
+                No_resources=1,
+                Talkgroup_and_Multigroup_Contention=3,
+                No_Busy=8
             };
             [StructLayout(LayoutKind.Explicit, Size = 22, CharSet = CharSet.Ansi)]
             public struct ATIA_PACKAGE_Header_and_NumOffset
@@ -250,6 +267,15 @@ namespace ATIA_2
                     parse_header_and_numoffset_package(struct_header);
                     parse_data_section(receiveBytes.Skip(4).ToArray());//skip first 4 package_length byte
 
+                    StringBuilder s = new StringBuilder();
+                    foreach (DictionaryEntry e in parse_package)
+                        s.Append(e.Key + ":" + e.Value + "|");
+                    s.Append(Environment.NewLine);
+                    using (StreamWriter w = File.AppendText("log.txt"))
+                    {
+                        Log(s.ToString(), w);
+                    }
+
                     parse_package.Clear();
                     Thread.Sleep(300);
                 }
@@ -267,18 +293,26 @@ namespace ATIA_2
                             {
                                 uint Offset_to_Call_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS+2).Take(2).Reverse().ToArray(), 0);
                                 uint Offset_to_Requester_section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS+6).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Status_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 4).Take(2).Reverse().ToArray(), 0);
                                 const int offset_to_call_section_Timestamp = 0;
                                 const int offset_to_req_section_Primary_ID = 0;
                                 const int offset_to_call_section_ucn = 8;
+                                const int offset_to_status_section_Overall_Call_Status = 0;
+                                const int offset_to_status_section_Reason_for_Busy = 1;
                                 byte[] timestamp = new byte[8];
                                 byte[] uid = new byte[4];
                                 byte[] ucn = new byte[4];//Universal Call Number
+                                byte call_status, reason_for_busy;
                                 timestamp = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
                                 uid = receiveBytes.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
                                 ucn = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
+                                call_status = receiveBytes[Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_status_section_Overall_Call_Status];
+                                reason_for_busy = receiveBytes[Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_status_section_Reason_for_Busy];
                                 parse_timestamp(timestamp);
                                 parse_uid(uid);
                                 parse_ucn(ucn);
+                                parse_call_status(call_status);
+                                parse_reason_for_busy(reason_for_busy);
                             }
                             break;
                         case "Flexible_Mobility_Update":
@@ -297,6 +331,45 @@ namespace ATIA_2
                             break;
      
                     }
+                }
+            }
+
+            private static void parse_call_status(byte call_status)
+            {
+                switch ((int)call_status)
+                {
+                    case (int)Call_Status.Global_Active:
+                        parse_package.Add("call_status", "Global_Active");
+                        break;
+                    case (int)Call_Status.Global_Busy:
+                        parse_package.Add("call_status", "Global_Busy");
+                        break;
+                    case (int)Call_Status.Active_and_Busy:
+                        parse_package.Add("call_status", "Active_and_Busy");
+                        break;
+                    case (int)Call_Status.Not_Active_or_Busy:
+                        parse_package.Add("call_status", "Not_Active_or_Busy");
+                        break;
+                    case (int)Call_Status.Active_and_Busy_from_FastStart:
+                        parse_package.Add("call_status", "Active_and_Busy_from_FastStart");
+                        break;
+                    
+                }
+            }
+
+            private static void parse_reason_for_busy(byte reason_for_busy)
+            {
+                switch ((int)reason_for_busy)
+                {
+                    case (int)Reason_for_Busy.No_Busy:
+                        parse_package.Add("reason_for_busy", "No_Busy");
+                        break;
+                    case (int)Reason_for_Busy.No_resources:
+                        parse_package.Add("reason_for_busy", "No_resources");
+                        break;
+                    case (int)Reason_for_Busy.Talkgroup_and_Multigroup_Contention:
+                        parse_package.Add("reason_for_busy", "Talkgroup_and_Multigroup_Contention");
+                        break;
                 }
             }
 
@@ -349,6 +422,21 @@ namespace ATIA_2
                                 parse_package.Add("opcode", "End_of_Call");
                                 parse_package.Add("result", "end_call");
                                 break;
+                            case (ushort)Flexible_Controlling_Zone_Update_opcode.PTT_ID_Active_Control:
+                                opcode = Flexible_Controlling_Zone_Update_opcode.PTT_ID_Active_Control.ToString("G");
+                                parse_package.Add("opcode", "PTT_ID_Active_Control");
+                                parse_package.Add("result", "PTT_ID_Active_Control");
+                                break;
+                            case (ushort)Flexible_Controlling_Zone_Update_opcode.PTT_ID_Active_No_Control:
+                                opcode = Flexible_Controlling_Zone_Update_opcode.PTT_ID_Active_No_Control.ToString("G");
+                                parse_package.Add("opcode", "PTT_ID_Active_No_Control");
+                                parse_package.Add("result", "PTT_ID_Active_No_Control");
+                                break;
+                            case (ushort)Flexible_Controlling_Zone_Update_opcode.PTT_ID_Busy_Control:
+                                opcode = Flexible_Controlling_Zone_Update_opcode.PTT_ID_Busy_Control.ToString("G");
+                                parse_package.Add("opcode", "PTT_ID_Busy_Control");
+                                parse_package.Add("result", "PTT_ID_Busy_Control");
+                                break;
                         }
                         break;
                     case (ushort)Block_Command_Type_Values.Flexible_Mobility_Update:
@@ -377,6 +465,19 @@ namespace ATIA_2
                                 parse_package.Add("opcode", "Deregistration");
                                 parse_package.Add("result", "power_off");
                                 break;
+                        }
+                        break;
+
+                    case (ushort)Block_Command_Type_Values.Flexible_Call_Activity_Update:
+                        {
+                            command = Block_Command_Type_Values.Flexible_Call_Activity_Update.ToString("G");
+                            parse_package.Add("cmd", "Flexible_Call_Activity_Update");
+                        }
+                        break;
+                    case (ushort)Block_Command_Type_Values.Flexible_End_of_Call:
+                        {
+                            command = Block_Command_Type_Values.Flexible_End_of_Call.ToString("G");
+                            parse_package.Add("cmd", "Flexible_End_of_Call");
                         }
                         break;
                 }
@@ -429,17 +530,7 @@ namespace ATIA_2
                 // Update the underlying file.
                 w.Flush();
             }
-            public static void Log_raw(byte[] logMessage, TextWriter w)
-            {
-                w.Write("\r\nLog Entry : ");
-                w.WriteLine("{0} {1}", DateTime.Now.ToString("H:mm:ss.fffffff"),
-                    DateTime.Now.ToLongDateString());
-                w.WriteLine("  :");
-                w.WriteLine(logMessage);
-                w.WriteLine("-------------------------------");
-                // Update the underlying file.
-                w.Flush();
-            }
+            
         
     }
 }
