@@ -269,12 +269,16 @@ namespace ATIA_2
                                 uint Offset_to_Requester_section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS+6).Take(2).Reverse().ToArray(), 0);
                                 const int offset_to_call_section_Timestamp = 0;
                                 const int offset_to_req_section_Primary_ID = 0;
+                                const int offset_to_call_section_ucn = 8;
                                 byte[] timestamp = new byte[8];
                                 byte[] uid = new byte[4];
+                                byte[] ucn = new byte[4];//Universal Call Number
                                 timestamp = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
                                 uid = receiveBytes.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
+                                ucn = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
                                 parse_timestamp(timestamp);
                                 parse_uid(uid);
+                                parse_ucn(ucn);
                             }
                             break;
                         case "Flexible_Mobility_Update":
@@ -294,6 +298,12 @@ namespace ATIA_2
      
                     }
                 }
+            }
+
+            private static void parse_ucn(byte[] ucn)
+            {
+                uint call_number = BitConverter.ToUInt32(ucn.Take(ucn.Length).Reverse().ToArray(), 0);
+                parse_package.Add("call_number", call_number.ToString());
             }
 
             private static void parse_uid(byte[] uid)
