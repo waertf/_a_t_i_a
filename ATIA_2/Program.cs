@@ -320,8 +320,8 @@ namespace ATIA_2
                                 timestamp = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
                                 uid = receiveBytes.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
                                 ucn = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
-                                call_status = receiveBytes[Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_status_section_Overall_Call_Status];
-                                reason_for_busy = receiveBytes[Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_status_section_Reason_for_Busy];
+                                call_status = receiveBytes[Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_status_section_Overall_Call_Status-1];
+                                reason_for_busy = receiveBytes[Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_status_section_Reason_for_Busy-1];
                                 parse_timestamp(timestamp);
                                 parse_uid(uid);
                                 parse_ucn(ucn);
@@ -345,6 +345,29 @@ namespace ATIA_2
                             break;
                         case "Flexible_Call_Activity_Update":
                             {
+                                byte[] timestamp = new byte[8];
+                                byte[] uid = new byte[4];
+                                byte[] ucn = new byte[4];//Universal Call Number
+                                byte call_status, reason_for_busy;
+                                uint Offset_to_Call_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 2).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Busy_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 4).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Requester_section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 8).Take(2).Reverse().ToArray(), 0);
+                                const int offset_to_call_section_Timestamp = 0;
+                                const int offset_to_call_section_ucn = 8;
+                                const int offset_to_call_section_call_status = 31;
+                                const int offset_to_busy_section_reason_of_busy = 0;
+                                const int offset_to_req_section_Primary_ID = 0;
+                                timestamp = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
+                                uid = receiveBytes.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
+                                ucn = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
+                                call_status = receiveBytes[Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_status-1];
+                                reason_for_busy = receiveBytes[Offset_to_Busy_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_busy_section_reason_of_busy-1];
+                                parse_timestamp(timestamp);
+                                parse_uid(uid);
+                                parse_ucn(ucn);
+                                parse_call_status(call_status);
+                                parse_reason_for_busy(reason_for_busy);
+                                
  
                             }
                             break;
