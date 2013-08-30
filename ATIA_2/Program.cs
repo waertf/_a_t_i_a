@@ -366,14 +366,20 @@ namespace ATIA_2
                                 parse_uid(uid);
                                 parse_ucn(ucn);
                                 parse_call_status(call_status);
-                                parse_reason_for_busy(reason_for_busy);
-                                
- 
+                                parse_reason_for_busy(reason_for_busy);                                 
                             }
                             break;
                         case "Flexible_End_of_Call":
                             {
-
+                                byte[] timestamp = new byte[8];
+                                byte[] ucn = new byte[4];//Universal Call Number
+                                uint Offset_to_Call_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 2).Take(2).Reverse().ToArray(), 0);
+                                const int offset_to_call_section_Timestamp = 0;
+                                const int offset_to_call_section_ucn = 8;
+                                timestamp = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
+                                ucn = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
+                                parse_timestamp(timestamp);
+                                parse_uid(ucn);
                             }
                             break;
                     }
