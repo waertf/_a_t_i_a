@@ -455,6 +455,10 @@ namespace ATIA_2
                                 Call_Type = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_Call_Type).Take(Call_Type.Length).Reverse().ToArray();
                                 phone_length = p.Skip((int)Offset_to_Phone_Number_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_phone_Length_Phone_Number).Take(phone_length.Length).Reverse().ToArray();
                                 uint phone_length_uint = BitConverter.ToUInt16(phone_length.Take(phone_length.Length).ToArray(), 0);
+                                
+                                byte[] phone = new byte[phone_length_uint];
+                                phone = p.Skip((int)Offset_to_Phone_Number_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_phone_Phone_Number).Take(phone.Length).ToArray();
+                                parse_phone(phone);
                                 parse_timestamp(timestamp);
                                 parse_uid(uid);
                                 parse_duration_in_sec(duration_in_sec);
@@ -463,6 +467,16 @@ namespace ATIA_2
                             break;
                     }
                 }
+            }
+
+            private static void parse_phone(byte[] phone)
+            {
+                string result = string.Empty;
+                foreach (byte x in phone)
+                {
+                    result += Convert.ToChar(x);
+                }
+                parse_package.Add("phone_number", result);
             }
             /// <summary>
             /// Call Type Description
