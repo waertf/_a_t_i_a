@@ -243,7 +243,7 @@ namespace ATIA_2
             }
             static void udp_server_t()
             {
-                UdpClient udpClient = new UdpClient(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT"]));
+                UdpClient udpClient = new UdpClient(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8671"]));
                 //IPEndPoint object will allow us to read datagrams sent from any source.
                 IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
                 //int c = int.Parse(ConfigurationManager.AppSettings["raw_log_counter"].ToString());
