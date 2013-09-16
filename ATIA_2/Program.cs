@@ -15,13 +15,15 @@ namespace ATIA_2
 {
     class Program
     {
+        //every device has only one uid , so to use uid just fine without gid or snd_id
 
+        
             static Byte[] receiveBytes;
             static ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
             static string returnData;
             static Hashtable parse_package = new Hashtable();//cmd,opcode,result,uid,timestamp
             const int OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS = 18;
-            const int DEVIATION_OF_OFFSET_FIELDS_OF_VALUES = -1;
+            const int DEVIATION_OF_OFFSET_FIELDS_OF_VALUES = 0;
 
             enum Block_Command_Type_Values
             {
@@ -50,7 +52,8 @@ namespace ATIA_2
                 Flexible_Conventional_Radio_Status_Traffic_Update=138,
                 Flexible_Subscriber_Tagging_Activity=140,
                 Flexible_Dynamic_Config_Update=141,
-                Flexible_Site_Monitor_Update=142
+                Flexible_Site_Monitor_Update=142,
+                Flexible_Interconnect_Call_Billing_Info_Packet = 131 //Flexible Call Termination
 
             };
             enum Flexible_Controlling_Zone_Update_opcode
@@ -67,6 +70,7 @@ namespace ATIA_2
                 Unit_Registration=1,
                 Console_Registration=2,
                 Request_for_Registration=3,
+                Group_Affiliation =4,//for power on get gid/uid
                 Location_Registration=6,
                 //power off
                 Deregistration=7
@@ -248,15 +252,18 @@ namespace ATIA_2
                 {
                     // Blocks until a message returns on this socket from a remote host.
                     receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
+                    byte[] receiveBytes_original = new byte[receiveBytes.Length];
+                    Array.Copy(receiveBytes, receiveBytes_original, receiveBytes_original.Length);
                     if (bool.Parse(ConfigurationManager.AppSettings["log_raw_data"]))
                     {
                         //using (var stream = new FileStream("raw" + c + ".txt", FileMode.Append))
-                        using (var stream = new FileStream("raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".txt", FileMode.Append))
+                        using (var stream = new FileStream("raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".atia", FileMode.Append))
                         {
                             stream.Write(receiveBytes, 0, receiveBytes.Length);
                             stream.Close();
                         }
                     }
+
                     if (receiveBytes.Length != BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0) + 4)
                     {
                         Console.WriteLine("size embedded in the packet does not match bytes received");
@@ -279,17 +286,22 @@ namespace ATIA_2
                     Console.WriteLine("This is the message you received :" +
                                                  returnData.ToString());
                     parse_header_and_numoffset_package(struct_header);
+                    
                     parse_data_section(receiveBytes.Skip(4).ToArray());//skip first 4 package_length byte
 
                     StringBuilder s = new StringBuilder();
                     foreach (DictionaryEntry e in parse_package)
-                        s.Append(e.Key + ":" + e.Value + "|");
+                        s.Append(e.Key + ":" + e.Value + Environment.NewLine);
                     s.Append(Environment.NewLine);
+                    Console.WriteLine("####################################################");
                     using (StreamWriter w = File.AppendText("log.txt"))
                     {
-                        Log(s.ToString(), w);
+                        string raw_data_without_first_4_byte = ByteToHexBitFiddle(receiveBytes_original.Skip(4).ToArray());
+                        Log("raw:" + raw_data_without_first_4_byte+Environment.NewLine+s.ToString(), w);
+                        Console.WriteLine(s.ToString());
                     }
-
+                    Console.WriteLine("####################################################");
+                    
                     parse_package.Clear();
                     Thread.Sleep(300);
                 }
@@ -299,71 +311,92 @@ namespace ATIA_2
             private static void parse_data_section(byte[] p)
             {
                 //get unique id and timestamp(uid,timestamp)
+                
                 if(parse_package.ContainsKey("cmd"))
                 {
                     switch (parse_package["cmd"].ToString())
                     {
                         case "Flexible_Controlling_Zone_Update":
                             {
-                                uint Offset_to_Call_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS+2).Take(2).Reverse().ToArray(), 0);
-                                uint Offset_to_Requester_section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS+6).Take(2).Reverse().ToArray(), 0);
-                                uint Offset_to_Status_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 4).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Call_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS+2).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Requester_section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS+6).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Status_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 4).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Target_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 8).Take(2).Reverse().ToArray(), 0); 
                                 const int offset_to_call_section_Timestamp = 0;
                                 const int offset_to_req_section_Primary_ID = 0;
                                 const int offset_to_call_section_ucn = 8;
                                 const int offset_to_status_section_Overall_Call_Status = 0;
                                 const int offset_to_status_section_Reason_for_Busy = 1;
+                                const int Offset_to_Target_Section_Secondary_ID = 0;
                                 byte[] timestamp = new byte[8];
                                 byte[] uid = new byte[4];
                                 byte[] ucn = new byte[4];//Universal Call Number
+                                byte[] snd_id = new byte[4];
                                 byte call_status, reason_for_busy;
-                                timestamp = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
-                                uid = receiveBytes.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
-                                ucn = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
-                                call_status = receiveBytes[Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_status_section_Overall_Call_Status-1];
-                                reason_for_busy = receiveBytes[Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_status_section_Reason_for_Busy-1];
+                                timestamp = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
+                                uid = p.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
+                                ucn = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
+                                call_status = p[Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_status_section_Overall_Call_Status-1];
+                                reason_for_busy = p[Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_status_section_Reason_for_Busy-1];
+                                snd_id = p.Skip((int)Offset_to_Target_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Target_Section_Secondary_ID).Take(snd_id.Length).Reverse().ToArray();                              
                                 parse_timestamp(timestamp);
                                 parse_uid(uid);
                                 parse_ucn(ucn);
                                 parse_call_status(call_status);
                                 parse_reason_for_busy(reason_for_busy);
+                                parse_snd_id(snd_id);
                             }
                             break;
                         case "Flexible_Mobility_Update":
                             {
-                                uint Offset_to_Status_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 2).Take(2).Reverse().ToArray(), 0);
-                                uint Offset_to_Unit_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 4).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Status_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 2).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Unit_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 4).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Group_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 6).Take(2).Reverse().ToArray(), 0);
                                 const int Offset_to_Status_Section_Timestamp = 0;
                                 const int Offset_to_Unit_Section_Operating_Unit_ID = 0;
+                                const int Offset_to_Group_Section_Operating_Group_ID = 0;
                                 byte[] timestamp = new byte[8];
                                 byte[] uid = new byte[4];
-                                timestamp = receiveBytes.Skip((int)Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Status_Section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
-                                uid = receiveBytes.Skip((int)Offset_to_Unit_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Unit_Section_Operating_Unit_ID).Take(uid.Length).Reverse().ToArray();
+                                byte[] gid = new byte[4];
+                                timestamp = p.Skip((int)Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Status_Section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
+                                uid = p.Skip((int)Offset_to_Unit_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Unit_Section_Operating_Unit_ID).Take(uid.Length).Reverse().ToArray();
+                                gid = p.Skip((int)Offset_to_Group_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Group_Section_Operating_Group_ID).Take(gid.Length).Reverse().ToArray();                                
                                 parse_timestamp(timestamp);
                                 parse_uid(uid);
+                                parse_gid(gid);
                             }
                             break;
                         case "Flexible_Call_Activity_Update":
                             {
+                                //get secondary ID for target device combine with primary id to dicide end call will be raise with limite in the same group
+                                //Primary Alias , local radio device id maybe e.g. Zone01-Radio-02
+                                //Secondary Alias, group id maybe e.g. Zone01-TG04
+                                //Requester’s Affiliated TG Alias, group id maybe the same with Secondary Alias e.g. Zone01-TG04
+
                                 byte[] timestamp = new byte[8];
                                 byte[] uid = new byte[4];
                                 byte[] ucn = new byte[4];//Universal Call Number
+                                byte[] snd_id = new byte[4];
                                 byte call_status, reason_for_busy;
-                                uint Offset_to_Call_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 2).Take(2).Reverse().ToArray(), 0);
-                                uint Offset_to_Busy_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 4).Take(2).Reverse().ToArray(), 0);
-                                uint Offset_to_Requester_section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 8).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Call_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 2).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Busy_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 4).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Requester_section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 8).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Target_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 10).Take(2).Reverse().ToArray(), 0);
                                 const int offset_to_call_section_Timestamp = 0;
                                 const int offset_to_call_section_ucn = 8;
                                 const int offset_to_call_section_call_status = 31;
                                 const int offset_to_busy_section_reason_of_busy = 0;
                                 const int offset_to_req_section_Primary_ID = 0;
-                                timestamp = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
-                                uid = receiveBytes.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
-                                ucn = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
-                                call_status = receiveBytes[Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_status-1];
-                                reason_for_busy = receiveBytes[Offset_to_Busy_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_busy_section_reason_of_busy-1];
+                                const int Offset_to_Target_Section_Secondary_ID = 0;
+                                timestamp = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
+                                uid = p.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
+                                snd_id = p.Skip((int)Offset_to_Target_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Target_Section_Secondary_ID).Take(snd_id.Length).Reverse().ToArray();
+                                ucn = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
+                                call_status = p[Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_status-1];
+                                reason_for_busy = p[Offset_to_Busy_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_busy_section_reason_of_busy-1];
                                 parse_timestamp(timestamp);
                                 parse_uid(uid);
+                                parse_snd_id(snd_id);
                                 parse_ucn(ucn);
                                 parse_call_status(call_status);
                                 parse_reason_for_busy(reason_for_busy);                                 
@@ -373,17 +406,93 @@ namespace ATIA_2
                             {
                                 byte[] timestamp = new byte[8];
                                 byte[] ucn = new byte[4];//Universal Call Number
-                                uint Offset_to_Call_Section = BitConverter.ToUInt16(receiveBytes.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 2).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Call_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 2).Take(2).Reverse().ToArray(), 0);
                                 const int offset_to_call_section_Timestamp = 0;
                                 const int offset_to_call_section_ucn = 8;
-                                timestamp = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
-                                ucn = receiveBytes.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
+                                timestamp = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
+                                ucn = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
                                 parse_timestamp(timestamp);
                                 parse_uid(ucn);
                             }
                             break;
+                            
+                        case "Flexible_Interconnect_Call_Billing":
+                            {
+                                //phone call use api:Flexible Interconnect Call Billing Info Packet
+                                //field use:Call Section
+                                //-Duration in Seconds
+                                //-Subscriber ID->uid
+                                //-Call Type->call direction
+                                /*--L-> Land to Mobile
+                                 * --M->Mobile to Land
+                                 * --T->Land to Talkgroup
+                                 * [09/12/13 00:45:37] Interconnect Call Billing Info Packet - MBX Info Type : CALL {Universal Call # (lower comp) = 128 ; Controlling Zone ID = 1 ; Duration in Seconds = 13 ; Subscriber ID = 1(0x1) "Z1RADIO01" [Security Id=1] ; Type = Mobile to Land} INTERCONNECT {Route # = 1} PHONE NUMBER {Phone Encoding = n/a ; Phone # = 9999906} 
+00:45:37    mobile_to_land PHONE INFO - - - - - - - -  radio:  1        00m13 9999906
+                                 * mobile_to_land->radio to phone
+                                 * radio:1->radio device id=1
+                                 * 00m13->duration time 13 sec
+                                 * 9999906->phone number
+                                 * ------------------------------------
+                                 * land-to-mobile PHONE INFO - - - - - - - -  radio:  1        00m12
+                                 * phone to radio,radio uid=1,duration time is 12sec, unknow phone number
+                                 */
+                                byte[] duration_in_sec = new byte[4];
+                                byte[] uid = new byte[4];
+                                byte[] timestamp = new byte[8];
+                                byte[] phone_length = new byte[2];
+                                byte[] Call_Type = new byte[1];
+                                uint Offset_to_Call_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 2).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Phone_Number_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 6).Take(2).Reverse().ToArray(), 0);
+                                const int offset_to_call_section_timestamp = 0;
+                                const int offset_to_call_section_duration_in_sec = 14;
+                                const int offset_to_call_uid = 18;
+                                const int offset_to_call_Call_Type = 22;
+                                const int offset_to_phone_Length_Phone_Number = 2;
+                                const int offset_to_phone_Phone_Number = 4;
+                                timestamp = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_timestamp).Take(timestamp.Length).Reverse().ToArray();
+                                duration_in_sec = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_duration_in_sec).Take(duration_in_sec.Length).Reverse().ToArray();
+                                uid = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_uid).Take(uid.Length).Reverse().ToArray();
+                                Call_Type = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_Call_Type).Take(Call_Type.Length).Reverse().ToArray();
+                                phone_length = p.Skip((int)Offset_to_Phone_Number_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_phone_Length_Phone_Number).Take(phone_length.Length).Reverse().ToArray();
+                                uint phone_length_uint = BitConverter.ToUInt16(phone_length.Take(phone_length.Length).ToArray(), 0);
+                                parse_timestamp(timestamp);
+                                parse_uid(uid);
+                                parse_duration_in_sec(duration_in_sec);
+                                parse_call_type(Call_Type[0]);
+                            }
+                            break;
                     }
                 }
+            }
+            /// <summary>
+            /// Call Type Description
+            ///L Land to Mobile
+            ///M Mobile to Land
+            ///T Land to Talkgroup
+            /// </summary>
+            /// <param name="Call_Type"></param>
+            private static void parse_call_type(byte Call_Type)
+            {
+                char result = Convert.ToChar(Call_Type);//L , M or T
+                parse_package.Add("call_type", result);
+            }
+
+            private static void parse_duration_in_sec(byte[] duration_in_sec)
+            {
+                uint sec = BitConverter.ToUInt32(duration_in_sec.Take(duration_in_sec.Length).ToArray(), 0);
+                parse_package.Add("sec", sec.ToString());
+            }
+
+            private static void parse_gid(byte[] gid)
+            {
+                uint id = BitConverter.ToUInt32(gid.Take(gid.Length).ToArray(), 0);
+                parse_package.Add("gid", id.ToString());
+            }
+
+            private static void parse_snd_id(byte[] snd_id)
+            {
+                uint id = BitConverter.ToUInt32(snd_id.Take(snd_id.Length).ToArray(), 0);
+                parse_package.Add("snd_id", id.ToString());
             }
 
             private static void parse_call_status(byte call_status)
@@ -427,7 +536,7 @@ namespace ATIA_2
 
             private static void parse_ucn(byte[] ucn)
             {
-                uint call_number = BitConverter.ToUInt32(ucn.Take(ucn.Length).Reverse().ToArray(), 0);
+                uint call_number = BitConverter.ToUInt32(ucn.Take(ucn.Length).ToArray(), 0);
                 parse_package.Add("call_number", call_number.ToString());
             }
 
@@ -436,14 +545,15 @@ namespace ATIA_2
                 //This the individual ID received from the radio unit. It is right justified and padded with leading zeros.
                 //For the Type II case, thefield would have the format 0x0000nnnn where the n’s represent the 16-bit
                 //individual ID. If this field is unused, it will be set to the hexadecimal value 0.
-                uint id= BitConverter.ToUInt32(uid.Take(uid.Length).Reverse().ToArray(), 0);
+                uint id= BitConverter.ToUInt32(uid.Take(uid.Length).ToArray(), 0);
                 parse_package.Add("uid", id.ToString());
                 
             }
 
             private static void parse_timestamp(byte[] timestamp)
             {
-                int year = BitConverter.ToInt32(timestamp.Take(2).Reverse().ToArray(), 0);
+                Array.Reverse(timestamp);
+                int year = BitConverter.ToUInt16(timestamp.Take(2).Reverse().ToArray(), 0);
                 int month = (int)timestamp[2];
                 int day = (int)timestamp[3];
                 int hour = (int)timestamp[4];
@@ -517,6 +627,10 @@ namespace ATIA_2
                                 parse_package.Add("opcode", "Deregistration");
                                 parse_package.Add("result", "power_off");
                                 break;
+                            case (ushort)Flexible_Mobility_Update_opcode.Group_Affiliation:
+                                parse_package.Add("opcode", "Group_Affiliation");// to get gid/uid
+                                parse_package.Add("result", "power_on");
+                                break;
                         }
                         break;
 
@@ -561,6 +675,12 @@ namespace ATIA_2
                                     break;
                                 
                             }
+                        }
+                        break;
+                    case (ushort)Block_Command_Type_Values.Flexible_Interconnect_Call_Billing_Info_Packet:
+                        {
+                            command = Block_Command_Type_Values.Flexible_Interconnect_Call_Billing_Info_Packet.ToString("G");
+                            parse_package.Add("cmd", "Flexible_Interconnect_Call_Billing");
                         }
                         break;
                 }
@@ -608,12 +728,33 @@ namespace ATIA_2
                 w.WriteLine("{0} {1}", DateTime.Now.ToString("H:mm:ss.fffffff"),
                     DateTime.Now.ToLongDateString());
                 w.WriteLine("  :");
-                w.WriteLine("  :{0}", logMessage);
+                w.WriteLine("{0}", logMessage);
                 w.WriteLine("-------------------------------");
                 // Update the underlying file.
                 w.Flush();
             }
-            
+            static string ByteToHexBitFiddle(byte[] bytes)
+            {
+                char[] c = new char[bytes.Length * 2];
+                int b;
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    b = bytes[i] >> 4;
+                    c[i * 2] = (char)(55 + b + (((b - 10) >> 31) & -7));
+                    b = bytes[i] & 0xF;
+                    c[i * 2 + 1] = (char)(55 + b + (((b - 10) >> 31) & -7));
+                }
+                string str1 = new string(c);
+                string str2 = String.Join(" ",
+                    str1.ToCharArray().Aggregate("",
+                    (result, x) => result += ((!string.IsNullOrEmpty(result) &&
+                        (result.Length + 1) % 3 == 0) ? " " : "") + x.ToString())
+                        .Split(' ').ToList().Select(
+                    x => x.Length == 1
+                        ? String.Format("{0}{1}", Int32.Parse(x) - 1, x)
+                        : x).ToArray());
+                return str2;
+            }
         
     }
 }
