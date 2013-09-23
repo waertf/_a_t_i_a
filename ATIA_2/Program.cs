@@ -506,7 +506,7 @@ namespace ATIA_2
             private static void parse_snd_id(byte[] snd_id)
             {
                 uint id = BitConverter.ToUInt32(snd_id.Take(snd_id.Length).ToArray(), 0);
-                parse_package.Add("snd_id", id.ToString());
+                parse_package.Add("target_id", id.ToString());
             }
 
             private static void parse_call_status(byte call_status)
@@ -560,7 +560,7 @@ namespace ATIA_2
                 //For the Type II case, thefield would have the format 0x0000nnnn where the n’s represent the 16-bit
                 //individual ID. If this field is unused, it will be set to the hexadecimal value 0.
                 uint id= BitConverter.ToUInt32(uid.Take(uid.Length).ToArray(), 0);
-                parse_package.Add("uid", id.ToString());
+                parse_package.Add("source_id", id.ToString());
                 
             }
 
