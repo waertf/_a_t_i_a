@@ -562,7 +562,7 @@ namespace ATIA_2
             private static void parse_ucn(byte[] ucn)
             {
                 uint call_number = BitConverter.ToUInt32(ucn.Take(ucn.Length).ToArray(), 0);
-                parse_package.Add("Universal Call Number", call_number.ToString());
+                parse_package.Add("universal_call_number", call_number.ToString());
             }
 
             private static void parse_uid(byte[] uid)
@@ -601,27 +601,27 @@ namespace ATIA_2
                         {
                             case (ushort)Flexible_Controlling_Zone_Update_opcode.Start_of_Call:
                                 opcode = Flexible_Controlling_Zone_Update_opcode.Start_of_Call.ToString("G");
-                                parse_package.Add("opcode", "Start_of_Call");
+//                                parse_package.Add("opcode", "Start_of_Call");
                                 parse_package.Add("result", "start_call");
                                 break;
                             case (ushort)Flexible_Controlling_Zone_Update_opcode.End_of_Call:
                                 opcode = Flexible_Controlling_Zone_Update_opcode.End_of_Call.ToString("G");
-                                parse_package.Add("opcode", "End_of_Call");
+//                                parse_package.Add("opcode", "End_of_Call");
                                 parse_package.Add("result", "end_call");
                                 break;
                             case (ushort)Flexible_Controlling_Zone_Update_opcode.PTT_ID_Active_Control:
                                 opcode = Flexible_Controlling_Zone_Update_opcode.PTT_ID_Active_Control.ToString("G");
-                                parse_package.Add("opcode", "PTT_ID_Active_Control");
+//                                parse_package.Add("opcode", "PTT_ID_Active_Control");
                                 parse_package.Add("result", "PTT_ID_Active_Control");
                                 break;
                             case (ushort)Flexible_Controlling_Zone_Update_opcode.PTT_ID_Active_No_Control:
                                 opcode = Flexible_Controlling_Zone_Update_opcode.PTT_ID_Active_No_Control.ToString("G");
-                                parse_package.Add("opcode", "PTT_ID_Active_No_Control");
+//                                parse_package.Add("opcode", "PTT_ID_Active_No_Control");
                                 parse_package.Add("result", "PTT_ID_Active_No_Control");
                                 break;
                             case (ushort)Flexible_Controlling_Zone_Update_opcode.PTT_ID_Busy_Control:
                                 opcode = Flexible_Controlling_Zone_Update_opcode.PTT_ID_Busy_Control.ToString("G");
-                                parse_package.Add("opcode", "PTT_ID_Busy_Control");
+//                                parse_package.Add("opcode", "PTT_ID_Busy_Control");
                                 parse_package.Add("result", "PTT_ID_Busy_Control");
                                 break;
                         }
@@ -632,28 +632,28 @@ namespace ATIA_2
                         switch (struct_header.BlockOpcode)
                         {
                             case (ushort)Flexible_Mobility_Update_opcode.Unit_Registration:
-                                parse_package.Add("opcode", "Unit_Registration");
+                                parse_package.Add("comment", "Unit_Registration");
                                 parse_package.Add("result", "power_on");
                                 break;
                             case (ushort)Flexible_Mobility_Update_opcode.Request_for_Registration:
-                                parse_package.Add("opcode", "Request_for_Registration");
+                                parse_package.Add("comment", "Request_for_Registration");
                                 parse_package.Add("result", "power_on");
                                 break;
                             case (ushort)Flexible_Mobility_Update_opcode.Location_Registration:
-                                parse_package.Add("opcode", "Location_Registration");
+                                parse_package.Add("comment", "Location_Registration");
                                 parse_package.Add("result", "power_on");
                                 break;
                             case (ushort)Flexible_Mobility_Update_opcode.Console_Registration:
-                                parse_package.Add("opcode", "Console_Registration");
+                                parse_package.Add("comment", "Console_Registration");
                                 parse_package.Add("result", "power_on");
                                 break;
 
                             case (ushort)Flexible_Mobility_Update_opcode.Deregistration:
-                                parse_package.Add("opcode", "Deregistration");
+                                parse_package.Add("comment", "Deregistration");
                                 parse_package.Add("result", "power_off");
                                 break;
                             case (ushort)Flexible_Mobility_Update_opcode.Group_Affiliation:
-                                parse_package.Add("opcode", "Group_Affiliation");// to get gid/uid
+                                parse_package.Add("comment", "Group_Affiliation");// to get gid/uid
                                 parse_package.Add("result", "power_on");
                                 break;
                         }
@@ -666,23 +666,23 @@ namespace ATIA_2
                             switch (struct_header.BlockOpcode)
                             {
                                 case (ushort)Flexible_Call_Activity_Update_opcode.PTT_ID_Update_Active:
-                                    parse_package.Add("opcode", "PTT_ID_Update_Active");
+//                                    parse_package.Add("opcode", "PTT_ID_Update_Active");
                                     parse_package.Add("result", "PTT_ID_Update_Active");
                                     break;
                                 case (ushort)Flexible_Call_Activity_Update_opcode.PTT_ID_Update_Active_No_Control:
-                                    parse_package.Add("opcode", "PTT_ID_Update_Active_No_Control");
+//                                    parse_package.Add("opcode", "PTT_ID_Update_Active_No_Control");
                                     parse_package.Add("result", "PTT_ID_Update_Active_No_Control");
                                     break;
                                 case (ushort)Flexible_Call_Activity_Update_opcode.PTT_ID_Update_Busy:
-                                    parse_package.Add("opcode", "PTT_ID_Update_Busy");
+//                                    parse_package.Add("opcode", "PTT_ID_Update_Busy");
                                     parse_package.Add("result", "PTT_ID_Update_Active");
                                     break;
                                 case (ushort)Flexible_Call_Activity_Update_opcode.PTT_ID_Update_Busy_No_Control:
-                                    parse_package.Add("opcode", "PTT_ID_Update_Busy_No_Control");
+//                                    parse_package.Add("opcode", "PTT_ID_Update_Busy_No_Control");
                                     parse_package.Add("result", "PTT_ID_Update_Busy_No_Control");
                                     break;
                                 case (ushort)Flexible_Call_Activity_Update_opcode.Start_of_Call:
-                                    parse_package.Add("opcode", "Start_of_Call");
+//                                    parse_package.Add("opcode", "Start_of_Call");
                                     parse_package.Add("result", "Start_of_Call");
                                     break;
                             }
@@ -695,8 +695,8 @@ namespace ATIA_2
                             switch (struct_header.BlockOpcode)
                             {
                                 case (ushort)Flexible_End_of_Call_opcode.End_of_Call:
-                                    parse_package.Add("opcode", "End_of_Call");
-                                    parse_package.Add("result", "End_of_Call");
+//                                    parse_package.Add("opcode", "End_of_Call");
+                                    parse_package.Add("result", "end_call");
                                     break;
                                 
                             }
