@@ -476,7 +476,8 @@ namespace ATIA_2
                 {
                     result += Convert.ToChar(x);
                 }
-                parse_package.Add("phone_number", result);
+                //parse_package.Add("phone_number", result);
+                parse_package.Add("target_id", result);
             }
             /// <summary>
             /// Call Type Description
@@ -488,7 +489,16 @@ namespace ATIA_2
             private static void parse_call_type(byte Call_Type)
             {
                 char result = Convert.ToChar(Call_Type);//L , M or T
-                parse_package.Add("call_type", result);
+                switch (result)
+                {
+                    case 'L':
+                        parse_package.Add("call_type", "Land_to_Mobile");
+                        break;
+                    case 'M':
+                        parse_package.Add("call_type", "Mobile_to_Land");
+                        break;
+                }
+                
             }
 
             private static void parse_duration_in_sec(byte[] duration_in_sec)
@@ -500,7 +510,7 @@ namespace ATIA_2
             private static void parse_gid(byte[] gid)
             {
                 uint id = BitConverter.ToUInt32(gid.Take(gid.Length).ToArray(), 0);
-                parse_package.Add("gid", id.ToString());
+                //parse_package.Add("gid", id.ToString());
             }
 
             private static void parse_snd_id(byte[] snd_id)
