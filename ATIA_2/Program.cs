@@ -296,8 +296,9 @@ namespace ATIA_2
                     Console.WriteLine("####################################################");
                     using (StreamWriter w = File.AppendText("log.txt"))
                     {
-                        string raw_data_without_first_4_byte = ByteToHexBitFiddle(receiveBytes_original.Skip(4).ToArray());
-                        Log("raw:" + raw_data_without_first_4_byte+Environment.NewLine+s.ToString(), w);
+                        //string raw_data_without_first_4_byte = ByteToHexBitFiddle(receiveBytes_original.Skip(4).ToArray());
+                        //Log("raw:" + raw_data_without_first_4_byte+Environment.NewLine+s.ToString(), w);
+                        Log(Environment.NewLine + s.ToString(), w);
                         Console.WriteLine(s.ToString());
                     }
                     Console.WriteLine("####################################################");
