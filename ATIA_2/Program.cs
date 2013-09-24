@@ -562,7 +562,7 @@ namespace ATIA_2
             private static void parse_ucn(byte[] ucn)
             {
                 uint call_number = BitConverter.ToUInt32(ucn.Take(ucn.Length).ToArray(), 0);
-                parse_package.Add("call_number", call_number.ToString());
+                parse_package.Add("Universal Call Number", call_number.ToString());
             }
 
             private static void parse_uid(byte[] uid)
