@@ -329,10 +329,12 @@ namespace ATIA_2
                                 const int offset_to_status_section_Overall_Call_Status = 0;
                                 const int offset_to_status_section_Reason_for_Busy = 1;
                                 const int Offset_to_Target_Section_Secondary_ID = 0;
+                                const int offset_to_call_section_call_type = 14;
                                 byte[] timestamp = new byte[8];
                                 byte[] uid = new byte[4];
                                 byte[] ucn = new byte[4];//Universal Call Number
                                 byte[] snd_id = new byte[4];
+                                byte[] call_type = new byte[1];
                                 byte call_status, reason_for_busy;
                                 timestamp = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
                                 uid = p.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
