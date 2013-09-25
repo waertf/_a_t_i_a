@@ -21,7 +21,8 @@ namespace ATIA_2
             static Byte[] receiveBytes;
             static ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
             static string returnData;
-            static Hashtable parse_package = new Hashtable();//cmd,opcode,result,uid,timestamp
+            //static Hashtable parse_package = new Hashtable();//cmd,opcode,result,uid,timestamp
+            static SortedDictionary<string, string> parse_package = new SortedDictionary<string, string>();
             const int OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS = 18;
             const int DEVIATION_OF_OFFSET_FIELDS_OF_VALUES = 0;
 
@@ -290,7 +291,7 @@ namespace ATIA_2
                     parse_data_section(receiveBytes.Skip(4).ToArray());//skip first 4 package_length byte
 
                     StringBuilder s = new StringBuilder();
-                    foreach (DictionaryEntry e in parse_package)
+                    foreach (var e in parse_package)
                         s.Append(e.Key + ":" + e.Value + Environment.NewLine);
                     s.Append(Environment.NewLine);
                     Console.WriteLine("####################################################");
