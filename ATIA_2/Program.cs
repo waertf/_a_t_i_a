@@ -18,11 +18,11 @@ namespace ATIA_2
         //every device has only one uid , so to use uid just fine without gid or snd_id
 
         
-            static Byte[] receiveBytes;
-            static ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
-            static string returnData;
+            //static Byte[] receiveBytes;
+            //static ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
+            //static string returnData;
             //static Hashtable parse_package = new Hashtable();//cmd,opcode,result,uid,timestamp
-            static SortedDictionary<string, string> parse_package = new SortedDictionary<string, string>();
+            //static SortedDictionary<string, string> parse_package = new SortedDictionary<string, string>();
             const int OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS = 18;
             const int DEVIATION_OF_OFFSET_FIELDS_OF_VALUES = 0;
 
@@ -238,13 +238,16 @@ namespace ATIA_2
             }
             static void Main(string[] args)
             {
-                Thread udp_server = new Thread(new ThreadStart(udp_server_t));
-                udp_server.Start();
+                //Thread read_thread = new Thread(() => read_thread_method(tcpClient, netStream, sql_client));
+                Thread udp_server_8671 = new Thread(() => udp_server_t(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8671"]))); //(new ThreadStart(udp_server_t));
+                Thread udp_server_8601 = new Thread(() => udp_server_t(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8601"])));
+                udp_server_8671.Start();
+                udp_server_8601.Start();
 
             }
-            static void udp_server_t()
+            static void udp_server_t(int port)
             {
-                UdpClient udpClient = new UdpClient(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8671"]));
+                UdpClient udpClient = new UdpClient(port);
                 //IPEndPoint object will allow us to read datagrams sent from any source.
                 IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
                 //int c = int.Parse(ConfigurationManager.AppSettings["raw_log_counter"].ToString());
@@ -252,8 +255,9 @@ namespace ATIA_2
                 while (true)
                 {
                     // Blocks until a message returns on this socket from a remote host.
-                    receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
+                    Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
                     byte[] receiveBytes_original = new byte[receiveBytes.Length];
+                    SortedDictionary<string, string> parse_package = new SortedDictionary<string, string>();
                     Array.Copy(receiveBytes, receiveBytes_original, receiveBytes_original.Length);
                     if (bool.Parse(ConfigurationManager.AppSettings["log_raw_data"]))
                     {
@@ -277,18 +281,19 @@ namespace ATIA_2
                     //configuration.Save();
                     //ConfigurationManager.RefreshSection("appSettings");
 
-                    returnData = Encoding.ASCII.GetString(receiveBytes);
+                    string returnData = Encoding.ASCII.GetString(receiveBytes);
                     Console.WriteLine("receive_length=" + receiveBytes.Length);
                     array_reverse_ATIA_PACKAGE_Header_and_NumOffset(ref receiveBytes);
+                    ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
                     struct_header = (ATIA_PACKAGE_Header_and_NumOffset)BytesToStruct(receiveBytes, struct_header.GetType());
                     //Console.WriteLine("package lenght exclude first 4 byte :"+BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0)); 
 
                     // Uses the IPEndPoint object to determine which of these two hosts responded.
                     Console.WriteLine("This is the message you received :" +
                                                  returnData.ToString());
-                    parse_header_and_numoffset_package(struct_header);
-                    
-                    parse_data_section(receiveBytes.Skip(4).ToArray());//skip first 4 package_length byte
+                    parse_header_and_numoffset_package(struct_header, ref parse_package);
+
+                    parse_data_section(receiveBytes.Skip(4).ToArray(), ref parse_package);//skip first 4 package_length byte
 
                     StringBuilder s = new StringBuilder();
                     foreach (var e in parse_package)
@@ -310,7 +315,7 @@ namespace ATIA_2
 
             }
 
-            private static void parse_data_section(byte[] p)
+            private static void parse_data_section(byte[] p, ref SortedDictionary<string, string> parse_package)
             {
                 //get unique id and timestamp(uid,timestamp)
                 
@@ -344,13 +349,13 @@ namespace ATIA_2
                                 reason_for_busy = p[Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_status_section_Reason_for_Busy-1];
                                 snd_id = p.Skip((int)Offset_to_Target_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Target_Section_Secondary_ID).Take(snd_id.Length).Reverse().ToArray();
                                 call_type = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_type).Take(call_type.Length).Reverse().ToArray();
-                                parse_timestamp(timestamp);
-                                parse_uid(uid);
-                                parse_ucn(ucn);
+                                parse_timestamp(timestamp,ref  parse_package);
+                                parse_uid(uid,ref  parse_package);
+                                parse_ucn(ucn,ref  parse_package);
                                 //parse_call_status(call_status);
                                 //parse_reason_for_busy(reason_for_busy);
-                                parse_snd_id(snd_id);
-                                parse_call_type(call_type[0]);
+                                parse_snd_id(snd_id,ref  parse_package);
+                                parse_call_type(call_type[0],ref parse_package);
                             }
                             break;
                         case "Flexible_Mobility_Update":
@@ -367,8 +372,8 @@ namespace ATIA_2
                                 timestamp = p.Skip((int)Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Status_Section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
                                 uid = p.Skip((int)Offset_to_Unit_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Unit_Section_Operating_Unit_ID).Take(uid.Length).Reverse().ToArray();
                                 gid = p.Skip((int)Offset_to_Group_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Group_Section_Operating_Group_ID).Take(gid.Length).Reverse().ToArray();                                
-                                parse_timestamp(timestamp);
-                                parse_uid(uid);
+                                parse_timestamp(timestamp,ref  parse_package);
+                                parse_uid(uid,ref  parse_package);
                                 parse_gid(gid);
                             }
                             break;
@@ -400,10 +405,10 @@ namespace ATIA_2
                                 ucn = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
                                 call_status = p[Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_status-1];
                                 reason_for_busy = p[Offset_to_Busy_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_busy_section_reason_of_busy-1];
-                                parse_timestamp(timestamp);
-                                parse_uid(uid);
-                                parse_snd_id(snd_id);
-                                parse_ucn(ucn);
+                                parse_timestamp(timestamp,ref  parse_package);
+                                parse_uid(uid,ref  parse_package);
+                                parse_snd_id(snd_id,ref  parse_package);
+                                parse_ucn(ucn,ref  parse_package);
                                 //parse_call_status(call_status);
                                 //parse_reason_for_busy(reason_for_busy);                                 
                             }
@@ -417,8 +422,8 @@ namespace ATIA_2
                                 const int offset_to_call_section_ucn = 8;
                                 timestamp = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
                                 ucn = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
-                                parse_timestamp(timestamp);
-                                parse_uid(ucn);
+                                parse_timestamp(timestamp,ref  parse_package);
+                                parse_uid(ucn,ref  parse_package);
                             }
                             break;
                             
@@ -464,18 +469,18 @@ namespace ATIA_2
                                 
                                 byte[] phone = new byte[phone_length_uint];
                                 phone = p.Skip((int)Offset_to_Phone_Number_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_phone_Phone_Number).Take(phone.Length).ToArray();
-                                parse_phone(phone);
-                                parse_timestamp(timestamp);
-                                parse_uid(uid);
-                                parse_duration_in_sec(duration_in_sec);
-                                parse_call_type(Call_Type[0]);
+                                parse_phone(phone, ref parse_package);
+                                parse_timestamp(timestamp,ref  parse_package);
+                                parse_uid(uid,ref  parse_package);
+                                parse_duration_in_sec(duration_in_sec,ref  parse_package);
+                                parse_call_type(Call_Type[0],ref  parse_package);
                             }
                             break;
                     }
                 }
             }
 
-            private static void parse_phone(byte[] phone)
+            private static void parse_phone(byte[] phone, ref SortedDictionary<string, string> parse_package)
             {
                 string result = string.Empty;
                 foreach (byte x in phone)
@@ -492,7 +497,7 @@ namespace ATIA_2
             ///T Land to Talkgroup
             /// </summary>
             /// <param name="Call_Type"></param>
-            private static void parse_call_type(byte Call_Type)
+            private static void parse_call_type(byte Call_Type, ref SortedDictionary<string, string> parse_package)
             {
                 /*
                 char result = Convert.ToChar(Call_Type);//L , M or T
@@ -530,7 +535,7 @@ namespace ATIA_2
                 }
             }
 
-            private static void parse_duration_in_sec(byte[] duration_in_sec)
+            private static void parse_duration_in_sec(byte[] duration_in_sec, ref SortedDictionary<string, string> parse_package)
             {
                 uint sec = BitConverter.ToUInt32(duration_in_sec.Take(duration_in_sec.Length).ToArray(), 0);
                 parse_package.Add("sec", sec.ToString());
@@ -542,13 +547,13 @@ namespace ATIA_2
                 //parse_package.Add("gid", id.ToString());
             }
 
-            private static void parse_snd_id(byte[] snd_id)
+            private static void parse_snd_id(byte[] snd_id, ref SortedDictionary<string, string> parse_package)
             {
                 uint id = BitConverter.ToUInt32(snd_id.Take(snd_id.Length).ToArray(), 0);
                 parse_package.Add("target_id", id.ToString());
             }
 
-            private static void parse_call_status(byte call_status)
+            private static void parse_call_status(byte call_status,ref  SortedDictionary<string, string> parse_package)
             {
                 switch ((int)call_status)
                 {
@@ -571,7 +576,7 @@ namespace ATIA_2
                 }
             }
 
-            private static void parse_reason_for_busy(byte reason_for_busy)
+            private static void parse_reason_for_busy(byte reason_for_busy, ref SortedDictionary<string, string> parse_package)
             {
                 switch ((int)reason_for_busy)
                 {
@@ -587,13 +592,13 @@ namespace ATIA_2
                 }
             }
 
-            private static void parse_ucn(byte[] ucn)
+            private static void parse_ucn(byte[] ucn, ref SortedDictionary<string, string> parse_package)
             {
                 uint call_number = BitConverter.ToUInt32(ucn.Take(ucn.Length).ToArray(), 0);
                 parse_package.Add("universal_call_number", call_number.ToString());
             }
 
-            private static void parse_uid(byte[] uid)
+            private static void parse_uid(byte[] uid, ref SortedDictionary<string, string> parse_package)
             {
                 //This the individual ID received from the radio unit. It is right justified and padded with leading zeros.
                 //For the Type II case, thefield would have the format 0x0000nnnn where the n’s represent the 16-bit
@@ -603,7 +608,7 @@ namespace ATIA_2
                 
             }
 
-            private static void parse_timestamp(byte[] timestamp)
+            private static void parse_timestamp(byte[] timestamp, ref SortedDictionary<string, string> parse_package)
             {
                 Array.Reverse(timestamp);
                 int year = BitConverter.ToUInt16(timestamp.Take(2).Reverse().ToArray(), 0);
@@ -617,7 +622,7 @@ namespace ATIA_2
                 parse_package.Add("timestamp", date_time.ToString("yyyy/MM/dd H:mm:ss.ffff"));
             }
 
-            private static void parse_header_and_numoffset_package(ATIA_PACKAGE_Header_and_NumOffset struct_header)
+            private static void parse_header_and_numoffset_package(ATIA_PACKAGE_Header_and_NumOffset struct_header, ref SortedDictionary<string, string> parse_package)
             {
                 string command,opcode;
                 switch (struct_header.BlockCommandType)
