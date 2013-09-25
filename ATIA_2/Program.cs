@@ -341,13 +341,15 @@ namespace ATIA_2
                                 ucn = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
                                 call_status = p[Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_status_section_Overall_Call_Status-1];
                                 reason_for_busy = p[Offset_to_Status_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_status_section_Reason_for_Busy-1];
-                                snd_id = p.Skip((int)Offset_to_Target_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Target_Section_Secondary_ID).Take(snd_id.Length).Reverse().ToArray();                              
+                                snd_id = p.Skip((int)Offset_to_Target_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Target_Section_Secondary_ID).Take(snd_id.Length).Reverse().ToArray();
+                                call_type = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_type).Take(call_type.Length).Reverse().ToArray();
                                 parse_timestamp(timestamp);
                                 parse_uid(uid);
                                 parse_ucn(ucn);
-                                parse_call_status(call_status);
-                                parse_reason_for_busy(reason_for_busy);
+                                //parse_call_status(call_status);
+                                //parse_reason_for_busy(reason_for_busy);
                                 parse_snd_id(snd_id);
+                                parse_call_type(call_type[0]);
                             }
                             break;
                         case "Flexible_Mobility_Update":
@@ -401,8 +403,8 @@ namespace ATIA_2
                                 parse_uid(uid);
                                 parse_snd_id(snd_id);
                                 parse_ucn(ucn);
-                                parse_call_status(call_status);
-                                parse_reason_for_busy(reason_for_busy);                                 
+                                //parse_call_status(call_status);
+                                //parse_reason_for_busy(reason_for_busy);                                 
                             }
                             break;
                         case "Flexible_End_of_Call":
@@ -491,6 +493,7 @@ namespace ATIA_2
             /// <param name="Call_Type"></param>
             private static void parse_call_type(byte Call_Type)
             {
+                /*
                 char result = Convert.ToChar(Call_Type);//L , M or T
                 switch (result)
                 {
@@ -500,8 +503,30 @@ namespace ATIA_2
                     case 'M':
                         parse_package.Add("call_type", "Mobile_to_Land");
                         break;
+                    case '1':
+                        parse_package.Add("call_type", "Individual_Call");
+                        break;
+                    case '2':
+                        parse_package.Add("call_type", "Group_Call");
+                        break;
                 }
-                
+                 * */
+                string result = Call_Type.ToString();//L , M or T
+                switch (result)
+                {
+                    case "76"://L
+                        parse_package.Add("call_type", "Land_to_Mobile");
+                        break;
+                    case "77"://M
+                        parse_package.Add("call_type", "Mobile_to_Land");
+                        break;
+                    case "1":
+                        parse_package.Add("call_type", "Individual_Call");
+                        break;
+                    case "2":
+                        parse_package.Add("call_type", "Group_Call");
+                        break;
+                }
             }
 
             private static void parse_duration_in_sec(byte[] duration_in_sec)
