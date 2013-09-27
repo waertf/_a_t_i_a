@@ -10,6 +10,8 @@ using System.Net;
 using System.ComponentModel;
 using System.IO;
 using System.Collections;
+using log4net;
+using log4net.Config;
 
 namespace ATIA_2
 {
@@ -25,6 +27,7 @@ namespace ATIA_2
             //static SortedDictionary<string, string> parse_package = new SortedDictionary<string, string>();
             const int OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS = 18;
             const int DEVIATION_OF_OFFSET_FIELDS_OF_VALUES = 0;
+            private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
             enum Block_Command_Type_Values
             {
@@ -298,8 +301,9 @@ namespace ATIA_2
                     StringBuilder s = new StringBuilder();
                     foreach (var e in parse_package)
                         s.Append(e.Key + ":" + e.Value + Environment.NewLine);
-                    s.Append(Environment.NewLine);
+                    //s.Append(Environment.NewLine);
                     Console.WriteLine("####################################################");
+                    /*
                     using (StreamWriter w = File.AppendText("log.txt"))
                     {
                         //string raw_data_without_first_4_byte = ByteToHexBitFiddle(receiveBytes_original.Skip(4).ToArray());
@@ -307,8 +311,18 @@ namespace ATIA_2
                         Log(Environment.NewLine + s.ToString(), w);
                         Console.WriteLine(s.ToString());
                     }
+                     * */
+                    try
+                    {
+                        log.Info(s.ToString());
+                        Console.WriteLine(s.ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(ex.Message);
+                    }
                     Console.WriteLine("####################################################");
-                    
+
                     parse_package.Clear();
                     Thread.Sleep(300);
                 }
