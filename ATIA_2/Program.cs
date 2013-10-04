@@ -315,7 +315,33 @@ namespace ATIA_2
                         string start_time = _StartTime.ToString("yyyyMMddHHmmssffff");
                         parse_package.Add("start_call_time", start_time);
                     }
+                    if(parse_package.ContainsKey("result"))
+                    {
+                        switch (parse_package["result"].ToString())
+                        {
+                            case "power_on":
+                                Device_power_status dev_power_status = new Device_power_status();
+                                dev_power_status.ID = parse_package["source_id"].ToString();
+                                string power_on_today = DateTime.Now.ToString("yyyyMMdd");
+                                /*
+                                int iVal = 1;
 
+                                iVal.ToString("D3"); // = "001"
+                                 * */
+                                Power_status.Add(dev_power_status);
+                                break;
+                            case "power_off":
+                                break;
+                            case "start_call":
+                                Device_call_status dev_call_status = new Device_call_status();
+                                dev_call_status.ID = parse_package["source_id"].ToString();
+                                string start_call_today = DateTime.Now.ToString("yyyyMMdd");
+                                Call_status.Add(dev_call_status);
+                                break;
+                            case "end_call":
+                                break;
+                        }
+                    }
                     StringBuilder s = new StringBuilder();
                     foreach (var e in parse_package)
                         s.Append(e.Key + ":" + e.Value + Environment.NewLine);
@@ -344,6 +370,7 @@ namespace ATIA_2
                     
 
                     parse_package.Clear();
+                    AddValue("test1", "alonso");
                     Thread.Sleep(300);
                 }
 
@@ -846,6 +873,22 @@ namespace ATIA_2
                         ? String.Format("{0}{1}", Int32.Parse(x) - 1, x)
                         : x).ToArray());
                 return str2;
+            }
+            static void AddValue(string key, string value)
+            {
+                ConfigurationManager.RefreshSection("appSettings");
+                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings.Get(key)))
+                {
+                    Console.WriteLine("not null");
+                    return;
+                }
+                else
+                    Console.WriteLine("null");
+                Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                AppSettingsSection app = config.AppSettings;
+                app.Settings.Add(key,value);
+                config.Save(ConfigurationSaveMode.Modified);
+                
             }
         
     }
