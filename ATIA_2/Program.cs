@@ -29,7 +29,8 @@ namespace ATIA_2
             const int OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS = 18;
             const int DEVIATION_OF_OFFSET_FIELDS_OF_VALUES = 0;
             private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
+            private static List<Device_power_status> Power_status = new List<Device_power_status>();
+            private static List<Device_call_status> Call_status = new List<Device_call_status>();
             enum Block_Command_Type_Values
             {
                 Flexible_Radio_Command=101,
@@ -847,5 +848,22 @@ namespace ATIA_2
                 return str2;
             }
         
+    }
+    public class Device_power_status
+    {
+        public string ID { get; set; }
+        public string SN { get; set; }
+        public string power_on_time { get; set; }
+        public string power_off_time { get; set; }
+        
+    }
+    public class Device_call_status
+    {
+        public string ID { get; set; }
+        public string SN { get; set; }
+        public string call_type { get; set; }
+        public string start_call_time { get; set; }
+        public string end_call_time { get; set; }
+
     }
 }
