@@ -12,6 +12,7 @@ using System.IO;
 using System.Collections;
 using log4net;
 using log4net.Config;
+using System.Globalization;
 
 namespace ATIA_2
 {
@@ -298,6 +299,22 @@ namespace ATIA_2
 
                     parse_data_section(receiveBytes.Skip(4).ToArray(), ref parse_package);//skip first 4 package_length byte
 
+                    if (parse_package.ContainsValue("Land_to_Mobile") || parse_package.ContainsValue("Mobile_to_Land"))
+                    {
+                        //get start call timestamp
+                        DateTimeFormatInfo myDateTimeFormat = new CultureInfo("zh-TW", false).DateTimeFormat;
+
+
+                        myDateTimeFormat.FullDateTimePattern = "yyyyMMddHHmmssffff";
+
+
+                        DateTime _EndTime = DateTime.ParseExact(parse_package["timestamp"].ToString(), myDateTimeFormat.FullDateTimePattern, myDateTimeFormat);
+                        double sec = Convert.ToDouble(parse_package["sec"]);
+                        DateTime _StartTime = _EndTime.AddSeconds(0 - sec);
+                        string start_time = _StartTime.ToString("yyyyMMddHHmmssffff");
+                        parse_package.Add("start_call_time", start_time);
+                    }
+
                     StringBuilder s = new StringBuilder();
                     foreach (var e in parse_package)
                         s.Append(e.Key + ":" + e.Value + Environment.NewLine);
@@ -322,6 +339,8 @@ namespace ATIA_2
                         log.Error(ex.Message);
                     }
                     Console.WriteLine("####################################################");
+
+                    
 
                     parse_package.Clear();
                     Thread.Sleep(300);
@@ -633,7 +652,7 @@ namespace ATIA_2
                 int second = (int)timestamp[6];
                 int deciSecond = (int)timestamp[7];
                 DateTime date_time = new DateTime(year, month, day, hour, minute, second, deciSecond / 100);
-                parse_package.Add("timestamp", date_time.ToString("yyyy/MM/dd H:mm:ss.ffff"));
+                parse_package.Add("timestamp", date_time.ToString("yyyyMMddHHmmssffff"));
             }
 
             private static void parse_header_and_numoffset_package(ATIA_PACKAGE_Header_and_NumOffset struct_header, ref SortedDictionary<string, string> parse_package)
