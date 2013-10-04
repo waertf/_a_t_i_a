@@ -323,6 +323,24 @@ namespace ATIA_2
                                 Device_power_status dev_power_status = new Device_power_status();
                                 dev_power_status.ID = parse_package["source_id"].ToString();
                                 string power_on_today = DateTime.Now.ToString("yyyyMMdd");
+                                if (AddValue(dev_power_status.ID, power_on_today+","+"0"))
+                                {
+                                    int iVal = 0;
+
+                                    dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
+                                }
+                                else
+                                {
+                                    string sn = ConfigurationManager.AppSettings["dev_power_status.ID"].ToString();
+                                    string[] sn_sub = sn.Split(',');
+                                    if (sn_sub[0] != power_on_today)
+                                    {
+                                        int iVal = 0;
+
+                                        dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
+                                    }
+                                }
+                                
                                 /*
                                 int iVal = 1;
 
@@ -370,7 +388,7 @@ namespace ATIA_2
                     
 
                     parse_package.Clear();
-                    AddValue("test1", "alonso");
+                    
                     Thread.Sleep(300);
                 }
 
@@ -874,21 +892,46 @@ namespace ATIA_2
                         : x).ToArray());
                 return str2;
             }
-            static void AddValue(string key, string value)
+            static bool AddValue(string key, string value)
             {
                 ConfigurationManager.RefreshSection("appSettings");
+
                 if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings.Get(key)))
                 {
-                    Console.WriteLine("not null");
-                    return;
+                    //Console.WriteLine("not null");
+                    return false;
                 }
                 else
-                    Console.WriteLine("null");
+                {
+                    //Console.WriteLine("null");
+                    Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                    AppSettingsSection app = config.AppSettings;
+                    app.Settings.Add(key, value);
+                    config.Save(ConfigurationSaveMode.Modified);
+                    return true;
+                }
+                
+            }
+            static void ModifyValue(string key, string value)
+            {
+                ConfigurationManager.RefreshSection("appSettings");
+                //Configuration與AppSettingsSection必須引用System.Configuration才可使用！
                 Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
                 AppSettingsSection app = config.AppSettings;
-                app.Settings.Add(key,value);
+                //app.Settings.Add("B", "This is B value");
+                app.Settings[key].Value = value;
                 config.Save(ConfigurationSaveMode.Modified);
-                
+            }
+            static void DeleteValue(string key)
+            {
+                ConfigurationManager.RefreshSection("appSettings");
+                //Configuration與AppSettingsSection必須引用System.Configuration才可使用！
+                Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                AppSettingsSection app = config.AppSettings;
+                //app.Settings.Add("B", "This is B value");
+                //app.Settings["A"].Value = "This is not B";
+                app.Settings.Remove(key);
+                config.Save(ConfigurationSaveMode.Modified);
             }
         
     }
