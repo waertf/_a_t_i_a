@@ -14,6 +14,7 @@ using log4net;
 using log4net.Config;
 using System.Globalization;
 
+
 namespace ATIA_2
 {
     class Program
@@ -317,11 +318,13 @@ namespace ATIA_2
                     }
                     if(parse_package.ContainsKey("result"))
                     {
+                        SqlClient sql_client = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
                         switch (parse_package["result"].ToString())
                         {
                             case "power_on":
                                 Device_power_status dev_power_status = new Device_power_status();
                                 dev_power_status.ID = parse_package["source_id"].ToString();
+                                dev_power_status.power_on_time = parse_package["timestamp"].ToString();
                                 string power_on_today = DateTime.Now.ToString("yyyyMMdd");
                                 if (AddValue(dev_power_status.ID, power_on_today+","+"0"))
                                 {
@@ -331,13 +334,20 @@ namespace ATIA_2
                                 }
                                 else
                                 {
-                                    string sn = ConfigurationManager.AppSettings["dev_power_status.ID"].ToString();
+                                    string sn = ConfigurationManager.AppSettings[dev_power_status.ID].ToString();
                                     string[] sn_sub = sn.Split(',');
                                     if (sn_sub[0] != power_on_today)
                                     {
                                         int iVal = 0;
 
                                         dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
+                                        ModifyValue(dev_power_status.ID, power_on_today + "," + "0");
+                                    }
+                                    else
+                                    {
+                                        uint count = uint.Parse(sn_sub[1])+1;
+                                        dev_power_status.SN = dev_power_status.ID + power_on_today + count.ToString("D3");
+                                        ModifyValue(dev_power_status.ID, power_on_today + "," + count.ToString());
                                     }
                                 }
                                 
@@ -349,6 +359,11 @@ namespace ATIA_2
                                 Power_status.Add(dev_power_status);
                                 break;
                             case "power_off":
+                                Device_power_status dev_power_off_status = new Device_power_status();
+                                dev_power_off_status.ID = parse_package["source_id"].ToString();
+                                string power_off_sn = ConfigurationManager.AppSettings[dev_power_off_status.ID].ToString();
+                                string[] power_off_sn_sub = power_off_sn.Split(',');
+                                dev_power_off_status.SN = dev_power_off_status.ID + power_off_sn_sub[0] + uint.Parse(power_off_sn_sub[1]).ToString("D3");
                                 break;
                             case "start_call":
                                 Device_call_status dev_call_status = new Device_call_status();
