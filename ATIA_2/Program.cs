@@ -32,6 +32,7 @@ namespace ATIA_2
             private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
             private static List<Device_power_status> Power_status = new List<Device_power_status>();
             private static List<Device_call_status> Call_status = new List<Device_call_status>();
+            private static string sql_table_columns = string.Empty, sql_table_column_value = string.Empty, sql_cmd = string.Empty, sql_condition = string.Empty;
             enum Block_Command_Type_Values
             {
                 Flexible_Radio_Command=101,
@@ -316,15 +317,19 @@ namespace ATIA_2
                         string start_time = _StartTime.ToString("yyyyMMddHHmmssffff");
                         parse_package.Add("start_call_time", start_time);
                     }
-                    if(parse_package.ContainsKey("result"))
+                    if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off") || parse_package["result"].ToString().Equals("start_call") || parse_package["result"].ToString().Equals("end_call")))
                     {
                         SqlClient sql_client = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
+                        sql_client.connect();
                         switch (parse_package["result"].ToString())
                         {
                             case "power_on":
                                 Device_power_status dev_power_status = new Device_power_status();
                                 dev_power_status.ID = parse_package["source_id"].ToString();
                                 dev_power_status.power_on_time = parse_package["timestamp"].ToString();
+                                string device_on_time = dev_power_status.power_on_time.Substring(0, 4) + "-" + dev_power_status.power_on_time.Substring(4, 2) + "-" +
+                                    dev_power_status.power_on_time.Substring(6, 2) + " " + dev_power_status.power_on_time.Substring(8, 2) + ":" +
+                                    dev_power_status.power_on_time.Substring(10, 2) + ":" + dev_power_status.power_on_time.Substring(12, 2);
                                 string power_on_today = DateTime.Now.ToString("yyyyMMdd");
                                 if (AddValue(dev_power_status.ID, power_on_today+","+"0"))
                                 {
@@ -359,11 +364,36 @@ namespace ATIA_2
                                 Power_status.Add(dev_power_status);
                                 break;
                             case "power_off":
+                                string power_off_sn = string.Empty;
                                 Device_power_status dev_power_off_status = new Device_power_status();
                                 dev_power_off_status.ID = parse_package["source_id"].ToString();
-                                string power_off_sn = ConfigurationManager.AppSettings[dev_power_off_status.ID].ToString();
-                                string[] power_off_sn_sub = power_off_sn.Split(',');
-                                dev_power_off_status.SN = dev_power_off_status.ID + power_off_sn_sub[0] + uint.Parse(power_off_sn_sub[1]).ToString("D3");
+                                Device_power_status find_dev_sn = Power_status.Find(
+                                     delegate(Device_power_status bk)
+                                     {
+                                         return bk.ID == dev_power_off_status.ID;
+                                     }
+                                    );
+                                if (find_dev_sn != null)
+                                {
+                                     power_off_sn =dev_power_off_status.SN= find_dev_sn.SN;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Cannot fine device_id {0}", dev_power_off_status.ID);
+                                    break;
+                                }
+                                //string power_off_sn = ConfigurationManager.AppSettings[dev_power_off_status.ID].ToString();
+                               // string[] power_off_sn_sub = power_off_sn.Split(',');
+                                //dev_power_off_status.SN = dev_power_off_status.ID + power_off_sn_sub[0] + uint.Parse(power_off_sn_sub[1]).ToString("D3");
+                                dev_power_off_status.power_off_time = parse_package["timestamp"].ToString();
+                                //parse_package.Add("timestamp", date_time.ToString("yyyyMMddHHmmssffff"));
+                                string device_off_time = dev_power_off_status.power_off_time.Substring(0, 4) + "-" + dev_power_off_status.power_off_time.Substring(4, 2) + "-" +
+                                    dev_power_off_status.power_off_time.Substring(6, 2) + " " + dev_power_off_status.power_off_time.Substring(8, 2) + ":" +
+                                    dev_power_off_status.power_off_time.Substring(10, 2) + ":" + dev_power_off_status.power_off_time.Substring(12, 2);
+                                    sql_table_columns = "custom.turn_onoff_log";
+                                    sql_cmd = "UPDATE " + sql_table_columns + " SET off_time=\'" + device_off_time + "\' WHERE serial_no=\'" + dev_power_off_status.SN + "\'";
+                                    sql_client.modify(sql_cmd);
+                                    Power_status.Remove(find_dev_sn);
                                 break;
                             case "start_call":
                                 Device_call_status dev_call_status = new Device_call_status();
@@ -374,6 +404,7 @@ namespace ATIA_2
                             case "end_call":
                                 break;
                         }
+                        sql_client.disconnect();
                     }
                     StringBuilder s = new StringBuilder();
                     foreach (var e in parse_package)
