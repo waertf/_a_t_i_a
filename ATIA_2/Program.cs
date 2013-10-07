@@ -355,7 +355,10 @@ namespace ATIA_2
                                         ModifyValue(dev_power_status.ID, power_on_today + "," + count.ToString());
                                     }
                                 }
-                                
+                                sql_table_columns = "serial_no,uid,on_time";
+                                sql_table_column_value = "\'" + dev_power_status.SN + "\'" + "," + "\'" + dev_power_status.ID + "\'" + "," + "\'" + device_on_time + "\'";
+                                sql_cmd = "INSERT INTO custom.turn_onoff_log (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                sql_client.modify(sql_cmd);
                                 /*
                                 int iVal = 1;
 
