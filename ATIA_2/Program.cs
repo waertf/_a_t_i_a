@@ -369,6 +369,7 @@ namespace ATIA_2
                             string device_on_time = dev_power_status.power_on_time.Substring(0, 4) + "-" + dev_power_status.power_on_time.Substring(4, 2) + "-" +
                                 dev_power_status.power_on_time.Substring(6, 2) + " " + dev_power_status.power_on_time.Substring(8, 2) + ":" +
                                 dev_power_status.power_on_time.Substring(10, 2) + ":" + dev_power_status.power_on_time.Substring(12, 2);
+                            dev_power_status.power_on_time = device_on_time;
                             string power_on_today = DateTime.Now.ToString("yyyyMMdd");
                             if (AddValue(dev_power_status.ID, power_on_today + "," + "000"))
                             {
@@ -432,6 +433,7 @@ namespace ATIA_2
                             string device_off_time = dev_power_off_status.power_off_time.Substring(0, 4) + "-" + dev_power_off_status.power_off_time.Substring(4, 2) + "-" +
                                 dev_power_off_status.power_off_time.Substring(6, 2) + " " + dev_power_off_status.power_off_time.Substring(8, 2) + ":" +
                                 dev_power_off_status.power_off_time.Substring(10, 2) + ":" + dev_power_off_status.power_off_time.Substring(12, 2);
+                            dev_power_off_status.power_off_time = find_dev_sn.power_off_time = device_off_time;
                             sql_table_columns = "custom.turn_onoff_log";
                             sql_cmd = "UPDATE " + sql_table_columns + " SET off_time=\'" + device_off_time + "\' WHERE serial_no=\'" + dev_power_off_status.SN + "\'";
                             sql_client.modify(sql_cmd);
