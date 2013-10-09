@@ -523,96 +523,99 @@ namespace ATIA_2
                             Call_status.Remove(find_dev_call_off_sn);
                             break;
                     }
-                    switch (parse_package["call_type"].ToString())
+                    if (parse_package.ContainsKey("call_type"))
                     {
-                        case "Land_to_Mobile"://L
-                            {
-                                Device_call_status dev_call_status = new Device_call_status();
-                                dev_call_status.call_type = "4";
-                                dev_call_status.ID = parse_package["source_id"].ToString();
-                                dev_call_status.start_call_time = parse_package["start_call_time"].ToString();
-                                dev_call_status.end_call_time = parse_package["timestamp"].ToString();
-                                string start_call_today = DateTime.Now.ToString("yyyyMMdd");
-                                string start_call_time = dev_call_status.start_call_time.Substring(0, 4) + "-" + dev_call_status.start_call_time.Substring(4, 2) + "-" +
-                                dev_call_status.start_call_time.Substring(6, 2) + " " + dev_call_status.start_call_time.Substring(8, 2) + ":" +
-                                dev_call_status.start_call_time.Substring(10, 2) + ":" + dev_call_status.start_call_time.Substring(12, 2);
-                                string end_call_time = dev_call_status.end_call_time.Substring(0, 4) + "-" + dev_call_status.end_call_time.Substring(4, 2) + "-" +
-                                dev_call_status.end_call_time.Substring(6, 2) + " " + dev_call_status.end_call_time.Substring(8, 2) + ":" +
-                                dev_call_status.end_call_time.Substring(10, 2) + ":" + dev_call_status.end_call_time.Substring(12, 2);
-                                if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
+                        switch (parse_package["call_type"].ToString())
+                        {
+                            case "Land_to_Mobile"://L
                                 {
-                                    int iVal = 0;
-
-                                    dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                }
-                                else
-                                {
-                                    string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
-                                    string[] sn_sub = sn.Split(',');
-                                    if (sn_sub[0] != start_call_today)
+                                    Device_call_status dev_call_status = new Device_call_status();
+                                    dev_call_status.call_type = "4";
+                                    dev_call_status.ID = parse_package["source_id"].ToString();
+                                    dev_call_status.start_call_time = parse_package["start_call_time"].ToString();
+                                    dev_call_status.end_call_time = parse_package["timestamp"].ToString();
+                                    string start_call_today = DateTime.Now.ToString("yyyyMMdd");
+                                    string start_call_time = dev_call_status.start_call_time.Substring(0, 4) + "-" + dev_call_status.start_call_time.Substring(4, 2) + "-" +
+                                    dev_call_status.start_call_time.Substring(6, 2) + " " + dev_call_status.start_call_time.Substring(8, 2) + ":" +
+                                    dev_call_status.start_call_time.Substring(10, 2) + ":" + dev_call_status.start_call_time.Substring(12, 2);
+                                    string end_call_time = dev_call_status.end_call_time.Substring(0, 4) + "-" + dev_call_status.end_call_time.Substring(4, 2) + "-" +
+                                    dev_call_status.end_call_time.Substring(6, 2) + " " + dev_call_status.end_call_time.Substring(8, 2) + ":" +
+                                    dev_call_status.end_call_time.Substring(10, 2) + ":" + dev_call_status.end_call_time.Substring(12, 2);
+                                    if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
                                     {
                                         int iVal = 0;
 
                                         dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                        ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
                                     }
                                     else
                                     {
-                                        uint count = uint.Parse(sn_sub[1]) + 1;
-                                        dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
-                                        ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
-                                    }
-                                }
-                                sql_table_columns = "serial_no,uid,connect_type,start_time,end_time";
-                                sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" + dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'";
-                                sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-                                sql_client.modify(sql_cmd);
-                            }
-                            break;
-                        case "Mobile_to_Land"://M
-                            {
-                                Device_call_status dev_call_status = new Device_call_status();
-                                dev_call_status.call_type = "3";
-                                dev_call_status.ID = parse_package["source_id"].ToString();
-                                dev_call_status.start_call_time = parse_package["start_call_time"].ToString();
-                                dev_call_status.end_call_time = parse_package["timestamp"].ToString();
-                                string start_call_today = DateTime.Now.ToString("yyyyMMdd");
-                                string start_call_time = dev_call_status.start_call_time.Substring(0, 4) + "-" + dev_call_status.start_call_time.Substring(4, 2) + "-" +
-                                dev_call_status.start_call_time.Substring(6, 2) + " " + dev_call_status.start_call_time.Substring(8, 2) + ":" +
-                                dev_call_status.start_call_time.Substring(10, 2) + ":" + dev_call_status.start_call_time.Substring(12, 2);
-                                string end_call_time = dev_call_status.end_call_time.Substring(0, 4) + "-" + dev_call_status.end_call_time.Substring(4, 2) + "-" +
-                                dev_call_status.end_call_time.Substring(6, 2) + " " + dev_call_status.end_call_time.Substring(8, 2) + ":" +
-                                dev_call_status.end_call_time.Substring(10, 2) + ":" + dev_call_status.end_call_time.Substring(12, 2);
-                                if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
-                                {
-                                    int iVal = 0;
+                                        string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
+                                        string[] sn_sub = sn.Split(',');
+                                        if (sn_sub[0] != start_call_today)
+                                        {
+                                            int iVal = 0;
 
-                                    dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                            dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                            ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                        }
+                                        else
+                                        {
+                                            uint count = uint.Parse(sn_sub[1]) + 1;
+                                            dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
+                                            ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                        }
+                                    }
+                                    sql_table_columns = "serial_no,uid,connect_type,start_time,end_time";
+                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" + dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'";
+                                    sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                    sql_client.modify(sql_cmd);
                                 }
-                                else
+                                break;
+                            case "Mobile_to_Land"://M
                                 {
-                                    string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
-                                    string[] sn_sub = sn.Split(',');
-                                    if (sn_sub[0] != start_call_today)
+                                    Device_call_status dev_call_status = new Device_call_status();
+                                    dev_call_status.call_type = "3";
+                                    dev_call_status.ID = parse_package["source_id"].ToString();
+                                    dev_call_status.start_call_time = parse_package["start_call_time"].ToString();
+                                    dev_call_status.end_call_time = parse_package["timestamp"].ToString();
+                                    string start_call_today = DateTime.Now.ToString("yyyyMMdd");
+                                    string start_call_time = dev_call_status.start_call_time.Substring(0, 4) + "-" + dev_call_status.start_call_time.Substring(4, 2) + "-" +
+                                    dev_call_status.start_call_time.Substring(6, 2) + " " + dev_call_status.start_call_time.Substring(8, 2) + ":" +
+                                    dev_call_status.start_call_time.Substring(10, 2) + ":" + dev_call_status.start_call_time.Substring(12, 2);
+                                    string end_call_time = dev_call_status.end_call_time.Substring(0, 4) + "-" + dev_call_status.end_call_time.Substring(4, 2) + "-" +
+                                    dev_call_status.end_call_time.Substring(6, 2) + " " + dev_call_status.end_call_time.Substring(8, 2) + ":" +
+                                    dev_call_status.end_call_time.Substring(10, 2) + ":" + dev_call_status.end_call_time.Substring(12, 2);
+                                    if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
                                     {
                                         int iVal = 0;
 
                                         dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                        ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
                                     }
                                     else
                                     {
-                                        uint count = uint.Parse(sn_sub[1]) + 1;
-                                        dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
-                                        ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                        string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
+                                        string[] sn_sub = sn.Split(',');
+                                        if (sn_sub[0] != start_call_today)
+                                        {
+                                            int iVal = 0;
+
+                                            dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                            ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                        }
+                                        else
+                                        {
+                                            uint count = uint.Parse(sn_sub[1]) + 1;
+                                            dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
+                                            ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                        }
                                     }
+                                    sql_table_columns = "serial_no,uid,connect_type,start_time,end_time";
+                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" + dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'";
+                                    sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                    sql_client.modify(sql_cmd);
                                 }
-                                sql_table_columns = "serial_no,uid,connect_type,start_time,end_time";
-                                sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" + dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'";
-                                sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-                                sql_client.modify(sql_cmd);
-                            }
-                            break;
+                                break;
+                        }
                     }
                     sql_client.disconnect();
                 }
