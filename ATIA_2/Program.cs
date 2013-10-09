@@ -439,11 +439,12 @@ namespace ATIA_2
                             sql_client.modify(sql_cmd);
                             // TODO: insert information control present to sql server
                             /*
-                             * SELECT (((DATE_PART('day', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp) * 24 +
+                             * SELECT ((((DATE_PART('day', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp) * 24 +
                 DATE_PART('hour', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp)) * 60 +
                 DATE_PART('minute', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp)) * 60 +
-                DATE_PART('second', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp))/5;
+                DATE_PART('second', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp))/time_trigger_interval)*100;
                              */
+                            int time_trigger_interval = 30;
                             Power_status.Remove(find_dev_sn);
                             break;
                         case "start_call":
