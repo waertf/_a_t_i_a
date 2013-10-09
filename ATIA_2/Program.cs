@@ -438,6 +438,12 @@ namespace ATIA_2
                             sql_cmd = "UPDATE " + sql_table_columns + " SET off_time=\'" + device_off_time + "\' WHERE serial_no=\'" + dev_power_off_status.SN + "\'";
                             sql_client.modify(sql_cmd);
                             // TODO: insert information control present to sql server
+                            /*
+                             * SELECT (((DATE_PART('day', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp) * 24 +
+                DATE_PART('hour', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp)) * 60 +
+                DATE_PART('minute', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp)) * 60 +
+                DATE_PART('second', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp))/5;
+                             */
                             Power_status.Remove(find_dev_sn);
                             break;
                         case "start_call":
