@@ -437,6 +437,7 @@ namespace ATIA_2
                             sql_table_columns = "custom.turn_onoff_log";
                             sql_cmd = "UPDATE " + sql_table_columns + " SET off_time=\'" + device_off_time + "\' WHERE serial_no=\'" + dev_power_off_status.SN + "\'";
                             sql_client.modify(sql_cmd);
+                            // TODO: insert information control present to sql server
                             Power_status.Remove(find_dev_sn);
                             break;
                         case "start_call":
