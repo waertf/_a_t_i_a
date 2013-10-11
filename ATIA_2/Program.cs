@@ -13,6 +13,7 @@ using System.Collections;
 using log4net;
 using log4net.Config;
 using System.Globalization;
+using System.Data;
 
 
 namespace ATIA_2
@@ -447,12 +448,44 @@ namespace ATIA_2
                 DATE_PART('second', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp))/time_trigger_interval)*100;
                              */
                             int time_trigger_interval = 30;
-                            string date_part = @"
-SELECT ((((DATE_PART('day', '" + dev_power_off_status.power_off_time + @"'::timestamp - '" + dev_power_off_status.power_on_time + @"'::timestamp) * 24 +
-                DATE_PART('hour', '" + dev_power_off_status.power_off_time + @"'::timestamp - '" + dev_power_off_status.power_on_time + @"'::timestamp)) * 60 +
-                DATE_PART('minute', '" + dev_power_off_status.power_off_time + @"'::timestamp - '" + dev_power_off_status.power_on_time + @"'::timestamp)) * 60 +
-                DATE_PART('second', '" + dev_power_off_status.power_off_time + @"'::timestamp - '" + dev_power_off_status.power_on_time + @"'::timestamp))/"+time_trigger_interval+@")*100
-";
+                            string sql_select = @"
+                            
+                               SELECT
+  custom.turn_onoff_log.serial_no,
+  custom.turn_onoff_log.uid,
+  custom.turn_onoff_log.on_time,
+  custom.turn_onoff_log.off_time,
+  ((((DATE_PART('day', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp) * 24 +
+                DATE_PART('hour', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
+                DATE_PART('minute', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
+                DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))/30)  AS all_time_count,
+                COUNT(custom.voice_connect.uid) AS location_count,
+  (COUNT(custom.voice_connect.uid)/
+  ((((DATE_PART('day', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp) * 24 +
+                DATE_PART('hour', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
+                DATE_PART('minute', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
+                DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))/30))*100 || '%' AS location_percentage
+
+
+FROM
+  custom.voice_connect,
+  custom.turn_onoff_log
+WHERE
+  custom.voice_connect.uid = custom.turn_onoff_log.uid AND
+  custom.voice_connect.end_time > custom.turn_onoff_log.on_time AND
+  custom.voice_connect.end_time < custom.turn_onoff_log.off_time
+GROUP BY
+  custom.turn_onoff_log.serial_no,
+  custom.turn_onoff_log.uid,
+  custom.turn_onoff_log.on_time,
+  custom.turn_onoff_log.off_time,
+  (((DATE_PART('day', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp) * 24 +
+                DATE_PART('hour', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
+                DATE_PART('minute', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
+                DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))
+                                ";
+                            DataTable result = sql_client.get_DataTable(sql_select);
+
                             Power_status.Remove(find_dev_sn);
                             break;
                         case "start_call":
