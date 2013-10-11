@@ -425,6 +425,7 @@ namespace ATIA_2
                                 Console.WriteLine("Cannot fine device_id {0}", dev_power_off_status.ID);
                                 break;
                             }
+
                             //string power_off_sn = ConfigurationManager.AppSettings[dev_power_off_status.ID].ToString();
                             // string[] power_off_sn_sub = power_off_sn.Split(',');
                             //dev_power_off_status.SN = dev_power_off_status.ID + power_off_sn_sub[0] + uint.Parse(power_off_sn_sub[1]).ToString("D3");
@@ -434,6 +435,7 @@ namespace ATIA_2
                                 dev_power_off_status.power_off_time.Substring(6, 2) + " " + dev_power_off_status.power_off_time.Substring(8, 2) + ":" +
                                 dev_power_off_status.power_off_time.Substring(10, 2) + ":" + dev_power_off_status.power_off_time.Substring(12, 2);
                             dev_power_off_status.power_off_time = find_dev_sn.power_off_time = device_off_time;
+                            dev_power_off_status = find_dev_sn;
                             sql_table_columns = "custom.turn_onoff_log";
                             sql_cmd = "UPDATE " + sql_table_columns + " SET off_time=\'" + device_off_time + "\' WHERE serial_no=\'" + dev_power_off_status.SN + "\'";
                             sql_client.modify(sql_cmd);
@@ -445,6 +447,12 @@ namespace ATIA_2
                 DATE_PART('second', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp))/time_trigger_interval)*100;
                              */
                             int time_trigger_interval = 30;
+                            string date_part = @"
+SELECT ((((DATE_PART('day', '" + dev_power_off_status.power_off_time + @"'::timestamp - '" + dev_power_off_status.power_on_time + @"'::timestamp) * 24 +
+                DATE_PART('hour', '" + dev_power_off_status.power_off_time + @"'::timestamp - '" + dev_power_off_status.power_on_time + @"'::timestamp)) * 60 +
+                DATE_PART('minute', '" + dev_power_off_status.power_off_time + @"'::timestamp - '" + dev_power_off_status.power_on_time + @"'::timestamp)) * 60 +
+                DATE_PART('second', '" + dev_power_off_status.power_off_time + @"'::timestamp - '" + dev_power_off_status.power_on_time + @"'::timestamp))/"+time_trigger_interval+@")*100
+";
                             Power_status.Remove(find_dev_sn);
                             break;
                         case "start_call":

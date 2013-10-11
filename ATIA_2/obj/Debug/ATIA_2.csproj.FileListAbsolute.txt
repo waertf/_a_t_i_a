@@ -13,3 +13,6 @@ C:\Users\wavegis\Documents\atia\ATIA_2\obj\Debug\ATIA_2.pdb
 C:\Users\wavegis\Documents\atia\ATIA_2\bin\Debug\log4net.dll
 C:\Users\wavegis\Documents\atia\ATIA_2\bin\Debug\log4net.xml
 C:\Users\wavegis\Documents\atia\ATIA_2\bin\Debug\log4net.config
+C:\Users\wavegis\Documents\atia\ATIA_2\bin\Debug\Devart.Data.dll
+C:\Users\wavegis\Documents\atia\ATIA_2\bin\Debug\Devart.Data.PostgreSql.dll
+C:\Users\wavegis\Documents\atia\ATIA_2\bin\Debug\Devart.Data.PostgreSql.xml
