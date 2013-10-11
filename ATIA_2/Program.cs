@@ -483,8 +483,38 @@ GROUP BY
                 DATE_PART('hour', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
                 DATE_PART('minute', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
                 DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))
+limit 1
                                 ";
-                            DataTable result = sql_client.get_DataTable(sql_select);
+                            DataTable data_table = sql_client.get_DataTable(sql_select);
+                            sql_client.disconnect();
+
+                            if ((data_table == null) || (data_table.Rows.Count == 0))
+                            {
+                                Console.WriteLine("data_table == null");
+                            }
+                            else
+                            {
+                                Console.WriteLine("data_table != null");
+                                string ssql_insert_value = @"'" + data_table.Rows[0]["serial_no"].ToString() + @"'" +
+                                    "," + @"'" + data_table.Rows[0]["uid"].ToString() + @"'" +
+                                    "," + @"'" + data_table.Rows[0]["on_time"].ToString() + @"'" +
+                                    "," + @"'" + data_table.Rows[0]["off_time"].ToString() + @"'" +
+                                    "," + @"'" + data_table.Rows[0]["all_time_count"].ToString() + @"'" +
+                                    "," + @"'" + data_table.Rows[0]["location_count"].ToString() + @"'" +
+                                    "," + @"'" + data_table.Rows[0]["location_percentage"].ToString() + @"'";
+                                string sql_insert = @"
+INSERT INTO custom.location_control_log 
+(serial_no, uid, on_time, off_time, all_time_count, location_count, location_percentage) 
+VALUES 
+(" + ssql_insert_value + @");
+";
+                                //Console.WriteLine("[device]:" + data_table.Rows[0]["device"]);
+                                //Console.WriteLine("[longitude]:" + data_table.Rows[0]["longitude"]);
+                                //Console.WriteLine("[latitude]:" + data_table.Rows[0]["latitude"]);
+                                sql_client.connect();
+                                sql_client.modify(sql_insert);
+                                sql_client.disconnect();
+                            }
 
                             Power_status.Remove(find_dev_sn);
                             break;
