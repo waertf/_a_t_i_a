@@ -447,7 +447,7 @@ namespace ATIA_2
                 DATE_PART('minute', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp)) * 60 +
                 DATE_PART('second', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp))/time_trigger_interval)*100;
                              */
-                            int time_trigger_interval = 30;
+                            int time_trigger_interval = int.Parse(ConfigurationManager.AppSettings["time_trigger_interval"]);
                             string sql_select = @"
                             
                                SELECT
@@ -458,13 +458,13 @@ namespace ATIA_2
   ((((DATE_PART('day', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp) * 24 +
                 DATE_PART('hour', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
                 DATE_PART('minute', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
-                DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))/30)  AS all_time_count,
+                DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))/"+time_trigger_interval+@")  AS all_time_count,
                 COUNT(custom.voice_connect.uid) AS location_count,
   (COUNT(custom.voice_connect.uid)/
   ((((DATE_PART('day', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp) * 24 +
                 DATE_PART('hour', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
                 DATE_PART('minute', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
-                DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))/30))*100 || '%' AS location_percentage
+                DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))/"+time_trigger_interval+@"))*100 || '%' AS location_percentage
 
 
 FROM
