@@ -464,14 +464,16 @@ namespace ATIA_2
   ((((DATE_PART('day', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp) * 24 +
                 DATE_PART('hour', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
                 DATE_PART('minute', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
-                DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))/"+time_trigger_interval+@"))*100 || '%' AS location_percentage
+                DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))/"+time_trigger_interval+ @"))*100 || '%' AS location_percentage
 
 
 FROM
-  custom.voice_connect,
+  custom.voice_connect INNER JOIN
   custom.turn_onoff_log
+ ON
+  custom.voice_connect.uid = custom.turn_onoff_log.uid
 WHERE
-  custom.voice_connect.uid = custom.turn_onoff_log.uid AND
+  
   custom.voice_connect.end_time > custom.turn_onoff_log.on_time AND
   custom.voice_connect.end_time < custom.turn_onoff_log.off_time
 GROUP BY
