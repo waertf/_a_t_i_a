@@ -468,9 +468,9 @@ namespace ATIA_2
 
 
 FROM
-  custom.voice_connect INNER JOIN
-  custom.turn_onoff_log
- ON
+  custom.turn_onoff_log INNER JOIN
+  custom.voice_connect
+  ON
   custom.voice_connect.uid = custom.turn_onoff_log.uid
 WHERE
   
