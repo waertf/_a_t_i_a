@@ -450,7 +450,7 @@ namespace ATIA_2
                     }
                     
                     if (access_avls_server_send_timestamp_now)
-                        avls_package.Date_Time = string.Format("{0:yyMMddhhmmss}", DateTime.Now) + ",";
+                        avls_package.Date_Time = string.Format("{0:yyMMddHHmmss}", DateTime.Now) + ",";
                     else
                         avls_package.Date_Time = parse_package["timestamp"].ToString().Substring(2, 12)+",";
 
