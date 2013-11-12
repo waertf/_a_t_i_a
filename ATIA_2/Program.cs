@@ -21,7 +21,7 @@ namespace ATIA_2
     class Program
     {
         //every device has only one uid , so to use uid just fine without gid or snd_id
-
+        const bool access_avls_server_send_timestamp_now = false;
         
             //static Byte[] receiveBytes;
             //static ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
@@ -34,6 +34,65 @@ namespace ATIA_2
             private static List<Device_power_status> Power_status = new List<Device_power_status>();
             private static List<Device_call_status> Call_status = new List<Device_call_status>();
             private static string sql_table_columns = string.Empty, sql_table_column_value = string.Empty, sql_cmd = string.Empty, sql_condition = string.Empty;
+
+            // ManualResetEvent instances signal completion.
+            private static ManualResetEvent connectDone =
+                new ManualResetEvent(false);
+            private static ManualResetEvent sendDone =
+                new ManualResetEvent(false);
+            private static ManualResetEvent receiveDone =
+                new ManualResetEvent(false);
+
+            public struct AVLS_UNIT_Report_Packet
+            {
+                public string ID;
+                public string GPS_Valid;//only L or A (L->valid , A->not valid)
+                /*
+                 * The format is: 
+                Year month day hour minute second 
+                For example, the string 040315131415 means: 
+                The date is “Year 2004, March, Day 15 “ 
+                and the time is “13:14:15 ” 
+                 * */
+                public string Date_Time;
+                /*
+                 * For example, the string N2446.5321E12120.4231 means
+    “North 24 degrees 46.5321 minutes 
+    “East 121 degrees 20.4231 minutes” 
+     Or S2446.5281W01234.5678 means 
+    “South 24 degrees 46. 5281 minutes” = “South 24.7755 degrees” = “South 24 
+    degrees 46 minutes 31.69 seconds” 
+    “West 12 degrees 34.5678 minutes” = “West 12.57613 degrees” = “West 12 
+    degrees 34 minutes 34.07 seconds”
+                 * */
+                public string Loc;
+                /*
+                 * from 0 to 999
+                 * km/hr
+                 */
+                public string Speed;
+                /*
+                 the GPS direction in degrees. And this value is between 0 and 359 
+    degree. (no decimal)*/
+                public string Dir;
+                /*
+                 * The string provides the temperature in the format UNIT-sign-degrees. (Non-fixed 
+    length 0 to 999 and no decimal. 
+    For example, 
+    the string F103 means “103 degree Fahrenheit” 
+    the string C-12 means “-12 degree Celsius” 
+    If the UNIT does not include a Temperature sensor, it will report ’NA’.
+                 */
+                public string Temp;
+                /*
+                 We use eight ASCII characters to represent 32 bit binary number. Each bit represents 
+    a flag in the UNITs status register. The status string will be represented in HEX for 
+    each set of the byte. To display a four-byte string, there will be 8 digits string */
+                public string Status;//17
+                public string Event;//150
+                public string Message;
+            }
+
             enum Block_Command_Type_Values
             {
                 Flexible_Radio_Command=101,
@@ -320,7 +379,8 @@ namespace ATIA_2
                     }
                     if (bool.Parse(ConfigurationManager.AppSettings["SQL_ACCESS"]))
                         sql_access(ref parse_package);
-                    
+                    if (bool.Parse(ConfigurationManager.AppSettings["AVLS_ACCESS"]))
+                        access_avls_server(ref parse_package);
                     StringBuilder s = new StringBuilder();
                     foreach (var e in parse_package)
                         s.Append(e.Key + ":" + e.Value + Environment.NewLine);
@@ -353,6 +413,120 @@ namespace ATIA_2
                     Thread.Sleep(300);
                 }
 
+            }
+
+            private static void access_avls_server(ref SortedDictionary<string, string> parse_package)
+            {
+                TcpClient avls_tcpClient;
+                string send_string = string.Empty;
+                AVLS_UNIT_Report_Packet avls_package = new AVLS_UNIT_Report_Packet();
+                //string ipAddress = "127.0.0.1";
+                string ipAddress = ConfigurationManager.AppSettings["AVLS_SERVER_IP"];
+                //int port = 23;
+                int port = int.Parse(ConfigurationManager.AppSettings["AVLS_SERVER_PORT"]);
+
+                avls_tcpClient = new TcpClient();
+
+                //avls_tcpClient.Connect(ipAddress, port);
+                connectDone.Reset();
+                avls_tcpClient.BeginConnect(ipAddress, port, new AsyncCallback(ConnectCallback), avls_tcpClient);
+                connectDone.WaitOne();
+
+                //avls_tcpClient.NoDelay = false;
+
+                //Keeplive.keep(avls_tcpClient.Client);
+                NetworkStream netStream = avls_tcpClient.GetStream();
+
+                if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off")))
+                {
+                    switch (parse_package["result"].ToString())
+                    {
+                        case "power_on":
+                            avls_package.Event = "181,";
+                            break;
+                        case "power_off":
+                            avls_package.Event = "182,";
+                            break;
+                    }
+                    
+                    if (access_avls_server_send_timestamp_now)
+                        avls_package.Date_Time = string.Format("{0:yyMMddhhmmss}", DateTime.Now) + ",";
+                    else
+                        avls_package.Date_Time = parse_package["timestamp"].ToString().Substring(2, 12)+",";
+
+                    avls_package.ID = parse_package["source_id"].ToString() + ",";
+                    avls_package.GPS_Valid = "A,";
+                    avls_package.Loc = "N00000.0000E00000.0000,";
+                    avls_package.Speed = "0,";
+                    avls_package.Dir = "0,";
+                    avls_package.Temp = "NA,";
+                    avls_package.Status = "00000000,";
+                    avls_package.Message = "test";
+
+                }
+
+                send_string = "%%" + avls_package.ID + avls_package.GPS_Valid + avls_package.Date_Time + avls_package.Loc + avls_package.Speed + avls_package.Dir + avls_package.Temp + avls_package.Status + avls_package.Event + avls_package.Message + "\r\n";
+            
+
+                sendDone.Reset();
+                avls_WriteLine(netStream, System.Text.Encoding.Default.GetBytes(send_string), send_string);
+                sendDone.WaitOne();
+
+                //ReadLine(avls_tcpClient, netStream, send_string.Length);
+                netStream.Close();
+                avls_tcpClient.Close();
+            }
+
+            private static void avls_WriteLine(NetworkStream netStream, byte[] writeData, string write)
+            {
+                if (netStream.CanWrite)
+                {
+                    //byte[] writeData = Encoding.ASCII.GetBytes(write);
+                    try
+                    {
+
+                        Console.WriteLine("S----------------------------------------------------------------------------");
+                        Console.WriteLine("Write:\r\n" + write);
+                        Console.WriteLine("E----------------------------------------------------------------------------");
+
+                       
+                            log.Info("Write:\r\n"+write);
+                            // Close the writer and underlying file.
+                        
+
+                        //send method1
+                        //netStream.Write(writeData, 0, writeData.Length);
+                        // 需等待資料真的已寫入 NetworkStream
+                        //Thread.Sleep(3000);
+
+                        //send method2
+                        IAsyncResult result = netStream.BeginWrite(writeData, 0, writeData.Length, new AsyncCallback(avls_myWriteCallBack), netStream);
+                        result.AsyncWaitHandle.WaitOne();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("avls_WriteLineError:\r\n" + ex.Message);
+                        log.Error("avls_WriteLineError:\r\n" + ex.Message);
+                    }
+
+
+                }
+            }
+
+            public static void avls_myWriteCallBack(IAsyncResult ar)
+            {
+
+                NetworkStream myNetworkStream = (NetworkStream)ar.AsyncState;
+                myNetworkStream.EndWrite(ar);
+                sendDone.Set();
+
+            }
+
+            static void ConnectCallback(IAsyncResult ar)
+            {
+                connectDone.Set();
+                TcpClient t = (TcpClient)ar.AsyncState;
+                t.EndConnect(ar);
             }
 
             private static void sql_access(ref SortedDictionary<string, string> parse_package)
@@ -698,6 +872,8 @@ VALUES
                                 break;
                         }
                     }
+                    Console.WriteLine(sql_cmd);
+                    log.Info(sql_cmd);
                     sql_client.disconnect();
                 }
             }
@@ -1218,6 +1394,7 @@ VALUES
                     AppSettingsSection app = config.AppSettings;
                     app.Settings.Add(key, value);
                     config.Save(ConfigurationSaveMode.Modified);
+                    ConfigurationManager.RefreshSection("appSettings");
                     return true;
                 }
                 
