@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -303,8 +304,36 @@ namespace ATIA_2
                 [MarshalAs(UnmanagedType.AnsiBStr, SizeConst = 8)]
                 public string TargetAlias;//7 byte
             }
+            private static IPAddress GetLocalIPAddress()
+            {
+                foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+                {
+                    var addr = ni.GetIPProperties().GatewayAddresses.FirstOrDefault();
+                    if (addr != null && !addr.Address.Equals(new IPAddress(0x00000000)))
+                    {
+                        if (ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 || ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
+                        {
+                            //Console.WriteLine(ni.Name);
+                            //Console.WriteLine(addr.Address);
+                            foreach (UnicastIPAddressInformation ip in ni.GetIPProperties().UnicastAddresses)
+                            {
+                                if (ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                                {
+                                    //Console.WriteLine(ip.Address.ToString());
+                                    return ip.Address;
+                                }
+
+                            }
+                        }
+
+                    }
+                }
+                return null;
+            }
             static void Main(string[] args)
             {
+                Console.WriteLine(GetLocalIPAddress());//current ip address
+                Console.WriteLine(System.Environment.UserName);//current username
                 //Thread read_thread = new Thread(() => read_thread_method(tcpClient, netStream, sql_client));
                 Thread udp_server_8671 = new Thread(() => udp_server_t(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8671"]))); //(new ThreadStart(udp_server_t));
                 Thread udp_server_8601 = new Thread(() => udp_server_t(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8601"])));
@@ -570,8 +599,9 @@ namespace ATIA_2
                                     ModifyValue(dev_power_status.ID, power_on_today + "," + count.ToString("D3"));
                                 }
                             }
-                            sql_table_columns = "serial_no,uid,on_time";
-                            sql_table_column_value = "\'" + dev_power_status.SN + "\'" + "," + "\'" + dev_power_status.ID + "\'" + "," + "\'" + device_on_time + "\'";
+                            sql_table_columns = "serial_no,uid,on_time,create_user,create_ip";
+                            sql_table_column_value = "\'" + dev_power_status.SN + "\'" + "," + "\'" + dev_power_status.ID + "\'" + "," + "\'" +
+                                device_on_time + "\'" + "," + "0" + "," + "\'" +GetLocalIPAddress()+ "\'";
                             sql_cmd = "INSERT INTO custom.turn_onoff_log (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
                             sql_client.modify(sql_cmd);
                             /*
@@ -738,8 +768,9 @@ VALUES
                                 }
                             }
 
-                            sql_table_columns = "serial_no,uid,connect_type,start_time";
-                            sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" + dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'";
+                            sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip";
+                            sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
+                                dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress()+ "\'";
                             sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
                             sql_client.modify(sql_cmd);
 
@@ -820,8 +851,10 @@ VALUES
                                             ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
                                         }
                                     }
-                                    sql_table_columns = "serial_no,uid,connect_type,start_time,end_time";
-                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" + dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'";
+                                    sql_table_columns = "serial_no,uid,connect_type,start_time,end_time,create_user,create_ip";
+                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" + 
+                                        dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'"+
+                                        "," + "0" + "," + "\'" +GetLocalIPAddress()+ "\'";
                                     sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
                                     sql_client.modify(sql_cmd);
                                 }
@@ -864,8 +897,10 @@ VALUES
                                             ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
                                         }
                                     }
-                                    sql_table_columns = "serial_no,uid,connect_type,start_time,end_time";
-                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" + dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'";
+                                    sql_table_columns = "serial_no,uid,connect_type,start_time,end_time,create_user,create_ip";
+                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
+                                        dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'" +
+                                        "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'";
                                     sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
                                     sql_client.modify(sql_cmd);
                                 }
