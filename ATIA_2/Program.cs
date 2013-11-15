@@ -675,7 +675,8 @@ FROM
   custom.turn_onoff_log INNER JOIN
   custom.voice_connect
   ON
-  custom.voice_connect.uid = custom.turn_onoff_log.uid
+  custom.voice_connect.uid = " + "\'" + dev_power_off_status.ID + "\'" +//custom.turn_onoff_log.uid
+                               @"
 WHERE
   
   custom.voice_connect.end_time > custom.turn_onoff_log.on_time AND
@@ -692,6 +693,8 @@ GROUP BY
 limit 1
                                 ";
                             DataTable data_table = sql_client.get_DataTable(sql_select);
+                            Console.WriteLine(sql_select);
+                            log.Info(sql_select);
                             sql_client.disconnect();
 
                             if ((data_table == null) || (data_table.Rows.Count == 0))
@@ -714,6 +717,8 @@ INSERT INTO custom.location_control_log
 VALUES 
 (" + ssql_insert_value + @");
 ";
+                                Console.WriteLine(sql_insert);
+                                log.Info(sql_insert);
                                 //Console.WriteLine("[device]:" + data_table.Rows[0]["device"]);
                                 //Console.WriteLine("[longitude]:" + data_table.Rows[0]["longitude"]);
                                 //Console.WriteLine("[latitude]:" + data_table.Rows[0]["latitude"]);
