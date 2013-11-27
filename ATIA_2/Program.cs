@@ -1006,8 +1006,8 @@ VALUES
                                 uid = p.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
                                 snd_id = p.Skip((int)Offset_to_Target_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Target_Section_Secondary_ID).Take(snd_id.Length).Reverse().ToArray();
                                 ucn = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
-                                call_status = p[Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_status-1];
-                                reason_for_busy = p[Offset_to_Busy_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_busy_section_reason_of_busy-1];
+                                //call_status = p[Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_status-1];
+                                //reason_for_busy = p[Offset_to_Busy_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_busy_section_reason_of_busy-1];
                                 parse_timestamp(timestamp,ref  parse_package);
                                 parse_uid(uid,ref  parse_package);
                                 parse_snd_id(snd_id,ref  parse_package);
