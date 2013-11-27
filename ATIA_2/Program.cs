@@ -23,6 +23,8 @@ namespace ATIA_2
     {
         //every device has only one uid , so to use uid just fine without gid or snd_id
         const bool access_avls_server_send_timestamp_now = false;
+
+        private static object fileStreaWriteLock = new object();
         
             //static Byte[] receiveBytes;
             //static ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
@@ -357,12 +359,16 @@ namespace ATIA_2
                     Array.Copy(receiveBytes, receiveBytes_original, receiveBytes_original.Length);
                     if (bool.Parse(ConfigurationManager.AppSettings["log_raw_data"]))
                     {
-                        //using (var stream = new FileStream("raw" + c + ".txt", FileMode.Append))
-                        using (var stream = new FileStream("raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".atia", FileMode.Append))
+                        lock (fileStreaWriteLock)
                         {
-                            stream.Write(receiveBytes, 0, receiveBytes.Length);
-                            stream.Close();
+                            //using (var stream = new FileStream("raw" + c + ".txt", FileMode.Append))
+                            using (var stream = new FileStream("raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".atia", FileMode.Append))
+                            {
+                                stream.Write(receiveBytes, 0, receiveBytes.Length);
+                                stream.Close();
+                            }
                         }
+                        
                     }
 
                     if (receiveBytes.Length != BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0) + 4)
