@@ -385,15 +385,15 @@ namespace ATIA_2
                     //ConfigurationManager.RefreshSection("appSettings");
 
                     string returnData = Encoding.ASCII.GetString(receiveBytes);
-                    Console.WriteLine("receive_length=" + receiveBytes.Length);
+                    //Console.WriteLine("receive_length=" + receiveBytes.Length);
                     array_reverse_ATIA_PACKAGE_Header_and_NumOffset(ref receiveBytes);
                     ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
                     struct_header = (ATIA_PACKAGE_Header_and_NumOffset)BytesToStruct(receiveBytes, struct_header.GetType());
                     //Console.WriteLine("package lenght exclude first 4 byte :"+BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0)); 
 
                     // Uses the IPEndPoint object to determine which of these two hosts responded.
-                    Console.WriteLine("This is the message you received :" +
-                                                 returnData.ToString());
+                    //Console.WriteLine("This is the message you received :" +
+                                                 //returnData.ToString());
                     parse_header_and_numoffset_package(struct_header, ref parse_package);
 
                     parse_data_section(receiveBytes.Skip(4).ToArray(), ref parse_package);//skip first 4 package_length byte
@@ -417,30 +417,34 @@ namespace ATIA_2
                         sql_access(ref parse_package);
                     if (bool.Parse(ConfigurationManager.AppSettings["AVLS_ACCESS"]))
                         access_avls_server(ref parse_package);
-                    StringBuilder s = new StringBuilder();
-                    foreach (var e in parse_package)
-                        s.Append(e.Key + ":" + e.Value + Environment.NewLine);
-                    //s.Append(Environment.NewLine);
-                    Console.WriteLine("####################################################");
-                    /*
-                    using (StreamWriter w = File.AppendText("log.txt"))
+                    if (parse_package.Count != 0)
                     {
-                        //string raw_data_without_first_4_byte = ByteToHexBitFiddle(receiveBytes_original.Skip(4).ToArray());
-                        //Log("raw:" + raw_data_without_first_4_byte+Environment.NewLine+s.ToString(), w);
-                        Log(Environment.NewLine + s.ToString(), w);
-                        Console.WriteLine(s.ToString());
+                        StringBuilder s = new StringBuilder();
+                        foreach (var e in parse_package)
+                            s.Append(e.Key + ":" + e.Value + Environment.NewLine);
+                        //s.Append(Environment.NewLine);
+                        Console.WriteLine("####################################################");
+                        /*
+                        using (StreamWriter w = File.AppendText("log.txt"))
+                        {
+                            //string raw_data_without_first_4_byte = ByteToHexBitFiddle(receiveBytes_original.Skip(4).ToArray());
+                            //Log("raw:" + raw_data_without_first_4_byte+Environment.NewLine+s.ToString(), w);
+                            Log(Environment.NewLine + s.ToString(), w);
+                            Console.WriteLine(s.ToString());
+                        }
+                         * */
+                        try
+                        {
+                            log.Info(s.ToString());
+                            Console.WriteLine(s.ToString());
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error(ex.Message);
+                        }
+                        Console.WriteLine("####################################################");
                     }
-                     * */
-                    try
-                    {
-                        log.Info(s.ToString());
-                        Console.WriteLine(s.ToString());
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Error(ex.Message);
-                    }
-                    Console.WriteLine("####################################################");
+
 
                     
 
