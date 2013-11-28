@@ -644,7 +644,8 @@ namespace ATIA_2
                             }
                             else
                             {
-                                Console.WriteLine("Cannot fine device_id {0}", dev_power_off_status.ID);
+                                Console.WriteLine("power_off:Cannot fine device_id {0}", dev_power_off_status.ID);
+                                log.Info("power_off:Cannot fine device_id "+dev_power_off_status.ID);
                                 break;
                             }
 
@@ -814,7 +815,8 @@ VALUES
                             }
                             else
                             {
-                                Console.WriteLine("Cannot fine device_id {0}", dev_call_off_status.ID);
+                                Console.WriteLine("end_call:Cannot fine device_id {0}", dev_call_off_status.ID);
+                                log.Info("end_call:Cannot fine device_id "+dev_call_off_status.ID);
                                 break;
                             }
                             //string power_off_sn = ConfigurationManager.AppSettings[dev_power_off_status.ID].ToString();
