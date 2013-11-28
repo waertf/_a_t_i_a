@@ -336,6 +336,7 @@ namespace ATIA_2
             {
                 Console.WriteLine(GetLocalIPAddress());//current ip address
                 Console.WriteLine(System.Environment.UserName);//current username
+                Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 //Thread read_thread = new Thread(() => read_thread_method(tcpClient, netStream, sql_client));
                 Thread udp_server_8671 = new Thread(() => udp_server_t(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8671"]))); //(new ThreadStart(udp_server_t));
                 Thread udp_server_8601 = new Thread(() => udp_server_t(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8601"])));
@@ -452,64 +453,70 @@ namespace ATIA_2
 
             private static void access_avls_server(ref SortedDictionary<string, string> parse_package)
             {
-                TcpClient avls_tcpClient;
-                string send_string = string.Empty;
-                AVLS_UNIT_Report_Packet avls_package = new AVLS_UNIT_Report_Packet();
-                //string ipAddress = "127.0.0.1";
-                string ipAddress = ConfigurationManager.AppSettings["AVLS_SERVER_IP"];
-                //int port = 23;
-                int port = int.Parse(ConfigurationManager.AppSettings["AVLS_SERVER_PORT"]);
-
-                avls_tcpClient = new TcpClient();
-
-                //avls_tcpClient.Connect(ipAddress, port);
-                connectDone.Reset();
-                avls_tcpClient.BeginConnect(ipAddress, port, new AsyncCallback(ConnectCallback), avls_tcpClient);
-                connectDone.WaitOne();
-
-                //avls_tcpClient.NoDelay = false;
-
-                //Keeplive.keep(avls_tcpClient.Client);
-                NetworkStream netStream = avls_tcpClient.GetStream();
-
-                if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off")))
+                if (parse_package.ContainsKey("result") &&
+                    (parse_package["result"].ToString().Equals("power_on") ||
+                     parse_package["result"].ToString().Equals("power_off")))
                 {
-                    switch (parse_package["result"].ToString())
-                    {
-                        case "power_on":
-                            avls_package.Event = "181,";
-                            break;
-                        case "power_off":
-                            avls_package.Event = "182,";
-                            break;
-                    }
-                    
-                    if (access_avls_server_send_timestamp_now)
-                        avls_package.Date_Time = string.Format("{0:yyMMddHHmmss}", DateTime.Now) + ",";
-                    else
-                        avls_package.Date_Time = parse_package["timestamp"].ToString().Substring(2, 12)+",";
+                    TcpClient avls_tcpClient;
+                    string send_string = string.Empty;
+                    AVLS_UNIT_Report_Packet avls_package = new AVLS_UNIT_Report_Packet();
+                    //string ipAddress = "127.0.0.1";
+                    string ipAddress = ConfigurationManager.AppSettings["AVLS_SERVER_IP"];
+                    //int port = 23;
+                    int port = int.Parse(ConfigurationManager.AppSettings["AVLS_SERVER_PORT"]);
 
-                    avls_package.ID = parse_package["source_id"].ToString() + ",";
-                    avls_package.GPS_Valid = "A,";
-                    avls_package.Loc = "N00000.0000E00000.0000,";
-                    avls_package.Speed = "0,";
-                    avls_package.Dir = "0,";
-                    avls_package.Temp = "NA,";
-                    avls_package.Status = "00000000,";
-                    avls_package.Message = "test";
+                    avls_tcpClient = new TcpClient();
 
+                    //avls_tcpClient.Connect(ipAddress, port);
+                    connectDone.Reset();
+                    avls_tcpClient.BeginConnect(ipAddress, port, new AsyncCallback(ConnectCallback), avls_tcpClient);
+                    connectDone.WaitOne();
+
+                    //avls_tcpClient.NoDelay = false;
+
+                    //Keeplive.keep(avls_tcpClient.Client);
+                    NetworkStream netStream = avls_tcpClient.GetStream();
+
+                    //if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off")))
+                    //{
+                        switch (parse_package["result"].ToString())
+                        {
+                            case "power_on":
+                                avls_package.Event = "181,";
+                                break;
+                            case "power_off":
+                                avls_package.Event = "182,";
+                                break;
+                        }
+
+                        if (access_avls_server_send_timestamp_now)
+                            avls_package.Date_Time = string.Format("{0:yyMMddHHmmss}", DateTime.Now) + ",";
+                        else
+                            avls_package.Date_Time = parse_package["timestamp"].ToString().Substring(2, 12) + ",";
+
+                        avls_package.ID = parse_package["source_id"].ToString() + ",";
+                        avls_package.GPS_Valid = "A,";
+                        avls_package.Loc = "N00000.0000E00000.0000,";
+                        avls_package.Speed = "0,";
+                        avls_package.Dir = "0,";
+                        avls_package.Temp = "NA,";
+                        avls_package.Status = "00000000,";
+                        avls_package.Message = "test";
+
+                    //}
+
+                    send_string = "%%" + avls_package.ID + avls_package.GPS_Valid + avls_package.Date_Time + avls_package.Loc + avls_package.Speed + avls_package.Dir + avls_package.Temp + avls_package.Status + avls_package.Event + avls_package.Message + "\r\n";
+
+
+                    sendDone.Reset();
+                    avls_WriteLine(netStream, System.Text.Encoding.Default.GetBytes(send_string), send_string);
+                    sendDone.WaitOne();
+
+                    //ReadLine(avls_tcpClient, netStream, send_string.Length);
+                    netStream.Close();
+                    avls_tcpClient.Close();
                 }
-
-                send_string = "%%" + avls_package.ID + avls_package.GPS_Valid + avls_package.Date_Time + avls_package.Loc + avls_package.Speed + avls_package.Dir + avls_package.Temp + avls_package.Status + avls_package.Event + avls_package.Message + "\r\n";
-            
-
-                sendDone.Reset();
-                avls_WriteLine(netStream, System.Text.Encoding.Default.GetBytes(send_string), send_string);
-                sendDone.WaitOne();
-
-                //ReadLine(avls_tcpClient, netStream, send_string.Length);
-                netStream.Close();
-                avls_tcpClient.Close();
+                
             }
 
             private static void avls_WriteLine(NetworkStream netStream, byte[] writeData, string write)
