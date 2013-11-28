@@ -336,7 +336,7 @@ namespace ATIA_2
             {
                 Console.WriteLine(GetLocalIPAddress());//current ip address
                 Console.WriteLine(System.Environment.UserName);//current username
-                Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                Console.WriteLine(DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
                 //Thread read_thread = new Thread(() => read_thread_method(tcpClient, netStream, sql_client));
                 Thread udp_server_8671 = new Thread(() => udp_server_t(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8671"]))); //(new ThreadStart(udp_server_t));
                 Thread udp_server_8601 = new Thread(() => udp_server_t(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8601"])));
@@ -497,6 +497,9 @@ namespace ATIA_2
                             avls_package.Date_Time = string.Format("{0:yyMMddHHmmss}", DateTime.Now) + ",";
                         else
                             avls_package.Date_Time = parse_package["timestamp"].ToString().Substring(2, 12) + ",";
+                    DateTime tempDatetime = DateTime.ParseExact(avls_package.Date_Time, "yyMMddHHmmss", null);
+                    tempDatetime = tempDatetime.ToUniversalTime();
+                    avls_package.Date_Time=tempDatetime.ToString("yyMMddHHmmss");
 
                         avls_package.ID = parse_package["source_id"].ToString() + ",";
                         avls_package.GPS_Valid = "A,";
