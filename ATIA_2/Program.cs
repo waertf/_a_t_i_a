@@ -337,6 +337,10 @@ namespace ATIA_2
                 Console.WriteLine(GetLocalIPAddress());//current ip address
                 Console.WriteLine(System.Environment.UserName);//current username
                 Console.WriteLine(DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
+                DateTime test = DateTime.Now;
+                string test1 = test.ToString("yyyyMMddHHmmss").Substring(2, 12);
+                DateTime tempDatetime = DateTime.ParseExact(test1, "yyMMddHHmmss", null);
+                tempDatetime = tempDatetime.ToUniversalTime();
                 //Thread read_thread = new Thread(() => read_thread_method(tcpClient, netStream, sql_client));
                 Thread udp_server_8671 = new Thread(() => udp_server_t(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8671"]))); //(new ThreadStart(udp_server_t));
                 Thread udp_server_8601 = new Thread(() => udp_server_t(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8601"])));
@@ -496,13 +500,27 @@ namespace ATIA_2
                         if (access_avls_server_send_timestamp_now)
                             avls_package.Date_Time = string.Format("{0:yyMMddHHmmss}", DateTime.Now) + ",";
                         else
-                            avls_package.Date_Time = parse_package["timestamp"].ToString().Substring(2, 12) + ",";
-                    DateTime tempDatetime = DateTime.ParseExact(avls_package.Date_Time, "yyMMddHHmmss", null);
+                            avls_package.Date_Time = parse_package["timestamp"].ToString().Substring(2, 12) ;
+                        //log.Info("avls_package.Date_Time=" + avls_package.Date_Time);
+                        DateTime tempDatetime = DateTime.ParseExact(avls_package.Date_Time, "yyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture);
                     tempDatetime = tempDatetime.ToUniversalTime();
-                    avls_package.Date_Time=tempDatetime.ToString("yyMMddHHmmss");
+                    avls_package.Date_Time = tempDatetime.ToString("yyMMddHHmmss") + ",";
 
                         avls_package.ID = parse_package["source_id"].ToString() + ",";
                         avls_package.GPS_Valid = "A,";
+                        /*
+                         * SELECT 
+      public._gps_log._lat,
+      public._gps_log._lon
+    FROM
+      public._gps_log
+    WHERE
+      public._gps_log._time < now() AND 
+      public._gps_log._uid = 'avls_package.ID'
+    ORDER BY
+      public._gps_log._time DESC
+    LIMIT 1
+                         */
                         avls_package.Loc = "N00000.0000E00000.0000,";
                         avls_package.Speed = "0,";
                         avls_package.Dir = "0,";
