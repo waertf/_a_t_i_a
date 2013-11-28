@@ -362,18 +362,24 @@ namespace ATIA_2
                     byte[] receiveBytes_original = new byte[receiveBytes.Length];
                     SortedDictionary<string, string> parse_package = new SortedDictionary<string, string>();
                     Array.Copy(receiveBytes, receiveBytes_original, receiveBytes_original.Length);
-                    if (bool.Parse(ConfigurationManager.AppSettings["log_raw_data"]))
+                    lock (fileStreaWriteLock)
                     {
-                        lock (fileStreaWriteLock)
+                        if (bool.Parse(ConfigurationManager.AppSettings["log_raw_data"]))
                         {
+
                             //using (var stream = new FileStream("raw" + c + ".txt", FileMode.Append))
-                            using (var stream = new FileStream("raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".atia", FileMode.Append))
+                            using (
+                                var stream =
+                                    new FileStream(
+                                        "raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".atia",
+                                        FileMode.Append))
                             {
                                 stream.Write(receiveBytes, 0, receiveBytes.Length);
                                 stream.Close();
                             }
+
+
                         }
-                        
                     }
 
                     if (receiveBytes.Length != BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0) + 4)
