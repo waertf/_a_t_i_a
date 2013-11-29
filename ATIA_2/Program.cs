@@ -702,8 +702,10 @@ LIMIT 1";
                                     {
                                         sn = row[0].ToString();
                                     }
-                                    string yyyyMMdd = sn.Substring(sn.Length, 8);
-                                    string count = sn.Substring(sn.Length + 8, 3);
+                                    log.Info(sn.Length);
+                                    int snLength = sn.Length;
+                                    string yyyyMMdd = sn.Substring(snLength, 8);
+                                    string count = sn.Substring(snLength + 8, 3);
                                     if (power_on_today.Equals(yyyyMMdd))
                                     {
                                         uint addCount = (uint.Parse(count) + 1);
@@ -932,8 +934,11 @@ LIMIT 1";
                                     {
                                         sn = row[0].ToString();
                                     }
-                                    string yyyyMMdd = sn.Substring(sn.Length, 8);
-                                    string count = sn.Substring(sn.Length + 8, 5);
+                                    log.Info(sn.Length);
+                                    int snLength = sn.Length;
+                                    string yyyyMMdd = sn.Substring(snLength, 8);
+                                    string count = sn.Substring(snLength + 8, 5);
+
                                     if (start_call_today.Equals(yyyyMMdd))
                                     {
                                         uint addCount = (uint.Parse(count) + 1);
@@ -1074,8 +1079,10 @@ LIMIT 1";
                                             {
                                                 sn = row[0].ToString();
                                             }
-                                            string yyyyMMdd = sn.Substring(sn.Length, 8);
-                                            string count = sn.Substring(sn.Length + 8, 5);
+                                            log.Info(sn.Length);
+                                            int snLength = sn.Length;
+                                            string yyyyMMdd = sn.Substring(snLength, 8);
+                                            string count = sn.Substring(snLength + 8, 5);
                                             if (start_call_today.Equals(yyyyMMdd))
                                             {
                                                 uint addCount = (uint.Parse(count) + 1);
@@ -1177,8 +1184,10 @@ LIMIT 1";
                                             {
                                                 sn = row[0].ToString();
                                             }
-                                            string yyyyMMdd = sn.Substring(sn.Length, 8);
-                                            string count = sn.Substring(sn.Length + 8, 5);
+                                            log.Info(sn.Length);
+                                            int snLength = sn.Length;
+                                            string yyyyMMdd = sn.Substring(snLength, 8);
+                                            string count = sn.Substring(snLength + 8, 5);
                                             if (start_call_today.Equals(yyyyMMdd))
                                             {
                                                 uint addCount = (uint.Parse(count) + 1);
