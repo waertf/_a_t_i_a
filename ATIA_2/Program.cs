@@ -672,34 +672,90 @@ LIMIT 1";
                                 dev_power_status.power_on_time.Substring(10, 2) + ":" + dev_power_status.power_on_time.Substring(12, 2);
                             dev_power_status.power_on_time = device_on_time;
                             string power_on_today = DateTime.Now.ToString("yyyyMMdd");
-                            if (AddValue(dev_power_status.ID, power_on_today + "," + "000"))
+                            /*SELECT 
+  custom.turn_onoff_log.serial_no
+FROM
+  custom.turn_onoff_log
+WHERE
+  custom.turn_onoff_log.uid = '910000'
+ORDER BY
+  custom.turn_onoff_log.create_time DESC
+LIMIT 1
+                             */
+                            if (true)
                             {
-                                int iVal = 0;
+                                string sn = string.Empty;
+                                sql_cmd = @"SELECT 
+  custom.turn_onoff_log.serial_no
+FROM
+  custom.turn_onoff_log
+WHERE
+  custom.turn_onoff_log.uid = '" + dev_power_status.ID + @"'
+ORDER BY
+  custom.turn_onoff_log.create_time DESC
+LIMIT 1";
+                                var dt = sql_client.get_DataTable(sql_cmd);
+                                sql_client.disconnect();
+                                if (dt != null && dt.Rows.Count != 0)
+                                {
+                                    foreach (DataRow row in dt.Rows)
+                                    {
+                                        sn = row[0].ToString();
+                                    }
+                                    string yyyyMMdd = sn.Substring(sn.Length, 8);
+                                    string count = sn.Substring(sn.Length + 8, 3);
+                                    if (power_on_today.Equals(yyyyMMdd))
+                                    {
+                                        uint addCount = (uint.Parse(count) + 1);
+                                        dev_power_status.SN = dev_power_status.ID + power_on_today + addCount.ToString("D3");
+                                    }
+                                    else
+                                    {
+                                        int iVal = 0;
 
-                                dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
-                            }
-                            else
-                            {
-                                string sn = ConfigurationManager.AppSettings[dev_power_status.ID].ToString();
-                                string[] sn_sub = sn.Split(',');
-                                if (sn_sub[0] != power_on_today)
+                                        dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
+                                    }
+                                }
+                                else
                                 {
                                     int iVal = 0;
 
                                     dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
-                                    ModifyValue(dev_power_status.ID, power_on_today + "," + "000");
+                                }
+                            }
+                            else
+                            {
+                                if (AddValue(dev_power_status.ID, power_on_today + "," + "000"))
+                                {
+                                    int iVal = 0;
+
+                                    dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
                                 }
                                 else
                                 {
-                                    uint count = uint.Parse(sn_sub[1]) + 1;
-                                    dev_power_status.SN = dev_power_status.ID + power_on_today + count.ToString("D3");
-                                    ModifyValue(dev_power_status.ID, power_on_today + "," + count.ToString("D3"));
+                                    string sn = ConfigurationManager.AppSettings[dev_power_status.ID].ToString();
+                                    string[] sn_sub = sn.Split(',');
+                                    if (sn_sub[0] != power_on_today)
+                                    {
+                                        int iVal = 0;
+
+                                        dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
+                                        ModifyValue(dev_power_status.ID, power_on_today + "," + "000");
+                                    }
+                                    else
+                                    {
+                                        uint count = uint.Parse(sn_sub[1]) + 1;
+                                        dev_power_status.SN = dev_power_status.ID + power_on_today + count.ToString("D3");
+                                        ModifyValue(dev_power_status.ID, power_on_today + "," + count.ToString("D3"));
+                                    }
                                 }
                             }
+                            
                             sql_table_columns = "serial_no,uid,on_time,create_user,create_ip";
                             sql_table_column_value = "\'" + dev_power_status.SN + "\'" + "," + "\'" + dev_power_status.ID + "\'" + "," + "\'" +
                                 device_on_time + "\'" + "," + "0" + "," + "\'" +GetLocalIPAddress()+ "\'";
                             sql_cmd = "INSERT INTO custom.turn_onoff_log (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                            sql_client.connect();
                             sql_client.modify(sql_cmd);
                             /*
                             int iVal = 1;
@@ -845,36 +901,92 @@ VALUES
                                     dev_call_status.call_type="1";
                                     break; 
                             }
-
-                            if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
+                            /*SELECT 
+  custom.voice_connect.serial_no
+FROM
+  custom.voice_connect
+WHERE
+  custom.voice_connect.connect_type = '3' AND 
+  custom.voice_connect.uid = '930000'
+ORDER BY
+  custom.voice_connect.create_time DESC
+LIMIT 1*/
+                            if (true)
                             {
-                                int iVal = 0;
+                                string sn = string.Empty;
+                                sql_cmd = @"SELECT 
+  custom.voice_connect.serial_no
+FROM
+  custom.voice_connect
+WHERE
+  custom.voice_connect.connect_type = '"+dev_call_status.call_type+@"' AND 
+  custom.voice_connect.uid = '"+dev_call_status.ID+@"'
+ORDER BY
+  custom.voice_connect.create_time DESC
+LIMIT 1";
+                                var dt = sql_client.get_DataTable(sql_cmd);
+                                sql_client.disconnect();
+                                if (dt != null && dt.Rows.Count != 0)
+                                {
+                                    foreach (DataRow row in dt.Rows)
+                                    {
+                                        sn = row[0].ToString();
+                                    }
+                                    string yyyyMMdd = sn.Substring(sn.Length, 8);
+                                    string count = sn.Substring(sn.Length + 8, 5);
+                                    if (start_call_today.Equals(yyyyMMdd))
+                                    {
+                                        uint addCount = (uint.Parse(count) + 1);
+                                        dev_call_status.SN = dev_call_status.ID + start_call_today + addCount.ToString("D5");
+                                    }
+                                    else
+                                    {
+                                        int iVal = 0;
 
-                                dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                            }
-                            else
-                            {
-                                string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
-                                string[] sn_sub = sn.Split(',');
-                                if (sn_sub[0] != start_call_today)
+                                        dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                    }
+                                }
+                                else
                                 {
                                     int iVal = 0;
 
                                     dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                    ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                }
+                            }
+                            else
+                            {
+                                if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
+                                {
+                                    int iVal = 0;
+
+                                    dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
                                 }
                                 else
                                 {
-                                    uint count = uint.Parse(sn_sub[1]) + 1;
-                                    dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
-                                    ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                    string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
+                                    string[] sn_sub = sn.Split(',');
+                                    if (sn_sub[0] != start_call_today)
+                                    {
+                                        int iVal = 0;
+
+                                        dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                        ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                    }
+                                    else
+                                    {
+                                        uint count = uint.Parse(sn_sub[1]) + 1;
+                                        dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
+                                        ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                    }
                                 }
                             }
+                            
 
                             sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip";
                             sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
                                 dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress()+ "\'";
                             sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                            sql_client.connect();
                             sql_client.modify(sql_cmd);
 
                             Call_status.Add(dev_call_status);
@@ -931,35 +1043,92 @@ VALUES
                                     string end_call_time = dev_call_status.end_call_time.Substring(0, 4) + "-" + dev_call_status.end_call_time.Substring(4, 2) + "-" +
                                     dev_call_status.end_call_time.Substring(6, 2) + " " + dev_call_status.end_call_time.Substring(8, 2) + ":" +
                                     dev_call_status.end_call_time.Substring(10, 2) + ":" + dev_call_status.end_call_time.Substring(12, 2);
-                                    if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
+                                    /*SELECT 
+custom.voice_connect.serial_no
+FROM
+custom.voice_connect
+WHERE
+custom.voice_connect.connect_type = '3' AND 
+custom.voice_connect.uid = '930000'
+ORDER BY
+custom.voice_connect.create_time DESC
+LIMIT 1*/
+                                    if (true)
                                     {
-                                        int iVal = 0;
+                                        string sn = string.Empty;
+                                        sql_cmd = @"SELECT 
+  custom.voice_connect.serial_no
+FROM
+  custom.voice_connect
+WHERE
+  custom.voice_connect.connect_type = '" + dev_call_status.call_type + @"' AND 
+  custom.voice_connect.uid = '" + dev_call_status.ID + @"'
+ORDER BY
+  custom.voice_connect.create_time DESC
+LIMIT 1";
+                                        var dt = sql_client.get_DataTable(sql_cmd);
+                                        sql_client.disconnect();
+                                        if (dt != null && dt.Rows.Count != 0)
+                                        {
+                                            foreach (DataRow row in dt.Rows)
+                                            {
+                                                sn = row[0].ToString();
+                                            }
+                                            string yyyyMMdd = sn.Substring(sn.Length, 8);
+                                            string count = sn.Substring(sn.Length + 8, 5);
+                                            if (start_call_today.Equals(yyyyMMdd))
+                                            {
+                                                uint addCount = (uint.Parse(count) + 1);
+                                                dev_call_status.SN = dev_call_status.ID + start_call_today + addCount.ToString("D5");
+                                            }
+                                            else
+                                            {
+                                                int iVal = 0;
 
-                                        dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                    }
-                                    else
-                                    {
-                                        string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
-                                        string[] sn_sub = sn.Split(',');
-                                        if (sn_sub[0] != start_call_today)
+                                                dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                            }
+                                        }
+                                        else
                                         {
                                             int iVal = 0;
 
                                             dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                            ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
+                                        {
+                                            int iVal = 0;
+
+                                            dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
                                         }
                                         else
                                         {
-                                            uint count = uint.Parse(sn_sub[1]) + 1;
-                                            dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
-                                            ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                            string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
+                                            string[] sn_sub = sn.Split(',');
+                                            if (sn_sub[0] != start_call_today)
+                                            {
+                                                int iVal = 0;
+
+                                                dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                                ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                            }
+                                            else
+                                            {
+                                                uint count = uint.Parse(sn_sub[1]) + 1;
+                                                dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
+                                                ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                            }
                                         }
                                     }
+                                    
                                     sql_table_columns = "serial_no,uid,connect_type,start_time,end_time,create_user,create_ip";
                                     sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" + 
                                         dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'"+
                                         "," + "0" + "," + "\'" +GetLocalIPAddress()+ "\'";
                                     sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                    sql_client.connect();
                                     sql_client.modify(sql_cmd);
                                 }
                                 break;
@@ -977,35 +1146,92 @@ VALUES
                                     string end_call_time = dev_call_status.end_call_time.Substring(0, 4) + "-" + dev_call_status.end_call_time.Substring(4, 2) + "-" +
                                     dev_call_status.end_call_time.Substring(6, 2) + " " + dev_call_status.end_call_time.Substring(8, 2) + ":" +
                                     dev_call_status.end_call_time.Substring(10, 2) + ":" + dev_call_status.end_call_time.Substring(12, 2);
-                                    if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
+                                    /*SELECT 
+custom.voice_connect.serial_no
+FROM
+custom.voice_connect
+WHERE
+custom.voice_connect.connect_type = '3' AND 
+custom.voice_connect.uid = '930000'
+ORDER BY
+custom.voice_connect.create_time DESC
+LIMIT 1*/
+                                    if (true)
                                     {
-                                        int iVal = 0;
+                                        string sn = string.Empty;
+                                        sql_cmd = @"SELECT 
+  custom.voice_connect.serial_no
+FROM
+  custom.voice_connect
+WHERE
+  custom.voice_connect.connect_type = '" + dev_call_status.call_type + @"' AND 
+  custom.voice_connect.uid = '" + dev_call_status.ID + @"'
+ORDER BY
+  custom.voice_connect.create_time DESC
+LIMIT 1";
+                                        var dt = sql_client.get_DataTable(sql_cmd);
+                                        sql_client.disconnect();
+                                        if (dt != null && dt.Rows.Count != 0)
+                                        {
+                                            foreach (DataRow row in dt.Rows)
+                                            {
+                                                sn = row[0].ToString();
+                                            }
+                                            string yyyyMMdd = sn.Substring(sn.Length, 8);
+                                            string count = sn.Substring(sn.Length + 8, 5);
+                                            if (start_call_today.Equals(yyyyMMdd))
+                                            {
+                                                uint addCount = (uint.Parse(count) + 1);
+                                                dev_call_status.SN = dev_call_status.ID + start_call_today + addCount.ToString("D5");
+                                            }
+                                            else
+                                            {
+                                                int iVal = 0;
 
-                                        dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                    }
-                                    else
-                                    {
-                                        string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
-                                        string[] sn_sub = sn.Split(',');
-                                        if (sn_sub[0] != start_call_today)
+                                                dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                            }
+                                        }
+                                        else
                                         {
                                             int iVal = 0;
 
                                             dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                            ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
+                                        {
+                                            int iVal = 0;
+
+                                            dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
                                         }
                                         else
                                         {
-                                            uint count = uint.Parse(sn_sub[1]) + 1;
-                                            dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
-                                            ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                            string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
+                                            string[] sn_sub = sn.Split(',');
+                                            if (sn_sub[0] != start_call_today)
+                                            {
+                                                int iVal = 0;
+
+                                                dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                                ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                            }
+                                            else
+                                            {
+                                                uint count = uint.Parse(sn_sub[1]) + 1;
+                                                dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
+                                                ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                            }
                                         }
                                     }
+                                    
                                     sql_table_columns = "serial_no,uid,connect_type,start_time,end_time,create_user,create_ip";
                                     sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
                                         dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'" +
                                         "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'";
                                     sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                    sql_client.connect();
                                     sql_client.modify(sql_cmd);
                                 }
                                 break;
