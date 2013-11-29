@@ -23,6 +23,7 @@ namespace ATIA_2
     {
         //every device has only one uid , so to use uid just fine without gid or snd_id
         const bool access_avls_server_send_timestamp_now = false;
+        private const bool avlsGetLastLocation = true;
 
         private static object fileStreaWriteLock = new object();
         
@@ -529,7 +530,48 @@ namespace ATIA_2
       public._gps_log._time DESC
     LIMIT 1
                          */
+                    if (avlsGetLastLocation)
+                    {
+                        var avlsSqlClient = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
+                        string avlsSqlCmd = @"SELECT 
+  public._gps_log._lat,
+  public._gps_log._lon
+FROM
+  public._gps_log
+WHERE
+  public._gps_log._time < now() AND 
+  public._gps_log._uid = '" + avls_package.ID + @"'
+ORDER BY
+  public._gps_log._time DESC
+LIMIT 1";
+                        avlsSqlClient.connect();
+                        var dt = avlsSqlClient.get_DataTable(avlsSqlCmd);
+                        avlsSqlClient.disconnect();
+                        if (dt != null && dt.Rows.Count != 0)
+                        {
+                            string avlsLat = string.Empty, avlsLon = string.Empty;
+                            foreach (DataRow row in dt.Rows)
+                            {
+                                avlsLat = row[0].ToString();
+                                avlsLon = row[1].ToString();
+                            }
+                            GeoAngle lat_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLat));
+                            GeoAngle long_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLon));
+                            string lat_str = lat_value.Degrees.ToString() + lat_value.Minutes.ToString("D2") + "." + lat_value.Seconds.ToString("D2") + lat_value.Milliseconds.ToString("D3");
+                            string long_str = long_value.Degrees.ToString() + long_value.Minutes.ToString("D2") + "." + long_value.Seconds.ToString("D2") + long_value.Milliseconds.ToString("D3");
+                            //avls_package.Loc = "N" + (Convert.ToDouble(htable["lat_value"])*100).ToString() + "E" + (Convert.ToDouble(htable["long_value"])*100).ToString()+ ",";
+                            avls_package.Loc = "N" + lat_str + "E" + long_str + ",";
+                        }
+                        else
+                        {
+                            avls_package.Loc = "N00000.0000E00000.0000,";
+                        }
+                    }
+                    else
+                    {
                         avls_package.Loc = "N00000.0000E00000.0000,";
+                    }
+                        
                         avls_package.Speed = "0,";
                         avls_package.Dir = "0,";
                         avls_package.Temp = "NA,";
@@ -1526,5 +1568,90 @@ VALUES
         public string start_call_time { get; set; }
         public string end_call_time { get; set; }
 
+    }
+    public class GeoAngle
+    {
+        public bool IsNegative { get; set; }
+        public int Degrees { get; set; }
+        public int Minutes { get; set; }
+        public int Seconds { get; set; }
+        public int Milliseconds { get; set; }
+
+
+
+        public static GeoAngle FromDouble(decimal angleInDegrees)
+        {
+            //ensure the value will fall within the primary range [-180.0..+180.0]
+            while (angleInDegrees < -180.0m)
+                angleInDegrees += 360.0m;
+
+            while (angleInDegrees > 180.0m)
+                angleInDegrees -= 360.0m;
+
+            var result = new GeoAngle();
+
+            //switch the value to positive
+            result.IsNegative = angleInDegrees < 0;
+            angleInDegrees = Math.Abs(angleInDegrees);
+
+            //gets the degree
+            result.Degrees = (int)Math.Floor(angleInDegrees);
+            var delta = angleInDegrees - result.Degrees;
+
+            //gets minutes and seconds
+            var seconds = (int)Math.Floor(3600.0m * delta);
+            result.Seconds = seconds % 60;
+            result.Minutes = (int)Math.Floor(seconds / 60.0);
+            delta = delta * 3600.0m - seconds;
+
+            //gets fractions
+            result.Milliseconds = (int)(1000.0m * delta);
+
+            return result;
+        }
+
+
+
+        public override string ToString()
+        {
+            var degrees = this.IsNegative
+                ? -this.Degrees
+                : this.Degrees;
+
+            return string.Format(
+                "{0}° {1:00}' {2:00}\"",
+                degrees,
+                this.Minutes,
+                this.Seconds);
+        }
+
+
+
+        public string ToString(string format)
+        {
+            switch (format)
+            {
+                case "NS":
+                    return string.Format(
+                        "{0}° {1:00}' {2:00}\".{3:000} {4}",
+                        this.Degrees,
+                        this.Minutes,
+                        this.Seconds,
+                        this.Milliseconds,
+                        this.IsNegative ? 'S' : 'N');
+
+                case "WE":
+                    return string.Format(
+                        "{0}° {1:00}' {2:00}\".{3:000} {4}",
+                        this.Degrees,
+                        this.Minutes,
+                        this.Seconds,
+                        this.Milliseconds,
+                        this.IsNegative ? 'W' : 'E');
+
+                default:
+                    throw new NotImplementedException();
+            }
+        }
     }
 }
