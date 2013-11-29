@@ -362,6 +362,7 @@ namespace ATIA_2
                     byte[] receiveBytes_original = new byte[receiveBytes.Length];
                     SortedDictionary<string, string> parse_package = new SortedDictionary<string, string>();
                     Array.Copy(receiveBytes, receiveBytes_original, receiveBytes_original.Length);
+                    /*
                     lock (fileStreaWriteLock)
                     {
                         if (bool.Parse(ConfigurationManager.AppSettings["log_raw_data"]))
@@ -381,6 +382,7 @@ namespace ATIA_2
 
                         }
                     }
+                     * */
 
                     if (receiveBytes.Length != BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0) + 4)
                     {
