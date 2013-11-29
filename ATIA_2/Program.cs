@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -375,7 +376,7 @@ namespace ATIA_2
                             Console.WriteLine("write to file:" + "raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".atia");
                             using (
                                 var stream =
-                                    new FileStream(
+                                    new FileStream(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)+@"\"+
                                         "raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".atia",
                                         FileMode.Append))
                             {
