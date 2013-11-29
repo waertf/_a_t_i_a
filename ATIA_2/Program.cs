@@ -26,6 +26,7 @@ namespace ATIA_2
         private const bool avlsGetLastLocation = true;
 
         private static object fileStreaWriteLock = new object();
+        private static Mutex mut = new Mutex();
         
             //static Byte[] receiveBytes;
             //static ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
@@ -363,13 +364,15 @@ namespace ATIA_2
                     byte[] receiveBytes_original = new byte[receiveBytes.Length];
                     SortedDictionary<string, string> parse_package = new SortedDictionary<string, string>();
                     Array.Copy(receiveBytes, receiveBytes_original, receiveBytes_original.Length);
-                    /*
-                    lock (fileStreaWriteLock)
+                    
+                    //lock (fileStreaWriteLock)
                     {
+                        mut.WaitOne();
                         if (bool.Parse(ConfigurationManager.AppSettings["log_raw_data"]))
                         {
 
                             //using (var stream = new FileStream("raw" + c + ".txt", FileMode.Append))
+                            Console.WriteLine("write to file:" + "raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".atia");
                             using (
                                 var stream =
                                     new FileStream(
@@ -379,11 +382,12 @@ namespace ATIA_2
                                 stream.Write(receiveBytes, 0, receiveBytes.Length);
                                 stream.Close();
                             }
-
+                            
 
                         }
+                        mut.ReleaseMutex();
                     }
-                     * */
+
 
                     if (receiveBytes.Length != BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0) + 4)
                     {
