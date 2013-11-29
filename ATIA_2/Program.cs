@@ -367,6 +367,7 @@ namespace ATIA_2
                     Array.Copy(receiveBytes, receiveBytes_original, receiveBytes_original.Length);
                     
                     //lock (fileStreaWriteLock)
+                    /*
                     {
                         mut.WaitOne();
                         if (bool.Parse(ConfigurationManager.AppSettings["log_raw_data"]))
@@ -388,7 +389,10 @@ namespace ATIA_2
                         }
                         mut.ReleaseMutex();
                     }
-
+                    */
+                    log.Info(ByteToHexBitFiddle(receiveBytes));
+                    //Console.WriteLine(BitConverter.ToString(receiveBytes).Replace("-"," "));
+                    //Console.WriteLine(ByteToHexBitFiddle(receiveBytes));
 
                     if (receiveBytes.Length != BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0) + 4)
                     {
