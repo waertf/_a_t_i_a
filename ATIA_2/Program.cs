@@ -318,13 +318,13 @@ namespace ATIA_2
                     {
                         if (ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 || ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
                         {
-                            //Console.WriteLine(ni.Name);
-                            //Console.WriteLine(addr.Address);
+                            //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+ni.Name);
+                            //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+addr.Address);
                             foreach (UnicastIPAddressInformation ip in ni.GetIPProperties().UnicastAddresses)
                             {
                                 if (ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                                 {
-                                    //Console.WriteLine(ip.Address.ToString());
+                                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+ip.Address.ToString());
                                     return ip.Address;
                                 }
 
@@ -337,9 +337,10 @@ namespace ATIA_2
             }
             static void Main(string[] args)
             {
-                Console.WriteLine(GetLocalIPAddress());//current ip address
-                Console.WriteLine(System.Environment.UserName);//current username
-                Console.WriteLine(DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
+                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+GetLocalIPAddress());//current ip address
+                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+System.Environment.UserName);//current username
+                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
+                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+DateTime.Now.ToString("O"));
                 DateTime test = DateTime.Now;
                 string test1 = test.ToString("yyyyMMddHHmmss").Substring(2, 12);
                 DateTime tempDatetime = DateTime.ParseExact(test1, "yyMMddHHmmss", null);
@@ -347,12 +348,15 @@ namespace ATIA_2
                 //Thread read_thread = new Thread(() => read_thread_method(tcpClient, netStream, sql_client));
                 Thread udp_server_8671 = new Thread(() => udp_server_t(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8671"]))); //(new ThreadStart(udp_server_t));
                 Thread udp_server_8601 = new Thread(() => udp_server_t(int.Parse(ConfigurationManager.AppSettings["ATIA_SERVER_PORT_8601"])));
+                udp_server_8601.Name = "thread_8601";
+                udp_server_8671.Name = "thread_8671";
                 udp_server_8671.Start();
                 udp_server_8601.Start();
 
             }
             static void udp_server_t(int port)
             {
+                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+Thread.CurrentThread.Name);
                 UdpClient udpClient = new UdpClient(port);
                 //IPEndPoint object will allow us to read datagrams sent from any source.
                 IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
@@ -374,7 +378,7 @@ namespace ATIA_2
                         {
 
                             //using (var stream = new FileStream("raw" + c + ".txt", FileMode.Append))
-                            Console.WriteLine("write to file:" + "raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".atia");
+                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"write to file:" + "raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".atia");
                             using (
                                 var stream =
                                     new FileStream(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)+@"\"+
@@ -391,12 +395,12 @@ namespace ATIA_2
                     }
                     */
                     log.Info(ByteToHexBitFiddle(receiveBytes));
-                    //Console.WriteLine(BitConverter.ToString(receiveBytes).Replace("-"," "));
-                    //Console.WriteLine(ByteToHexBitFiddle(receiveBytes));
+                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+BitConverter.ToString(receiveBytes).Replace("-"," "));
+                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+ByteToHexBitFiddle(receiveBytes));
 
                     if (receiveBytes.Length != BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0) + 4)
                     {
-                        Console.WriteLine("size embedded in the packet does not match bytes received");
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"size embedded in the packet does not match bytes received");
                         continue;
                     }
 
@@ -407,14 +411,14 @@ namespace ATIA_2
                     //ConfigurationManager.RefreshSection("appSettings");
 
                     string returnData = Encoding.ASCII.GetString(receiveBytes);
-                    //Console.WriteLine("receive_length=" + receiveBytes.Length);
+                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"receive_length=" + receiveBytes.Length);
                     array_reverse_ATIA_PACKAGE_Header_and_NumOffset(ref receiveBytes);
                     ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
                     struct_header = (ATIA_PACKAGE_Header_and_NumOffset)BytesToStruct(receiveBytes, struct_header.GetType());
-                    //Console.WriteLine("package lenght exclude first 4 byte :"+BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0)); 
+                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"package lenght exclude first 4 byte :"+BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0)); 
 
                     // Uses the IPEndPoint object to determine which of these two hosts responded.
-                    //Console.WriteLine("This is the message you received :" +
+                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"This is the message you received :" +
                                                  //returnData.ToString());
                     parse_header_and_numoffset_package(struct_header, ref parse_package);
 
@@ -445,26 +449,26 @@ namespace ATIA_2
                         foreach (var e in parse_package)
                             s.Append(e.Key + ":" + e.Value + Environment.NewLine);
                         //s.Append(Environment.NewLine);
-                        Console.WriteLine("####################################################");
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"####################################################");
                         /*
                         using (StreamWriter w = File.AppendText("log.txt"))
                         {
                             //string raw_data_without_first_4_byte = ByteToHexBitFiddle(receiveBytes_original.Skip(4).ToArray());
                             //Log("raw:" + raw_data_without_first_4_byte+Environment.NewLine+s.ToString(), w);
                             Log(Environment.NewLine + s.ToString(), w);
-                            Console.WriteLine(s.ToString());
+                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+s.ToString());
                         }
                          * */
                         try
                         {
                             log.Info(s.ToString());
-                            Console.WriteLine(s.ToString());
+                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+s.ToString());
                         }
                         catch (Exception ex)
                         {
                             log.Error(ex.Message);
                         }
-                        Console.WriteLine("####################################################");
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"####################################################");
                     }
 
 
@@ -611,9 +615,9 @@ LIMIT 1";
                     try
                     {
 
-                        Console.WriteLine("S----------------------------------------------------------------------------");
-                        Console.WriteLine("Write:\r\n" + write);
-                        Console.WriteLine("E----------------------------------------------------------------------------");
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"S----------------------------------------------------------------------------");
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"Write:\r\n" + write);
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"E----------------------------------------------------------------------------");
 
                        
                             log.Info("Write:\r\n"+write);
@@ -631,7 +635,7 @@ LIMIT 1";
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("avls_WriteLineError:\r\n" + ex.Message);
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"avls_WriteLineError:\r\n" + ex.Message);
                         log.Error("avls_WriteLineError:\r\n" + ex.Message);
                     }
 
@@ -657,18 +661,18 @@ LIMIT 1";
 
             private static void sql_access(ref SortedDictionary<string, string> parse_package)
             {
-                Console.WriteLine("+sql_access");
+                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"+sql_access");
                 if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off") || parse_package["result"].ToString().Equals("start_call") || parse_package["result"].ToString().Equals("end_call")))
                 {
                     if (parse_package.ContainsKey("call_type"))
                     {
-                        Console.WriteLine("call_type=" + parse_package["call_type"]);
-                        log.Info("call_type=" + parse_package["call_type"]);
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"call_type=" + parse_package["call_type"]);
+                        log.Info(Thread.CurrentThread.Name+"@"+"sql_access:call_type=" + parse_package["call_type"]);
                     }
                     else
                     {
-                        Console.WriteLine("call_type=unknown");
-                        log.Info("call_type=unknown");
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"call_type=unknown");
+                        log.Info(Thread.CurrentThread.Name+"@"+"sql_access:call_type=unknown");
                     }
                     SqlClient sql_client = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
                     sql_client.connect();
@@ -714,8 +718,8 @@ LIMIT 1";
                                         sn = row[0].ToString();
                                     }
 
-                                    Console.WriteLine("dev_power_status.ID.Length=" + dev_power_status.ID.Length);
-                                    Console.WriteLine("dev_power_status.ID=" + dev_power_status.ID);
+                                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_power_status.ID.Length=" + dev_power_status.ID.Length);
+                                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_power_status.ID=" + dev_power_status.ID);
 
                                     string yyyyMMdd = sn.Substring(dev_power_status.ID.Length, 8);
                                     string count = sn.Substring(dev_power_status.ID.Length + yyyyMMdd.Length, 3);
@@ -796,7 +800,7 @@ LIMIT 1";
                             }
                             else
                             {
-                                Console.WriteLine("power_off:Cannot fine device_id {0}", dev_power_off_status.ID);
+                                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"power_off:Cannot fine device_id {0}", dev_power_off_status.ID);
                                 log.Info("power_off:Cannot fine device_id "+dev_power_off_status.ID);
                                 break;
                             }
@@ -863,17 +867,17 @@ GROUP BY
 limit 1
                                 ";
                             DataTable data_table = sql_client.get_DataTable(sql_select);
-                            Console.WriteLine(sql_select);
+                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+sql_select);
                             log.Info(sql_select);
                             sql_client.disconnect();
 
                             if ((data_table == null) || (data_table.Rows.Count == 0))
                             {
-                                Console.WriteLine("data_table == null");
+                                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"data_table == null");
                             }
                             else
                             {
-                                Console.WriteLine("data_table != null");
+                                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"data_table != null");
                                 string ssql_insert_value = @"'" + data_table.Rows[0]["serial_no"].ToString() + @"'" +
                                     "," + @"'" + data_table.Rows[0]["uid"].ToString() + @"'" +
                                     "," + @"'" + data_table.Rows[0]["on_time"].ToString() + @"'" +
@@ -887,11 +891,11 @@ INSERT INTO custom.location_control_log
 VALUES 
 (" + ssql_insert_value + @");
 ";
-                                Console.WriteLine(sql_insert);
+                                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+sql_insert);
                                 log.Info(sql_insert);
-                                //Console.WriteLine("[device]:" + data_table.Rows[0]["device"]);
-                                //Console.WriteLine("[longitude]:" + data_table.Rows[0]["longitude"]);
-                                //Console.WriteLine("[latitude]:" + data_table.Rows[0]["latitude"]);
+                                //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[device]:" + data_table.Rows[0]["device"]);
+                                //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[longitude]:" + data_table.Rows[0]["longitude"]);
+                                //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[latitude]:" + data_table.Rows[0]["latitude"]);
                                 sql_client.connect();
                                 sql_client.modify(sql_insert);
                                 sql_client.disconnect();
@@ -948,8 +952,8 @@ LIMIT 1";
                                     {
                                         sn = row[0].ToString();
                                     }
-                                    Console.WriteLine("dev_call_status.ID.Length="+dev_call_status.ID.Length);
-                                    Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
+                                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_call_status.ID.Length="+dev_call_status.ID.Length);
+                                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_call_status.ID=" + dev_call_status.ID);
 
                                     string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
                                     string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
@@ -1027,7 +1031,7 @@ LIMIT 1";
                             }
                             else
                             {
-                                Console.WriteLine("end_call:Cannot fine device_id {0}", dev_call_off_status.ID);
+                                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"end_call:Cannot fine device_id {0}", dev_call_off_status.ID);
                                 log.Info("end_call:Cannot fine device_id "+dev_call_off_status.ID);
                                 break;
                             }
@@ -1094,8 +1098,8 @@ LIMIT 1";
                                             {
                                                 sn = row[0].ToString();
                                             }
-                                            Console.WriteLine("dev_call_status.ID.Length=" + dev_call_status.ID.Length);
-                                            Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
+                                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_call_status.ID.Length=" + dev_call_status.ID.Length);
+                                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_call_status.ID=" + dev_call_status.ID);
 
                                             string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
                                             string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
@@ -1200,8 +1204,8 @@ LIMIT 1";
                                             {
                                                 sn = row[0].ToString();
                                             }
-                                            Console.WriteLine("dev_call_status.ID.Length=" + dev_call_status.ID.Length);
-                                            Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
+                                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_call_status.ID.Length=" + dev_call_status.ID.Length);
+                                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_call_status.ID=" + dev_call_status.ID);
 
                                             string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
                                             string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
@@ -1263,11 +1267,11 @@ LIMIT 1";
                                 break;
                         }
                     }
-                    Console.WriteLine(sql_cmd);
+                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+sql_cmd);
                     log.Info(sql_cmd);
                     sql_client.disconnect();
                 }
-                Console.WriteLine("-sql_access");
+                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"-sql_access");
             }
 
             private static void parse_data_section(byte[] p, ref SortedDictionary<string, string> parse_package)
@@ -1505,14 +1509,14 @@ LIMIT 1";
                         parse_package.Add("call_type", "Digital Conventional Call");
                         break;
                 }
-                Console.WriteLine("+parse_call_type");
+                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"+parse_call_type");
                 if(parse_package.ContainsKey("call_type"))
-                    Console.WriteLine("call type ="+parse_package["call_type"]);
+                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"call type ="+parse_package["call_type"]);
                 else
                 {
-                    Console.WriteLine("call type = unknown");
+                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"call type = unknown");
                 }
-                Console.WriteLine("-parse_call_type");
+                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"-parse_call_type");
 
             }
 
@@ -1746,7 +1750,7 @@ LIMIT 1";
                 {
                     string name = descriptor.Name;
                     object value = descriptor.GetValue(obj);
-                    Console.WriteLine("{0}={1}", name, value);
+                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"{0}={1}", name, value);
                 }
             }
             static void array_reverse_ATIA_PACKAGE_Header_and_NumOffset(ref byte[] receive)
@@ -1800,12 +1804,12 @@ LIMIT 1";
 
                 if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings.Get(key)))
                 {
-                    //Console.WriteLine("not null");
+                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"not null");
                     return false;
                 }
                 else
                 {
-                    //Console.WriteLine("null");
+                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"null");
                     Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
                     AppSettingsSection app = config.AppSettings;
                     app.Settings.Add(key, value);
