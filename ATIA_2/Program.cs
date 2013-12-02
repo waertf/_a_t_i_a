@@ -483,10 +483,14 @@ namespace ATIA_2
 
             private static void access_avls_server(ref SortedDictionary<string, string> parse_package)
             {
+                log.Info("+access_avls_server");
+                Console.WriteLine("+access_avls_server");
                 if (parse_package.ContainsKey("result") &&
                     (parse_package["result"].ToString().Equals("power_on") ||
                      parse_package["result"].ToString().Equals("power_off")))
                 {
+                    log.Info("+access_avls_server:if");
+                    Console.WriteLine("+access_avls_server:if");
                     TcpClient avls_tcpClient;
                     string send_string = string.Empty;
                     AVLS_UNIT_Report_Packet avls_package = new AVLS_UNIT_Report_Packet();
@@ -557,6 +561,7 @@ WHERE
 ORDER BY
   public._gps_log._time DESC
 LIMIT 1";
+                        log.Info("avlsSqlCmd=" + Environment.NewLine + avlsSqlCmd);
                         avlsSqlClient.connect();
                         var dt = avlsSqlClient.get_DataTable(avlsSqlCmd);
                         avlsSqlClient.disconnect();
@@ -603,8 +608,11 @@ LIMIT 1";
                     //ReadLine(avls_tcpClient, netStream, send_string.Length);
                     netStream.Close();
                     avls_tcpClient.Close();
+                    log.Info("-access_avls_server:if");
+                    Console.WriteLine("-access_avls_server:if");
                 }
-                
+                log.Info("-access_avls_server");
+                Console.WriteLine("-access_avls_server");
             }
 
             private static void avls_WriteLine(NetworkStream netStream, byte[] writeData, string write)
