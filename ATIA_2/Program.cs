@@ -702,10 +702,13 @@ LIMIT 1";
                                     {
                                         sn = row[0].ToString();
                                     }
-                                    log.Info(sn.Length);
-                                    int snLength = sn.Length;
-                                    string yyyyMMdd = sn.Substring(snLength, 8);
-                                    string count = sn.Substring(snLength + 8, 3);
+
+                                    Console.WriteLine("dev_power_status.ID.Length=" + dev_power_status.ID.Length);
+                                    Console.WriteLine("dev_power_status.ID=" + dev_power_status.ID);
+
+                                    string yyyyMMdd = sn.Substring(dev_power_status.ID.Length, 8);
+                                    string count = sn.Substring(dev_power_status.ID.Length + yyyyMMdd.Length, 3);
+                                    
                                     if (power_on_today.Equals(yyyyMMdd))
                                     {
                                         uint addCount = (uint.Parse(count) + 1);
@@ -934,10 +937,11 @@ LIMIT 1";
                                     {
                                         sn = row[0].ToString();
                                     }
-                                    log.Info(sn.Length);
-                                    int snLength = sn.Length;
-                                    string yyyyMMdd = sn.Substring(snLength, 8);
-                                    string count = sn.Substring(snLength + 8, 5);
+                                    Console.WriteLine("dev_call_status.ID.Length="+dev_call_status.ID.Length);
+                                    Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
+
+                                    string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
+                                    string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
 
                                     if (start_call_today.Equals(yyyyMMdd))
                                     {
@@ -1079,10 +1083,11 @@ LIMIT 1";
                                             {
                                                 sn = row[0].ToString();
                                             }
-                                            log.Info(sn.Length);
-                                            int snLength = sn.Length;
-                                            string yyyyMMdd = sn.Substring(snLength, 8);
-                                            string count = sn.Substring(snLength + 8, 5);
+                                            Console.WriteLine("dev_call_status.ID.Length=" + dev_call_status.ID.Length);
+                                            Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
+
+                                            string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
+                                            string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
                                             if (start_call_today.Equals(yyyyMMdd))
                                             {
                                                 uint addCount = (uint.Parse(count) + 1);
@@ -1184,10 +1189,11 @@ LIMIT 1";
                                             {
                                                 sn = row[0].ToString();
                                             }
-                                            log.Info(sn.Length);
-                                            int snLength = sn.Length;
-                                            string yyyyMMdd = sn.Substring(snLength, 8);
-                                            string count = sn.Substring(snLength + 8, 5);
+                                            Console.WriteLine("dev_call_status.ID.Length=" + dev_call_status.ID.Length);
+                                            Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
+
+                                            string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
+                                            string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
                                             if (start_call_today.Equals(yyyyMMdd))
                                             {
                                                 uint addCount = (uint.Parse(count) + 1);
