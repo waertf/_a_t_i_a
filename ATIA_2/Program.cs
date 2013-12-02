@@ -532,7 +532,7 @@ namespace ATIA_2
                     tempDatetime = tempDatetime.ToUniversalTime();
                     avls_package.Date_Time = tempDatetime.ToString("yyMMddHHmmss") + ",";
 
-                        avls_package.ID = parse_package["source_id"].ToString() + ",";
+                        avls_package.ID = parse_package["source_id"].ToString() ;
                         avls_package.GPS_Valid = "A,";
                         /*
                          * SELECT 
@@ -597,7 +597,7 @@ LIMIT 1";
                         avls_package.Message = "test";
 
                     //}
-
+                    avls_package.ID += ",";
                     send_string = "%%" + avls_package.ID + avls_package.GPS_Valid + avls_package.Date_Time + avls_package.Loc + avls_package.Speed + avls_package.Dir + avls_package.Temp + avls_package.Status + avls_package.Event + avls_package.Message + "\r\n";
 
 
