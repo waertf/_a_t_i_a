@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Devart.Data.PostgreSql;
 using System.Data;
 
@@ -46,7 +47,7 @@ namespace ATIA_2
             }
             catch (PgSqlException ex)
             {
-                Console.WriteLine("Exception occurs: {0}", ex.Error);
+                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"Exception occurs: {0}", ex.Error);
                 return false;
             }
         }
@@ -67,7 +68,7 @@ namespace ATIA_2
             }
             catch (PgSqlException ex)
             {
-                Console.WriteLine("Exception occurs: {0}", ex.Error);
+                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"Exception occurs: {0}", ex.Error);
                 return false;
             }
         }
@@ -87,15 +88,15 @@ namespace ATIA_2
                     IAsyncResult cres = command.BeginExecuteNonQuery(null, null);
 
                     if (cres.IsCompleted)
-                        Console.WriteLine("Completed.");
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"Completed.");
                     else
-                        Console.WriteLine("Have to wait for operation to complete...");
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"Have to wait for operation to complete...");
                     int RowsAffected = command.EndExecuteNonQuery(cres);
-                    Console.WriteLine("Done. Rows affected: " + RowsAffected.ToString());
+                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"Done. Rows affected: " + RowsAffected.ToString());
                     /*
                      //sync
                      int aff = cmd.ExecuteNonQuery();
-                     Console.WriteLine(aff + " rows were affected.");
+                     Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+aff + " rows were affected.");
                      * 
                      */
                     return true;
@@ -105,7 +106,7 @@ namespace ATIA_2
             }
             catch (PgSqlException ex)
             {
-                Console.WriteLine("Exception occurs: {0}", ex.Error);
+                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"Exception occurs: {0}", ex.Error);
                 return false;
             }
 
@@ -120,12 +121,12 @@ namespace ATIA_2
                     DataTable datatable = new DataTable();
                     PgSqlCommand command = pgSqlConnection.CreateCommand();
                     command.CommandText = cmd;
-                    Console.WriteLine("Starting asynchronous retrieval of data...");
+                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"Starting asynchronous retrieval of data...");
                     IAsyncResult cres = command.BeginExecuteReader();
                     if (cres.IsCompleted)
-                        Console.WriteLine("Completed.");
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"Completed.");
                     else
-                        Console.WriteLine("Have to wait for operation to complete...");
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"Have to wait for operation to complete...");
                     PgSqlDataReader myReader = command.EndExecuteReader(cres);
                     try
                     {
@@ -147,7 +148,7 @@ namespace ATIA_2
                             }
                             datatable.Rows.Add(dr);
                             Console.Write(Environment.NewLine);
-                            //Console.WriteLine(myReader.GetInt32(0) + "\t" + myReader.GetString(1) + "\t");
+                            //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+myReader.GetInt32(0) + "\t" + myReader.GetString(1) + "\t");
                         }
                     }
                     finally
@@ -156,11 +157,11 @@ namespace ATIA_2
                     }
                     foreach (DataRow row in datatable.Rows) // Loop over the rows.
                     {
-                        Console.WriteLine("--- Row ---"); // Print separator.
+                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"--- Row ---"); // Print separator.
                         foreach (var item in row.ItemArray) // Loop over the items.
                         {
                             Console.Write("Item: "); // Print label.
-                            Console.WriteLine(item); // Invokes ToString abstract method.
+                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+item); // Invokes ToString abstract method.
                         }
                     }
                     return datatable;
@@ -170,7 +171,7 @@ namespace ATIA_2
             }
             catch (PgSqlException ex)
             {
-                Console.WriteLine("Exception occurs: {0}", ex.Error);
+                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"Exception occurs: {0}", ex.Error);
                 return null;
             }
         }
