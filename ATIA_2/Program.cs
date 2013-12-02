@@ -657,8 +657,19 @@ LIMIT 1";
 
             private static void sql_access(ref SortedDictionary<string, string> parse_package)
             {
+                Console.WriteLine("+sql_access");
                 if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off") || parse_package["result"].ToString().Equals("start_call") || parse_package["result"].ToString().Equals("end_call")))
                 {
+                    if (parse_package.ContainsKey("call_type"))
+                    {
+                        Console.WriteLine("call_type=" + parse_package["call_type"]);
+                        log.Info("call_type=" + parse_package["call_type"]);
+                    }
+                    else
+                    {
+                        Console.WriteLine("call_type=unknown");
+                        log.Info("call_type=unknown");
+                    }
                     SqlClient sql_client = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
                     sql_client.connect();
                     switch (parse_package["result"].ToString())
@@ -1256,6 +1267,7 @@ LIMIT 1";
                     log.Info(sql_cmd);
                     sql_client.disconnect();
                 }
+                Console.WriteLine("-sql_access");
             }
 
             private static void parse_data_section(byte[] p, ref SortedDictionary<string, string> parse_package)
@@ -1477,7 +1489,31 @@ LIMIT 1";
                     case "2":
                         parse_package.Add("call_type", "Group_Call");
                         break;
+                    case "3":
+                        parse_package.Add("call_type", "DataCall");
+                        break;
+                    case "4":
+                        parse_package.Add("call_type", "Multislot Data Call");
+                        break;
+                    case "5":
+                        parse_package.Add("call_type", "Analog Conventional Call");
+                        break;
+                    case "6":
+                        parse_package.Add("call_type", "Controlled Channel Access Data Call");
+                        break;
+                    case "7":
+                        parse_package.Add("call_type", "Digital Conventional Call");
+                        break;
                 }
+                Console.WriteLine("+parse_call_type");
+                if(parse_package.ContainsKey("call_type"))
+                    Console.WriteLine("call type ="+parse_package["call_type"]);
+                else
+                {
+                    Console.WriteLine("call type = unknown");
+                }
+                Console.WriteLine("-parse_call_type");
+
             }
 
             private static void parse_duration_in_sec(byte[] duration_in_sec, ref SortedDictionary<string, string> parse_package)
