@@ -364,9 +364,9 @@ namespace ATIA_2
 
                 while (true)
                 {
-                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.ForegroundColor = ConsoleColor.DarkBlue;
                     Console.WriteLine(Thread.CurrentThread.Name);
-                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.ForegroundColor = ConsoleColor.DarkCyan;
                     Console.WriteLine(DateTime.Now.ToString("O"));
                     Console.ResetColor();
                     // Blocks until a message returns on this socket from a remote host.
