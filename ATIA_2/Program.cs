@@ -583,12 +583,28 @@ LIMIT 1";
                         }
                         else
                         {
-                            avls_package.Loc = "N00000.0000E00000.0000,";
+                            string avlsLat = string.Empty, avlsLon = string.Empty;
+                            GetInitialLocationFromSql(ref avlsLat, ref avlsLon, avls_package.ID);
+                            GeoAngle lat_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLat));
+                            GeoAngle long_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLon));
+                            string lat_str = lat_value.Degrees.ToString() + lat_value.Minutes.ToString("D2") + "." + lat_value.Seconds.ToString("D2") + lat_value.Milliseconds.ToString("D3");
+                            string long_str = long_value.Degrees.ToString() + long_value.Minutes.ToString("D2") + "." + long_value.Seconds.ToString("D2") + long_value.Milliseconds.ToString("D3");
+                            //avls_package.Loc = "N" + (Convert.ToDouble(htable["lat_value"])*100).ToString() + "E" + (Convert.ToDouble(htable["long_value"])*100).ToString()+ ",";
+                            avls_package.Loc = "N" + lat_str + "E" + long_str + ",";
+                            //avls_package.Loc = "N00000.0000E00000.0000,";
                         }
                     }
                     else
                     {
-                        avls_package.Loc = "N00000.0000E00000.0000,";
+                        string avlsLat = string.Empty, avlsLon = string.Empty;
+                        GetInitialLocationFromSql(ref avlsLat, ref avlsLon, avls_package.ID);
+                        GeoAngle lat_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLat));
+                        GeoAngle long_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLon));
+                        string lat_str = lat_value.Degrees.ToString() + lat_value.Minutes.ToString("D2") + "." + lat_value.Seconds.ToString("D2") + lat_value.Milliseconds.ToString("D3");
+                        string long_str = long_value.Degrees.ToString() + long_value.Minutes.ToString("D2") + "." + long_value.Seconds.ToString("D2") + long_value.Milliseconds.ToString("D3");
+                        //avls_package.Loc = "N" + (Convert.ToDouble(htable["lat_value"])*100).ToString() + "E" + (Convert.ToDouble(htable["long_value"])*100).ToString()+ ",";
+                        avls_package.Loc = "N" + lat_str + "E" + long_str + ",";
+                        //avls_package.Loc = "N00000.0000E00000.0000,";
                     }
                         
                         avls_package.Speed = "0,";
@@ -614,6 +630,31 @@ LIMIT 1";
                 }
                 log.Info("-access_avls_server");
                 Console.WriteLine("-access_avls_server");
+            }
+
+            private static void GetInitialLocationFromSql(ref string lat, ref string lon, string id)
+            {
+                var sqlClient = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
+                        string sqlCmd = @"SELECT 
+  sd.initial_location.lat,
+  sd.initial_location.lon
+FROM
+  sd.initial_location
+WHERE
+  sd.initial_location.uid = '" + id + @"'";
+                        log.Info("GetInitialLocationFromSqllCmd=" + Environment.NewLine + sqlCmd);
+                        sqlClient.connect();
+                        var dt = sqlClient.get_DataTable(sqlCmd);
+                        sqlClient.disconnect();
+                if (dt != null && dt.Rows.Count != 0)
+                {
+                   
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        lat = row[0].ToString();
+                        lon = row[1].ToString();
+                    }
+                }
             }
 
             private static void avls_WriteLine(NetworkStream netStream, byte[] writeData, string write)
