@@ -655,6 +655,11 @@ WHERE
                         lon = row[1].ToString();
                     }
                 }
+                else
+                {
+                    lat = lon = "0";
+                    log.Error("Cannot find lat lon of deviceID: " + id + "in sql table: sd.initial_location ");
+                }
             }
 
             private static void avls_WriteLine(NetworkStream netStream, byte[] writeData, string write)
