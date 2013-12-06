@@ -337,10 +337,10 @@ namespace ATIA_2
             }
             static void Main(string[] args)
             {
-                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+GetLocalIPAddress());//current ip address
-                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+System.Environment.UserName);//current username
-                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
-                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+DateTime.Now.ToString("O"));
+              Console.WriteLine(GetLocalIPAddress());//current ip address
+              Console.WriteLine(System.Environment.UserName);//current username
+              Console.WriteLine(DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
+              Console.WriteLine(DateTime.Now.ToString("O"));
                 DateTime test = DateTime.Now;
                 string test1 = test.ToString("yyyyMMddHHmmss").Substring(2, 12);
                 DateTime tempDatetime = DateTime.ParseExact(test1, "yyMMddHHmmss", null);
@@ -356,7 +356,7 @@ namespace ATIA_2
             }
             static void udp_server_t(int port)
             {
-                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+Thread.CurrentThread.Name);
+              
                 UdpClient udpClient = new UdpClient(port);
                 //IPEndPoint object will allow us to read datagrams sent from any source.
                 IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
@@ -364,6 +364,11 @@ namespace ATIA_2
 
                 while (true)
                 {
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.WriteLine(Thread.CurrentThread.Name);
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.WriteLine(DateTime.Now.ToString("O"));
+                    Console.ResetColor();
                     // Blocks until a message returns on this socket from a remote host.
                     Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
                     byte[] receiveBytes_original = new byte[receiveBytes.Length];
@@ -378,7 +383,7 @@ namespace ATIA_2
                         {
 
                             //using (var stream = new FileStream("raw" + c + ".txt", FileMode.Append))
-                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"write to file:" + "raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".atia");
+                          Console.WriteLine("write to file:" + "raw" + DateTime.Now.ToString("yyyy-MM-dd_H.mm.ss.fffffff") + ".atia");
                             using (
                                 var stream =
                                     new FileStream(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)+@"\"+
@@ -400,7 +405,7 @@ namespace ATIA_2
 
                     if (receiveBytes.Length != BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0) + 4)
                     {
-                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"size embedded in the packet does not match bytes received");
+                      Console.WriteLine("size embedded in the packet does not match bytes received");
                         continue;
                     }
 
@@ -449,26 +454,26 @@ namespace ATIA_2
                         foreach (var e in parse_package)
                             s.Append(e.Key + ":" + e.Value + Environment.NewLine);
                         //s.Append(Environment.NewLine);
-                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"####################################################");
+                      Console.WriteLine("####################################################");
                         /*
                         using (StreamWriter w = File.AppendText("log.txt"))
                         {
                             //string raw_data_without_first_4_byte = ByteToHexBitFiddle(receiveBytes_original.Skip(4).ToArray());
                             //Log("raw:" + raw_data_without_first_4_byte+Environment.NewLine+s.ToString(), w);
                             Log(Environment.NewLine + s.ToString(), w);
-                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+s.ToString());
+                          Console.WriteLine(s.ToString());
                         }
                          * */
                         try
                         {
                             log.Info(s.ToString());
-                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+s.ToString());
+                          Console.WriteLine(s.ToString());
                         }
                         catch (Exception ex)
                         {
                             log.Error(ex.Message);
                         }
-                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"####################################################");
+                      Console.WriteLine("####################################################");
                     }
 
 
@@ -670,9 +675,9 @@ WHERE
                     try
                     {
 
-                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"S----------------------------------------------------------------------------");
-                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"Write:\r\n" + write);
-                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"E----------------------------------------------------------------------------");
+                      Console.WriteLine("S----------------------------------------------------------------------------");
+                      Console.WriteLine("Write:\r\n" + write);
+                      Console.WriteLine("E----------------------------------------------------------------------------");
 
                        
                             log.Info("Write:\r\n"+write);
@@ -690,7 +695,7 @@ WHERE
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"avls_WriteLineError:\r\n" + ex.Message);
+                      Console.WriteLine("avls_WriteLineError:\r\n" + ex.Message);
                         log.Error("avls_WriteLineError:\r\n" + ex.Message);
                     }
 
@@ -716,17 +721,17 @@ WHERE
 
             private static void sql_access(ref SortedDictionary<string, string> parse_package)
             {
-                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"+sql_access");
+              Console.WriteLine("+sql_access");
                 if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off") || parse_package["result"].ToString().Equals("start_call") || parse_package["result"].ToString().Equals("end_call")))
                 {
                     if (parse_package.ContainsKey("call_type"))
                     {
-                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"call_type=" + parse_package["call_type"]);
+                      Console.WriteLine("call_type=" + parse_package["call_type"]);
                         log.Info(Thread.CurrentThread.Name+"@"+"sql_access:call_type=" + parse_package["call_type"]);
                     }
                     else
                     {
-                        Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"call_type=unknown");
+                      Console.WriteLine("call_type=unknown");
                         log.Info(Thread.CurrentThread.Name+"@"+"sql_access:call_type=unknown");
                     }
                     SqlClient sql_client = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
@@ -773,8 +778,8 @@ LIMIT 1";
                                         sn = row[0].ToString();
                                     }
 
-                                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_power_status.ID.Length=" + dev_power_status.ID.Length);
-                                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_power_status.ID=" + dev_power_status.ID);
+                                  Console.WriteLine("dev_power_status.ID.Length=" + dev_power_status.ID.Length);
+                                  Console.WriteLine("dev_power_status.ID=" + dev_power_status.ID);
 
                                     string yyyyMMdd = sn.Substring(dev_power_status.ID.Length, 8);
                                     string count = sn.Substring(dev_power_status.ID.Length + yyyyMMdd.Length, 3);
@@ -855,7 +860,7 @@ LIMIT 1";
                             }
                             else
                             {
-                                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"power_off:Cannot fine device_id {0}", dev_power_off_status.ID);
+                              Console.WriteLine("power_off:Cannot fine device_id {0}", dev_power_off_status.ID);
                                 log.Info("power_off:Cannot fine device_id "+dev_power_off_status.ID);
                                 break;
                             }
@@ -922,17 +927,17 @@ GROUP BY
 limit 1
                                 ";
                             DataTable data_table = sql_client.get_DataTable(sql_select);
-                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+sql_select);
+                          Console.WriteLine(sql_select);
                             log.Info(sql_select);
                             sql_client.disconnect();
 
                             if ((data_table == null) || (data_table.Rows.Count == 0))
                             {
-                                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"data_table == null");
+                              Console.WriteLine("data_table == null");
                             }
                             else
                             {
-                                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"data_table != null");
+                              Console.WriteLine("data_table != null");
                                 string ssql_insert_value = @"'" + data_table.Rows[0]["serial_no"].ToString() + @"'" +
                                     "," + @"'" + data_table.Rows[0]["uid"].ToString() + @"'" +
                                     "," + @"'" + data_table.Rows[0]["on_time"].ToString() + @"'" +
@@ -946,7 +951,7 @@ INSERT INTO custom.location_control_log
 VALUES 
 (" + ssql_insert_value + @");
 ";
-                                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+sql_insert);
+                              Console.WriteLine(sql_insert);
                                 log.Info(sql_insert);
                                 //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[device]:" + data_table.Rows[0]["device"]);
                                 //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[longitude]:" + data_table.Rows[0]["longitude"]);
@@ -1006,8 +1011,8 @@ LIMIT 1";
                                     {
                                         sn = row[0].ToString();
                                     }
-                                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_call_status.ID.Length="+dev_call_status.ID.Length);
-                                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_call_status.ID=" + dev_call_status.ID);
+                                  Console.WriteLine("dev_call_status.ID.Length="+dev_call_status.ID.Length);
+                                  Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
 
                                     string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
                                     string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
@@ -1085,7 +1090,7 @@ LIMIT 1";
                             }
                             else
                             {
-                                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"end_call:Cannot fine device_id {0}", dev_call_off_status.ID);
+                              Console.WriteLine("end_call:Cannot fine device_id {0}", dev_call_off_status.ID);
                                 log.Info("end_call:Cannot fine device_id "+dev_call_off_status.ID);
                                 break;
                             }
@@ -1151,8 +1156,8 @@ LIMIT 1";
                                             {
                                                 sn = row[0].ToString();
                                             }
-                                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_call_status.ID.Length=" + dev_call_status.ID.Length);
-                                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_call_status.ID=" + dev_call_status.ID);
+                                          Console.WriteLine("dev_call_status.ID.Length=" + dev_call_status.ID.Length);
+                                          Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
 
                                             string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
                                             string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
@@ -1256,8 +1261,8 @@ LIMIT 1";
                                             {
                                                 sn = row[0].ToString();
                                             }
-                                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_call_status.ID.Length=" + dev_call_status.ID.Length);
-                                            Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"dev_call_status.ID=" + dev_call_status.ID);
+                                          Console.WriteLine("dev_call_status.ID.Length=" + dev_call_status.ID.Length);
+                                          Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
 
                                             string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
                                             string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
@@ -1319,11 +1324,11 @@ LIMIT 1";
                                 break;
                         }
                     }
-                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+sql_cmd);
+                  Console.WriteLine(sql_cmd);
                     log.Info(sql_cmd);
                     sql_client.disconnect();
                 }
-                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"-sql_access");
+              Console.WriteLine("-sql_access");
             }
 
             private static void parse_data_section(byte[] p, ref SortedDictionary<string, string> parse_package)
@@ -1561,14 +1566,14 @@ LIMIT 1";
                         parse_package.Add("call_type", "Digital Conventional Call");
                         break;
                 }
-                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"+parse_call_type");
+              Console.WriteLine("+parse_call_type");
                 if(parse_package.ContainsKey("call_type"))
-                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"call type ="+parse_package["call_type"]);
+                  Console.WriteLine("call type ="+parse_package["call_type"]);
                 else
                 {
-                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"call type = unknown");
+                  Console.WriteLine("call type = unknown");
                 }
-                Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"-parse_call_type");
+              Console.WriteLine("-parse_call_type");
 
             }
 
@@ -1802,7 +1807,7 @@ LIMIT 1";
                 {
                     string name = descriptor.Name;
                     object value = descriptor.GetValue(obj);
-                    Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"{0}={1}", name, value);
+                  Console.WriteLine("{0}={1}", name, value);
                 }
             }
             static void array_reverse_ATIA_PACKAGE_Header_and_NumOffset(ref byte[] receive)
