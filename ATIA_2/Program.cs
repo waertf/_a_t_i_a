@@ -989,7 +989,6 @@ LIMIT 1*/
 FROM
   custom.voice_connect
 WHERE
-  custom.voice_connect.connect_type = '"+dev_call_status.call_type+@"' AND 
   custom.voice_connect.uid = '"+dev_call_status.ID+@"'
 ORDER BY
   custom.voice_connect.create_time DESC
@@ -1135,7 +1134,6 @@ LIMIT 1*/
 FROM
   custom.voice_connect
 WHERE
-  custom.voice_connect.connect_type = '" + dev_call_status.call_type + @"' AND 
   custom.voice_connect.uid = '" + dev_call_status.ID + @"'
 ORDER BY
   custom.voice_connect.create_time DESC
@@ -1241,7 +1239,6 @@ LIMIT 1*/
 FROM
   custom.voice_connect
 WHERE
-  custom.voice_connect.connect_type = '" + dev_call_status.call_type + @"' AND 
   custom.voice_connect.uid = '" + dev_call_status.ID + @"'
 ORDER BY
   custom.voice_connect.create_time DESC
