@@ -491,8 +491,8 @@ namespace ATIA_2
                 log.Info("+access_avls_server");
                 Console.WriteLine("+access_avls_server");
                 if (parse_package.ContainsKey("result") &&
-                    (parse_package["result"].ToString().Equals("power_on") //||
-                     //parse_package["result"].ToString().Equals("power_off")
+                    (parse_package["result"].ToString().Equals("power_on") ||
+                     parse_package["result"].ToString().Equals("power_off")
                      ))
                 {
                     log.Info("+access_avls_server:if");
@@ -579,6 +579,11 @@ LIMIT 1";
                             {
                                 avlsLat = row[0].ToString();
                                 avlsLon = row[1].ToString();
+                            }
+                            string zero = "0";
+                            if (avlsLat.Equals(zero) || avlsLon.Equals(zero))
+                            {
+                                GetInitialLocationFromSql(ref avlsLat, ref avlsLon, avls_package.ID);
                             }
                             GeoAngle lat_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLat));
                             GeoAngle long_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLon));
