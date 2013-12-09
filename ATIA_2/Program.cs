@@ -1414,9 +1414,10 @@ LIMIT 1";
                         avlsSqlClient.connect();
                         var dt = avlsSqlClient.get_DataTable(avlsSqlCmd);
                         avlsSqlClient.disconnect();
+                        string avlsLat = string.Empty, avlsLon = string.Empty;
                         if (dt != null && dt.Rows.Count != 0)
                         {
-                            string avlsLat = string.Empty, avlsLon = string.Empty;
+                            
                             foreach (DataRow row in dt.Rows)
                             {
                                 avlsLat = row[0].ToString();
@@ -1431,7 +1432,7 @@ LIMIT 1";
                         }
                         else
                         {
-                            string avlsLat = string.Empty, avlsLon = string.Empty;
+                           
                             GetInitialLocationFromSql(ref avlsLat, ref avlsLon, dev_power_status.ID);
 
                         }
@@ -1444,6 +1445,8 @@ LIMIT 1";
                         sql_client.disconnect();
 
                         gps_log._id = "\'" + dev_power_status.ID + "_" + now + "_" + auto_id_serial_command + "\'";
+                        gps_log._lat = gps_log._or_lat =   avlsLat;
+                        gps_log._lon = gps_log._or_lon =   avlsLon;
                  
             }
 
