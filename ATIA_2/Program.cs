@@ -1389,7 +1389,7 @@ LIMIT 1";
             {
                 AUTO_SQL_DATA gps_log = new AUTO_SQL_DATA();
                 
-                        var avlsSqlClient =
+                        var sqlClient =
                             new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"],
                                 ConfigurationManager.AppSettings["SQL_SERVER_PORT"],
                                 ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"],
@@ -1399,7 +1399,7 @@ LIMIT 1";
                                 ConfigurationManager.AppSettings["MinPoolSize"],
                                 ConfigurationManager.AppSettings["MaxPoolSize"],
                                 ConfigurationManager.AppSettings["ConnectionLifetime"]);
-                        string avlsSqlCmd = @"SELECT 
+                        string sqlCmd = @"SELECT 
   public._gps_log._lat,
   public._gps_log._lon
 FROM
@@ -1410,43 +1410,42 @@ WHERE
 ORDER BY
   public._gps_log._time DESC
 LIMIT 1";
-                        log.Info("avlsSqlCmd=" + Environment.NewLine + avlsSqlCmd);
-                        avlsSqlClient.connect();
-                        var dt = avlsSqlClient.get_DataTable(avlsSqlCmd);
-                        avlsSqlClient.disconnect();
-                        string avlsLat = string.Empty, avlsLon = string.Empty;
+                        log.Info("avlsSqlCmd=" + Environment.NewLine + sqlCmd);
+                        sqlClient.connect();
+                        var dt = sqlClient.get_DataTable(sqlCmd);
+                        sqlClient.disconnect();
+                        string lat = string.Empty, lon = string.Empty;
                         if (dt != null && dt.Rows.Count != 0)
                         {
                             
                             foreach (DataRow row in dt.Rows)
                             {
-                                avlsLat = row[0].ToString();
-                                avlsLon = row[1].ToString();
+                                lat = row[0].ToString();
+                                lon = row[1].ToString();
                             }
                             string zero = "0";
-                            if (avlsLat.Equals(zero) || avlsLon.Equals(zero))
+                            if (lat.Equals(zero) || lon.Equals(zero))
                             {
-                                GetInitialLocationFromSql(ref avlsLat, ref avlsLon, dev_power_status.ID);
+                                GetInitialLocationFromSql(ref lat, ref lon, dev_power_status.ID);
                             }
 
                         }
                         else
                         {
                            
-                            GetInitialLocationFromSql(ref avlsLat, ref avlsLon, dev_power_status.ID);
+                            GetInitialLocationFromSql(ref lat, ref lon, dev_power_status.ID);
 
                         }
                         gps_log._uid = "\'" + dev_power_status.ID + "\'";
                         string now = string.Format("{0:yyyyMMdd}", DateTime.Now);
-                        var sql_client = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
-
-                        sql_client.connect();
-                        string auto_id_serial_command = sql_client.get_DataTable("SELECT COUNT(_uid)   FROM public._gps_log").Rows[0].ItemArray[0].ToString();
-                        sql_client.disconnect();
+                        
+                        sqlClient.connect();
+                        string auto_id_serial_command = sqlClient.get_DataTable("SELECT COUNT(_uid)   FROM public._gps_log").Rows[0].ItemArray[0].ToString();
+                        sqlClient.disconnect();
 
                         gps_log._id = "\'" + dev_power_status.ID + "_" + now + "_" + auto_id_serial_command + "\'";
-                        gps_log._lat = gps_log._or_lat =   avlsLat;
-                        gps_log._lon = gps_log._or_lon =   avlsLon;
+                        gps_log._lat = gps_log._or_lat =   lat;
+                        gps_log._lon = gps_log._or_lon =   lon;
                  
             }
 
