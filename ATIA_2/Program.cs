@@ -814,7 +814,7 @@ LIMIT 1";
                                 sql_client.disconnect();
                             if (dt != null && dt.Rows.Count != 0)
                             {
-                                return;
+                                break;
                             }
                         }
 
@@ -859,14 +859,14 @@ LIMIT 1";
                                         dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
                                     }
 
-                                    Insert_power_on_event_to_public_gps_log(dev_power_status);
+                                    InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_status, parse_package["result"].ToString(),parse_package);
                                 }
                                 else
                                 {
                                     int iVal = 0;
 
                                     dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
-                                    Insert_power_on_event_to_public_gps_log(dev_power_status);
+                                    InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_status, parse_package["result"].ToString(),parse_package);
 
                                 }
                             }
@@ -917,20 +917,63 @@ LIMIT 1";
                                 dev_power_off_status.power_off_time.Substring(10, 2) + ":" + dev_power_off_status.power_off_time.Substring(12, 2);
                             dev_power_off_status.power_off_time = find_dev_sn.power_off_time = device_off_time;
                             dev_power_off_status = find_dev_sn;
-                            sql_table_columns = "custom.turn_onoff_log";
-                            sql_cmd = "UPDATE " + sql_table_columns + " SET off_time=\'" + device_off_time + "\' WHERE serial_no=\'" + dev_power_off_status.SN + "\'";
+                            {
+                                sql_cmd = @"SELECT 
+  custom.turn_onoff_log.serial_no
+FROM
+  custom.turn_onoff_log
+WHERE
+  custom.turn_onoff_log.uid = '" + dev_power_off_status.ID + @"' AND 
+custom.turn_onoff_log.on_time IS NOT NULL AND 
+  custom.turn_onoff_log.off_time IS NOT NULL
+ORDER BY
+  custom.turn_onoff_log.create_time DESC
+LIMIT 1";
+                                sql_client.connect();
+                                var dt = sql_client.get_DataTable(sql_cmd);
+                                sql_client.disconnect();
+                                if (dt != null && dt.Rows.Count != 0)
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_off_status, parse_package["result"].ToString(),parse_package);
+                                    
+                                }
+                            }
+
+                            sql_cmd = @"SELECT 
+  custom.turn_onoff_log.serial_no
+FROM
+  custom.turn_onoff_log
+WHERE
+  custom.turn_onoff_log.serial_no = '" + power_off_sn + @"' AND 
+custom.turn_onoff_log.on_time IS NOT NULL AND 
+  custom.turn_onoff_log.off_time IS  NULL
+ORDER BY
+  custom.turn_onoff_log.create_time DESC
+LIMIT 1";
                             sql_client.connect();
-                            sql_client.modify(sql_cmd);
+                            var dt2 = sql_client.get_DataTable(sql_cmd);
                             sql_client.disconnect();
-                            // TODO: insert information control present to sql server
-                            /*
-                             * SELECT ((((DATE_PART('day', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp) * 24 +
-                DATE_PART('hour', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp)) * 60 +
-                DATE_PART('minute', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp)) * 60 +
-                DATE_PART('second', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp))/time_trigger_interval)*100;
-                             */
-                            int time_trigger_interval = int.Parse(ConfigurationManager.AppSettings["time_trigger_interval"]);
-                            string sql_select = @"
+                            if (dt2 != null && dt2.Rows.Count != 0)
+                            {
+                                InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_off_status, parse_package["result"].ToString(),parse_package);
+                                sql_table_columns = "custom.turn_onoff_log";
+                                sql_cmd = "UPDATE " + sql_table_columns + " SET off_time=\'" + device_off_time + "\' WHERE serial_no=\'" + dev_power_off_status.SN + "\'";
+                                sql_client.connect();
+                                sql_client.modify(sql_cmd);
+                                sql_client.disconnect();
+                                // TODO: insert information control present to sql server
+                                /*
+                                 * SELECT ((((DATE_PART('day', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp) * 24 +
+                    DATE_PART('hour', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp)) * 60 +
+                    DATE_PART('minute', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp)) * 60 +
+                    DATE_PART('second', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp))/time_trigger_interval)*100;
+                                 */
+                                int time_trigger_interval = int.Parse(ConfigurationManager.AppSettings["time_trigger_interval"]);
+                                string sql_select = @"
                             
                                SELECT
   custom.turn_onoff_log.serial_no,
@@ -940,13 +983,13 @@ LIMIT 1";
   ((((DATE_PART('day', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp) * 24 +
                 DATE_PART('hour', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
                 DATE_PART('minute', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
-                DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))/"+time_trigger_interval+@")  AS all_time_count,
+                DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))/" + time_trigger_interval + @")  AS all_time_count,
                 COUNT(custom.voice_connect.uid) AS location_count,
   (COUNT(custom.voice_connect.uid)/
   ((((DATE_PART('day', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp) * 24 +
                 DATE_PART('hour', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
                 DATE_PART('minute', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp)) * 60 +
-                DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))/"+time_trigger_interval+ @"))*100 || '%' AS location_percentage
+                DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))/" + time_trigger_interval + @"))*100 || '%' AS location_percentage
 
 
 FROM
@@ -954,7 +997,7 @@ FROM
   custom.voice_connect
   ON
   custom.voice_connect.uid = " + "\'" + dev_power_off_status.ID + "\'" +//custom.turn_onoff_log.uid
-                               @"
+                                   @"
 WHERE
   
   custom.voice_connect.end_time > custom.turn_onoff_log.on_time AND
@@ -970,42 +1013,44 @@ GROUP BY
                 DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))
 limit 1
                                 ";
-                            sql_client.connect();
-                            DataTable data_table = sql_client.get_DataTable(sql_select);
-                            sql_client.disconnect();
-                          Console.WriteLine(sql_select);
-                            log.Info(sql_select);
+                                sql_client.connect();
+                                DataTable data_table = sql_client.get_DataTable(sql_select);
+                                sql_client.disconnect();
+                                Console.WriteLine(sql_select);
+                                log.Info(sql_select);
 
 
-                            if ((data_table == null) || (data_table.Rows.Count == 0))
-                            {
-                              Console.WriteLine("data_table == null");
-                            }
-                            else
-                            {
-                              Console.WriteLine("data_table != null");
-                                string ssql_insert_value = @"'" + data_table.Rows[0]["serial_no"].ToString() + @"'" +
-                                    "," + @"'" + data_table.Rows[0]["uid"].ToString() + @"'" +
-                                    "," + @"'" + data_table.Rows[0]["on_time"].ToString() + @"'" +
-                                    "," + @"'" + data_table.Rows[0]["off_time"].ToString() + @"'" +
-                                    "," + @"'" + data_table.Rows[0]["all_time_count"].ToString() + @"'" +
-                                    "," + @"'" + data_table.Rows[0]["location_count"].ToString() + @"'" +
-                                    "," + @"'" + data_table.Rows[0]["location_percentage"].ToString() + @"'";
-                                string sql_insert = @"
+                                if ((data_table == null) || (data_table.Rows.Count == 0))
+                                {
+                                    Console.WriteLine("data_table == null");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("data_table != null");
+                                    string ssql_insert_value = @"'" + data_table.Rows[0]["serial_no"].ToString() + @"'" +
+                                        "," + @"'" + data_table.Rows[0]["uid"].ToString() + @"'" +
+                                        "," + @"'" + data_table.Rows[0]["on_time"].ToString() + @"'" +
+                                        "," + @"'" + data_table.Rows[0]["off_time"].ToString() + @"'" +
+                                        "," + @"'" + data_table.Rows[0]["all_time_count"].ToString() + @"'" +
+                                        "," + @"'" + data_table.Rows[0]["location_count"].ToString() + @"'" +
+                                        "," + @"'" + data_table.Rows[0]["location_percentage"].ToString() + @"'";
+                                    string sql_insert = @"
 INSERT INTO custom.location_control_log 
 (serial_no, uid, on_time, off_time, all_time_count, location_count, location_percentage) 
 VALUES 
 (" + ssql_insert_value + @");
 ";
-                              Console.WriteLine(sql_insert);
-                                log.Info(sql_insert);
-                                //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[device]:" + data_table.Rows[0]["device"]);
-                                //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[longitude]:" + data_table.Rows[0]["longitude"]);
-                                //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[latitude]:" + data_table.Rows[0]["latitude"]);
-                                sql_client.connect();
-                                sql_client.modify(sql_insert);
-                                sql_client.disconnect();
+                                    Console.WriteLine(sql_insert);
+                                    log.Info(sql_insert);
+                                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[device]:" + data_table.Rows[0]["device"]);
+                                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[longitude]:" + data_table.Rows[0]["longitude"]);
+                                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[latitude]:" + data_table.Rows[0]["latitude"]);
+                                    sql_client.connect();
+                                    sql_client.modify(sql_insert);
+                                    sql_client.disconnect();
+                                }
                             }
+                            
 
                             Power_status.Remove(find_dev_sn);
                             break;
@@ -1385,7 +1430,7 @@ LIMIT 1";
               Console.WriteLine("-sql_access");
             }
 
-            private static void Insert_power_on_event_to_public_gps_log(Device_power_status dev_power_status)
+            private static void InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(Device_power_status dev_power_status, string result, SortedDictionary<string, string> parse_package)
             {
                 AUTO_SQL_DATA gps_log = new AUTO_SQL_DATA();
                 
@@ -1446,7 +1491,97 @@ LIMIT 1";
                         gps_log._id = "\'" + dev_power_status.ID + "_" + now + "_" + auto_id_serial_command + "\'";
                         gps_log._lat = gps_log._or_lat =   lat;
                         gps_log._lon = gps_log._or_lon =   lon;
-                 
+                        gps_log._option3 = "\'" + result + "\'";
+                        gps_log._validity = "\'D\'";
+
+                gps_log._satellites = gps_log._temperature = gps_log._voltage = "0";
+                string table_columns = "_id,_uid,_option3,_or_lon,_or_lat,_satellites,_temperature,_voltage,_lat,_lon,_validity";
+                        string table_column_value = gps_log._id + "," + gps_log._uid +  "," + gps_log._option3 + "," +
+                            gps_log._or_lon + "," + gps_log._or_lat + "," + gps_log._satellites + "," +
+                                       gps_log._temperature + "," + gps_log._voltage + ","  + gps_log._lat
+                                       +
+                                       "," + gps_log._lon +
+                                       "," + gps_log._validity;
+                        string cmd = "INSERT INTO public._gps_log (" + table_columns + ") VALUES (" + table_column_value + ")";
+                sqlClient.connect();
+                sqlClient.modify(cmd);
+                sqlClient.disconnect();
+
+                //avls
+                string avlsLat = string.Empty, avlsLon = string.Empty;
+                log.Info("+access_avls_server:if");
+                Console.WriteLine("+access_avls_server:if");
+                TcpClient avls_tcpClient;
+                string send_string = string.Empty;
+                AVLS_UNIT_Report_Packet avls_package = new AVLS_UNIT_Report_Packet();
+                //string ipAddress = "127.0.0.1";
+                string ipAddress = ConfigurationManager.AppSettings["AVLS_SERVER_IP"];
+                //int port = 23;
+                int port = int.Parse(ConfigurationManager.AppSettings["AVLS_SERVER_PORT"]);
+
+                avls_tcpClient = new TcpClient();
+
+                //avls_tcpClient.Connect(ipAddress, port);
+                connectDone.Reset();
+                avls_tcpClient.BeginConnect(ipAddress, port, new AsyncCallback(ConnectCallback), avls_tcpClient);
+                connectDone.WaitOne();
+
+                //avls_tcpClient.NoDelay = false;
+
+                //Keeplive.keep(avls_tcpClient.Client);
+                NetworkStream netStream = avls_tcpClient.GetStream();
+
+                //if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off")))
+                //{
+                switch (result)
+                {
+                    case "power_on":
+                        avls_package.Event = "181,";
+                        break;
+                    case "power_off":
+                        avls_package.Event = "182,";
+                        break;
+                }
+
+
+                avls_package.Date_Time = parse_package["timestamp"].ToString().Substring(2, 12);
+                //log.Info("avls_package.Date_Time=" + avls_package.Date_Time);
+                DateTime tempDatetime = DateTime.ParseExact(avls_package.Date_Time, "yyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture);
+                tempDatetime = tempDatetime.ToUniversalTime();
+                avls_package.Date_Time = tempDatetime.ToString("yyMMddHHmmss") + ",";
+
+                avls_package.ID = parse_package["source_id"].ToString();
+                avls_package.GPS_Valid = "A,";
+
+                GeoAngle lat_value = GeoAngle.FromDouble(Convert.ToDecimal(lat));
+                GeoAngle long_value = GeoAngle.FromDouble(Convert.ToDecimal(lon));
+                string lat_str = lat_value.Degrees.ToString() + lat_value.Minutes.ToString("D2") + "." + lat_value.Seconds.ToString("D2") + lat_value.Milliseconds.ToString("D3");
+                string long_str = long_value.Degrees.ToString() + long_value.Minutes.ToString("D2") + "." + long_value.Seconds.ToString("D2") + long_value.Milliseconds.ToString("D3");
+                //avls_package.Loc = "N" + (Convert.ToDouble(htable["lat_value"])*100).ToString() + "E" + (Convert.ToDouble(htable["long_value"])*100).ToString()+ ",";
+                avls_package.Loc = "N" + lat_str + "E" + long_str + ",";
+                //avls_package.Loc = "N00000.0000E00000.0000,";
+
+                avls_package.Speed = "0,";
+                avls_package.Dir = "0,";
+                avls_package.Temp = "NA,";
+                avls_package.Status = "00000000,";
+                avls_package.Message = "test";
+
+                //}
+                avls_package.ID += ",";
+                send_string = "%%" + avls_package.ID + avls_package.GPS_Valid + avls_package.Date_Time + avls_package.Loc + avls_package.Speed + avls_package.Dir + avls_package.Temp + avls_package.Status + avls_package.Event + avls_package.Message + "\r\n";
+
+
+                sendDone.Reset();
+                avls_WriteLine(netStream, System.Text.Encoding.Default.GetBytes(send_string), send_string);
+                sendDone.WaitOne();
+
+                //ReadLine(avls_tcpClient, netStream, send_string.Length);
+                netStream.Close();
+                avls_tcpClient.Close();
+                log.Info("-access_avls_server:if");
+                Console.WriteLine("-access_avls_server:if");
+
             }
 
             private static void parse_data_section(byte[] p, ref SortedDictionary<string, string> parse_package)
