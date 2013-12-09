@@ -741,7 +741,7 @@ WHERE
                         log.Info(Thread.CurrentThread.Name+"@"+"sql_access:call_type=unknown");
                     }
                     SqlClient sql_client = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
-                    sql_client.connect();
+                    
                     switch (parse_package["result"].ToString())
                     {
                         case "power_on":
@@ -763,7 +763,7 @@ ORDER BY
   custom.turn_onoff_log.create_time DESC
 LIMIT 1
                              */
-                            if (true)
+                            //if (true)
                             {
                                 string sn = string.Empty;
                                 sql_cmd = @"SELECT 
@@ -775,6 +775,7 @@ WHERE
 ORDER BY
   custom.turn_onoff_log.create_time DESC
 LIMIT 1";
+                                sql_client.connect();
                                 var dt = sql_client.get_DataTable(sql_cmd);
                                 sql_client.disconnect();
                                 if (dt != null && dt.Rows.Count != 0)
@@ -809,33 +810,7 @@ LIMIT 1";
                                     dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
                                 }
                             }
-                            else
-                            {
-                                if (AddValue(dev_power_status.ID, power_on_today + "," + "000"))
-                                {
-                                    int iVal = 0;
-
-                                    dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
-                                }
-                                else
-                                {
-                                    string sn = ConfigurationManager.AppSettings[dev_power_status.ID].ToString();
-                                    string[] sn_sub = sn.Split(',');
-                                    if (sn_sub[0] != power_on_today)
-                                    {
-                                        int iVal = 0;
-
-                                        dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
-                                        ModifyValue(dev_power_status.ID, power_on_today + "," + "000");
-                                    }
-                                    else
-                                    {
-                                        uint count = uint.Parse(sn_sub[1]) + 1;
-                                        dev_power_status.SN = dev_power_status.ID + power_on_today + count.ToString("D3");
-                                        ModifyValue(dev_power_status.ID, power_on_today + "," + count.ToString("D3"));
-                                    }
-                                }
-                            }
+                            
                             
                             sql_table_columns = "serial_no,uid,on_time,create_user,create_ip";
                             sql_table_column_value = "\'" + dev_power_status.SN + "\'" + "," + "\'" + dev_power_status.ID + "\'" + "," + "\'" +
@@ -843,6 +818,7 @@ LIMIT 1";
                             sql_cmd = "INSERT INTO custom.turn_onoff_log (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
                             sql_client.connect();
                             sql_client.modify(sql_cmd);
+                            sql_client.disconnect();
                             /*
                             int iVal = 1;
 
@@ -883,7 +859,9 @@ LIMIT 1";
                             dev_power_off_status = find_dev_sn;
                             sql_table_columns = "custom.turn_onoff_log";
                             sql_cmd = "UPDATE " + sql_table_columns + " SET off_time=\'" + device_off_time + "\' WHERE serial_no=\'" + dev_power_off_status.SN + "\'";
+                            sql_client.connect();
                             sql_client.modify(sql_cmd);
+                            sql_client.disconnect();
                             // TODO: insert information control present to sql server
                             /*
                              * SELECT ((((DATE_PART('day', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp) * 24 +
@@ -932,10 +910,12 @@ GROUP BY
                 DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))
 limit 1
                                 ";
+                            sql_client.connect();
                             DataTable data_table = sql_client.get_DataTable(sql_select);
+                            sql_client.disconnect();
                           Console.WriteLine(sql_select);
                             log.Info(sql_select);
-                            sql_client.disconnect();
+
 
                             if ((data_table == null) || (data_table.Rows.Count == 0))
                             {
@@ -1009,6 +989,7 @@ WHERE
 ORDER BY
   custom.voice_connect.create_time DESC
 LIMIT 1";
+                                sql_client.connect();
                                 var dt = sql_client.get_DataTable(sql_cmd);
                                 sql_client.disconnect();
                                 if (dt != null && dt.Rows.Count != 0)
@@ -1077,6 +1058,7 @@ LIMIT 1";
                             sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
                             sql_client.connect();
                             sql_client.modify(sql_cmd);
+                            sql_client.disconnect();
 
                             Call_status.Add(dev_call_status);
                             break;
@@ -1110,7 +1092,9 @@ LIMIT 1";
                                 dev_call_off_status.end_call_time.Substring(10, 2) + ":" + dev_call_off_status.end_call_time.Substring(12, 2);
                             sql_table_columns = "custom.voice_connect";
                             sql_cmd = "UPDATE " + sql_table_columns + " SET end_time=\'" + device_end_call_time + "\' WHERE serial_no=\'" + dev_call_off_status.SN + "\'";
+                            sql_client.connect();
                             sql_client.modify(sql_cmd);
+                            sql_client.disconnect();
                             Call_status.Remove(find_dev_call_off_sn);
                             break;
                     }
@@ -1154,6 +1138,7 @@ WHERE
 ORDER BY
   custom.voice_connect.create_time DESC
 LIMIT 1";
+                                        sql_client.connect();
                                         var dt = sql_client.get_DataTable(sql_cmd);
                                         sql_client.disconnect();
                                         if (dt != null && dt.Rows.Count != 0)
@@ -1221,6 +1206,7 @@ LIMIT 1";
                                     sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
                                     sql_client.connect();
                                     sql_client.modify(sql_cmd);
+                                    sql_client.disconnect();
                                 }
                                 break;
                             case "Mobile_to_Land"://M
@@ -1259,6 +1245,7 @@ WHERE
 ORDER BY
   custom.voice_connect.create_time DESC
 LIMIT 1";
+                                        sql_client.connect();
                                         var dt = sql_client.get_DataTable(sql_cmd);
                                         sql_client.disconnect();
                                         if (dt != null && dt.Rows.Count != 0)
@@ -1326,13 +1313,14 @@ LIMIT 1";
                                     sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
                                     sql_client.connect();
                                     sql_client.modify(sql_cmd);
+                                    sql_client.disconnect();
                                 }
                                 break;
                         }
                     }
                   Console.WriteLine(sql_cmd);
                     log.Info(sql_cmd);
-                    sql_client.disconnect();
+                    
                 }
               Console.WriteLine("-sql_access");
             }
