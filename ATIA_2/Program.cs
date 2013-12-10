@@ -440,7 +440,7 @@ WHERE
             //Keeplive.keep(avls_tcpClient.Client);
             NetworkStream netStream = avls_tcpClient.GetStream();
             avls_package.Event = eventStatus+",";
-            avls_package.Date_Time = string.Format("{0:yyMMddHHmmss}", DateTime.Now) + ",";
+            avls_package.Date_Time = string.Format("{0:yyMMddHHmmss}", DateTime.Now.ToUniversalTime()) + ",";
             avls_package.ID = uid;
             avls_package.GPS_Valid = "A,";
 
