@@ -390,7 +390,7 @@ namespace ATIA_2
                 var aTimer = new System.Timers.Timer(int.Parse(ConfigurationManager.AppSettings["aTimer_interval_sec"])*1000);
                 aTimer.Elapsed += new ElapsedEventHandler(SendToAvlsEventColumnSetNegativeOneIfPowerOff);
                 aTimer.Enabled = true;
-
+                Console.ReadLine();
             }
 
         private static void SendToAvlsEventColumnSetNegativeOneIfPowerOff(object sender, ElapsedEventArgs e)
