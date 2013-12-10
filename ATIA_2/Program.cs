@@ -488,6 +488,14 @@ namespace ATIA_2
                         string start_time = _StartTime.ToString("yyyyMMddHHmmssffff");
                         parse_package.Add("start_call_time", start_time);
                     }
+                    if (CheckIfUidExist(parse_package["source_id"].ToString()))
+                    {
+                        //do nothing
+                    }
+                    else
+                    {
+                        continue;
+                    }
                     if (bool.Parse(ConfigurationManager.AppSettings["SQL_ACCESS"]))
                         sql_access(ref parse_package);
                     if (bool.Parse(ConfigurationManager.AppSettings["AVLS_ACCESS"]))
@@ -530,7 +538,30 @@ namespace ATIA_2
 
             }
 
-            private static void access_avls_server(ref SortedDictionary<string, string> parse_package)
+        private static bool CheckIfUidExist(string uid)
+        {
+            SqlClient sql_client = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
+            string sqlCmd = @"SELECT 
+  sd.equipment.uid
+FROM
+  sd.equipment
+WHERE
+  sd.equipment.uid = '"+uid+@"'
+LIMIT 1";
+            sql_client.connect();
+            var dt = sql_client.get_DataTable(sqlCmd);
+            sql_client.disconnect();
+            if (dt != null && dt.Rows.Count != 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private static void access_avls_server(ref SortedDictionary<string, string> parse_package)
             {
                 log.Info("+access_avls_server");
                 Console.WriteLine("+access_avls_server");
