@@ -395,6 +395,33 @@ namespace ATIA_2
 
         private static void SendToAvlsEventColumnSetNegativeOneIfPowerOff(object sender, ElapsedEventArgs e)
         {
+            var sqlClient = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
+            DataTable dt = new DataTable();
+            string sqlCmd = @"SELECT 
+  custom.turn_onoff_log.uid
+FROM
+  custom.turn_onoff_log
+  INNER JOIN sd.equipment ON (custom.turn_onoff_log.uid = sd.equipment.uid)
+WHERE
+  custom.turn_onoff_log.off_time IS NOT NULL AND 
+  custom.turn_onoff_log.create_time < current_timestamp- interval '" + ConfigurationManager.AppSettings["setNegativeOneToAvlsInterval"] + @"'";
+            sqlClient.connect();
+            dt = sqlClient.get_DataTable(sqlCmd);
+            sqlClient.disconnect();
+            string uid = string.Empty;
+            if (dt != null && dt.Rows.Count != 0)
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    uid = row[0].ToString();
+                    SendPackageToAvlsOnlyByUid(uid,"-1");
+                }
+            }
+
+        }
+
+        private static void SendPackageToAvlsOnlyByUid(string uid, string eventStatus)
+        {
             throw new NotImplementedException();
         }
 
