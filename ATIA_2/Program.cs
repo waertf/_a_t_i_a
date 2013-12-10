@@ -12,6 +12,7 @@ using System.Net;
 using System.ComponentModel;
 using System.IO;
 using System.Collections;
+using System.Timers;
 using log4net;
 using log4net.Config;
 using System.Globalization;
@@ -386,8 +387,18 @@ namespace ATIA_2
                 udp_server_8671.Start();
                 udp_server_8601.Start();
 
+                var aTimer = new System.Timers.Timer(int.Parse(ConfigurationManager.AppSettings["aTimer_interval_sec"])*1000);
+                aTimer.Elapsed += new ElapsedEventHandler(SendToAvlsEventColumnSetNegativeOneIfPowerOff);
+                aTimer.Enabled = true;
+
             }
-            static void udp_server_t(int port)
+
+        private static void SendToAvlsEventColumnSetNegativeOneIfPowerOff(object sender, ElapsedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        static void udp_server_t(int port)
             {
               
                 UdpClient udpClient = new UdpClient(port);
