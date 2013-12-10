@@ -817,7 +817,7 @@ LIMIT 1";
                                 break;
                             }
                         }
-
+                        #region
                         {
                                 string sn = string.Empty;
                                 sql_cmd = @"SELECT 
@@ -869,10 +869,10 @@ LIMIT 1";
                                     InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_status, parse_package["result"].ToString(),parse_package);
 
                                 }
-                            }
-                            
-                            
-                            sql_table_columns = "serial_no,uid,on_time,create_user,create_ip";
+                        }
+                        #endregion
+
+                        sql_table_columns = "serial_no,uid,on_time,create_user,create_ip";
                             sql_table_column_value = "\'" + dev_power_status.SN + "\'" + "," + "\'" + dev_power_status.ID + "\'" + "," + "\'" +
                                 device_on_time + "\'" + "," + "0" + "," + "\'" +GetLocalIPAddress()+ "\'";
                             sql_cmd = "INSERT INTO custom.turn_onoff_log (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
