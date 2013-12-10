@@ -512,7 +512,17 @@ LIMIT 1";
             avls_package.Dir = "0,";
             avls_package.Temp = "NA,";
             avls_package.Status = "00000000,";
-            avls_package.Message = "test";
+            switch (eventStatus)
+            {
+                case "-1":
+                    avls_package.Message = "power_off";
+                    break;
+                default:
+                    avls_package.Message = "test";
+                    break;
+
+            }
+            
 
             //}
             avls_package.ID += ",";
@@ -620,14 +630,22 @@ LIMIT 1";
                         string start_time = _StartTime.ToString("yyyyMMddHHmmssffff");
                         parse_package.Add("start_call_time", start_time);
                     }
-                    if (CheckIfUidExist(parse_package["source_id"].ToString()))
+                    if (parse_package.ContainsKey("source_id"))
                     {
-                        //do nothing
+                        if (CheckIfUidExist(parse_package["source_id"].ToString()))
+                        {
+                            //do nothing
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
                     else
                     {
                         continue;
                     }
+                    
                     if (bool.Parse(ConfigurationManager.AppSettings["SQL_ACCESS"]))
                         sql_access(ref parse_package);
                     if (bool.Parse(ConfigurationManager.AppSettings["AVLS_ACCESS"]))
