@@ -414,15 +414,120 @@ WHERE
                 foreach (DataRow row in dt.Rows)
                 {
                     uid = row[0].ToString();
-                    SendPackageToAvlsOnlyByUid(uid,"-1");
+                    SendPackageToAvlsOnlyByUidAndLocGetFromSql(uid,"-1");
                 }
             }
 
         }
 
-        private static void SendPackageToAvlsOnlyByUid(string uid, string eventStatus)
+        private static void SendPackageToAvlsOnlyByUidAndLocGetFromSql(string uid, string eventStatus)
         {
-            throw new NotImplementedException();
+            TcpClient avls_tcpClient;
+            string send_string = string.Empty;
+            AVLS_UNIT_Report_Packet avls_package = new AVLS_UNIT_Report_Packet();
+            //string ipAddress = "127.0.0.1";
+            string ipAddress = ConfigurationManager.AppSettings["AVLS_SERVER_IP"];
+            //int port = 23;
+            int port = int.Parse(ConfigurationManager.AppSettings["AVLS_SERVER_PORT"]);
+
+            avls_tcpClient = new TcpClient();
+            connectDone.Reset();
+            avls_tcpClient.BeginConnect(ipAddress, port, new AsyncCallback(ConnectCallback), avls_tcpClient);
+            connectDone.WaitOne();
+
+            //avls_tcpClient.NoDelay = false;
+
+            //Keeplive.keep(avls_tcpClient.Client);
+            NetworkStream netStream = avls_tcpClient.GetStream();
+            avls_package.Event = eventStatus+",";
+            avls_package.Date_Time = string.Format("{0:yyMMddHHmmss}", DateTime.Now) + ",";
+            avls_package.ID = uid;
+            avls_package.GPS_Valid = "A,";
+
+            if (avlsGetLastLocation)
+            {
+                var avlsSqlClient = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
+                string avlsSqlCmd = @"SELECT 
+  public._gps_log._lat,
+  public._gps_log._lon
+FROM
+  public._gps_log
+WHERE
+  public._gps_log._time < now() AND 
+  public._gps_log._uid = '" + avls_package.ID + @"'
+ORDER BY
+  public._gps_log._time DESC
+LIMIT 1";
+                log.Info("avlsSqlCmd=" + Environment.NewLine + avlsSqlCmd);
+                avlsSqlClient.connect();
+                var dt = avlsSqlClient.get_DataTable(avlsSqlCmd);
+                avlsSqlClient.disconnect();
+                if (dt != null && dt.Rows.Count != 0)
+                {
+                    string avlsLat = string.Empty, avlsLon = string.Empty;
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        avlsLat = row[0].ToString();
+                        avlsLon = row[1].ToString();
+                    }
+                    string zero = "0";
+                    if (avlsLat.Equals(zero) || avlsLon.Equals(zero))
+                    {
+                        GetInitialLocationFromSql(ref avlsLat, ref avlsLon, avls_package.ID);
+                    }
+                    GeoAngle lat_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLat));
+                    GeoAngle long_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLon));
+                    string lat_str = lat_value.Degrees.ToString() + lat_value.Minutes.ToString("D2") + "." + lat_value.Seconds.ToString("D2") + lat_value.Milliseconds.ToString("D3");
+                    string long_str = long_value.Degrees.ToString() + long_value.Minutes.ToString("D2") + "." + long_value.Seconds.ToString("D2") + long_value.Milliseconds.ToString("D3");
+                    //avls_package.Loc = "N" + (Convert.ToDouble(htable["lat_value"])*100).ToString() + "E" + (Convert.ToDouble(htable["long_value"])*100).ToString()+ ",";
+                    avls_package.Loc = "N" + lat_str + "E" + long_str + ",";
+                }
+                else
+                {
+                    string avlsLat = string.Empty, avlsLon = string.Empty;
+                    GetInitialLocationFromSql(ref avlsLat, ref avlsLon, avls_package.ID);
+                    GeoAngle lat_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLat));
+                    GeoAngle long_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLon));
+                    string lat_str = lat_value.Degrees.ToString() + lat_value.Minutes.ToString("D2") + "." + lat_value.Seconds.ToString("D2") + lat_value.Milliseconds.ToString("D3");
+                    string long_str = long_value.Degrees.ToString() + long_value.Minutes.ToString("D2") + "." + long_value.Seconds.ToString("D2") + long_value.Milliseconds.ToString("D3");
+                    //avls_package.Loc = "N" + (Convert.ToDouble(htable["lat_value"])*100).ToString() + "E" + (Convert.ToDouble(htable["long_value"])*100).ToString()+ ",";
+                    avls_package.Loc = "N" + lat_str + "E" + long_str + ",";
+                    //avls_package.Loc = "N00000.0000E00000.0000,";
+                }
+            }
+            else
+            {
+                string avlsLat = string.Empty, avlsLon = string.Empty;
+                GetInitialLocationFromSql(ref avlsLat, ref avlsLon, avls_package.ID);
+                GeoAngle lat_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLat));
+                GeoAngle long_value = GeoAngle.FromDouble(Convert.ToDecimal(avlsLon));
+                string lat_str = lat_value.Degrees.ToString() + lat_value.Minutes.ToString("D2") + "." + lat_value.Seconds.ToString("D2") + lat_value.Milliseconds.ToString("D3");
+                string long_str = long_value.Degrees.ToString() + long_value.Minutes.ToString("D2") + "." + long_value.Seconds.ToString("D2") + long_value.Milliseconds.ToString("D3");
+                //avls_package.Loc = "N" + (Convert.ToDouble(htable["lat_value"])*100).ToString() + "E" + (Convert.ToDouble(htable["long_value"])*100).ToString()+ ",";
+                avls_package.Loc = "N" + lat_str + "E" + long_str + ",";
+                //avls_package.Loc = "N00000.0000E00000.0000,";
+            }
+
+            avls_package.Speed = "0,";
+            avls_package.Dir = "0,";
+            avls_package.Temp = "NA,";
+            avls_package.Status = "00000000,";
+            avls_package.Message = "test";
+
+            //}
+            avls_package.ID += ",";
+            send_string = "%%" + avls_package.ID + avls_package.GPS_Valid + avls_package.Date_Time + avls_package.Loc + avls_package.Speed + avls_package.Dir + avls_package.Temp + avls_package.Status + avls_package.Event + avls_package.Message + "\r\n";
+
+
+            sendDone.Reset();
+            avls_WriteLine(netStream, System.Text.Encoding.Default.GetBytes(send_string), send_string);
+            sendDone.WaitOne();
+
+            //ReadLine(avls_tcpClient, netStream, send_string.Length);
+            netStream.Close();
+            avls_tcpClient.Close();
+            log.Info("-access_avls_server:if");
+            Console.WriteLine("-access_avls_server:if");
         }
 
         static void udp_server_t(int port)
