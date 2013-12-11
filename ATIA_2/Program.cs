@@ -1166,7 +1166,7 @@ FROM
 WHERE
   custom.turn_onoff_log.uid = '" + dev_power_off_status.ID + @"' AND 
 custom.turn_onoff_log.on_time IS NOT NULL AND 
-  custom.turn_onoff_log.off_time IS NOT NULL
+  custom.turn_onoff_log.off_time IS  NULL
 ORDER BY
   custom.turn_onoff_log.create_time DESC
 LIMIT 1";
@@ -1175,11 +1175,11 @@ LIMIT 1";
                                 sql_client.disconnect();
                                 if (dt != null && dt.Rows.Count != 0)
                                 {
-                                    break;
+                                    InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_off_status, parse_package["result"].ToString(), parse_package);
                                 }
                                 else
                                 {
-                                    InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_off_status, parse_package["result"].ToString(),parse_package);
+                                    break;
                                     
                                 }
                             }
