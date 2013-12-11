@@ -762,6 +762,12 @@ LIMIT 1";
 
         private static void access_avls_server(ref SortedDictionary<string, string> parse_package)
             {
+                if (CheckIfUidExist(parse_package["source_id"].ToString()))
+                {}
+                else
+                {
+                    return;
+                }
                 log.Info("+access_avls_server");
                 Console.WriteLine("+access_avls_server");
                 if (parse_package.ContainsKey("result") &&
@@ -1044,6 +1050,7 @@ LIMIT 1
   custom.turn_onoff_log.serial_no
 FROM
   custom.turn_onoff_log
+INNER JOIN sd.equipment ON (custom.turn_onoff_log.uid = sd.equipment.uid)
 WHERE
   custom.turn_onoff_log.uid = '" + dev_power_status.ID + @"' AND 
 custom.turn_onoff_log.on_time IS NOT NULL AND 
@@ -1066,6 +1073,7 @@ LIMIT 1";
   custom.turn_onoff_log.serial_no
 FROM
   custom.turn_onoff_log
+INNER JOIN sd.equipment ON (custom.turn_onoff_log.uid = sd.equipment.uid)
 WHERE
   custom.turn_onoff_log.uid = '" + dev_power_status.ID + @"' AND 
 custom.turn_onoff_log.on_time IS NOT NULL AND 
@@ -1114,24 +1122,42 @@ LIMIT 1";
                         }
                         #endregion
 
-                        sql_table_columns = "serial_no,uid,on_time,create_user,create_ip";
-                            sql_table_column_value = "\'" + dev_power_status.SN + "\'" + "," + "\'" + dev_power_status.ID + "\'" + "," + "\'" +
-                                device_on_time + "\'" + "," + "0" + "," + "\'" +GetLocalIPAddress()+ "\'";
-                            sql_cmd = "INSERT INTO custom.turn_onoff_log (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-                            sql_client.connect();
-                            sql_client.modify(sql_cmd);
-                            sql_client.disconnect();
-                            /*
-                            int iVal = 1;
+                            if (CheckIfUidInEquipmentTable(dev_power_status.ID))
+                            {
+                                sql_table_columns = "serial_no,uid,on_time,create_user,create_ip";
+                                sql_table_column_value = "\'" + dev_power_status.SN + "\'" + "," + "\'" + dev_power_status.ID + "\'" + "," + "\'" +
+                                    device_on_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'";
+                                sql_cmd = "INSERT INTO custom.turn_onoff_log (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                sql_client.connect();
+                                sql_client.modify(sql_cmd);
+                                sql_client.disconnect();
+                                /*
+                                int iVal = 1;
 
-                            iVal.ToString("D3"); // = "001"
-                             * */
-                            Power_status.Add(dev_power_status);
+                                iVal.ToString("D3"); // = "001"
+                                 * */
+                                Power_status.Add(dev_power_status);
+                            }
+                            else
+                            {
+                                
+                            }
+                        
                             break;
                         case "power_off":
+                            
                             string power_off_sn = string.Empty;
                             Device_power_status dev_power_off_status = new Device_power_status();
                             dev_power_off_status.ID = parse_package["source_id"].ToString();
+                            if (CheckIfUidInEquipmentTable(dev_power_off_status.ID))
+                            {
+                                
+                            }
+                            else
+                            {
+                                break;
+                            }
+
                             Device_power_status find_dev_sn = Power_status.Find(
                                  delegate(Device_power_status bk)
                                  {
@@ -1164,6 +1190,7 @@ LIMIT 1";
   custom.turn_onoff_log.serial_no
 FROM
   custom.turn_onoff_log
+INNER JOIN sd.equipment ON (custom.turn_onoff_log.uid = sd.equipment.uid)
 WHERE
   custom.turn_onoff_log.uid = '" + dev_power_off_status.ID + @"' AND 
 custom.turn_onoff_log.on_time IS NOT NULL AND 
@@ -1189,6 +1216,7 @@ LIMIT 1";
   custom.turn_onoff_log.serial_no
 FROM
   custom.turn_onoff_log
+INNER JOIN sd.equipment ON (custom.turn_onoff_log.uid = sd.equipment.uid)
 WHERE
   custom.turn_onoff_log.serial_no = '" + power_off_sn + @"' AND 
 custom.turn_onoff_log.on_time IS NOT NULL AND 
@@ -1400,22 +1428,31 @@ LIMIT 1";
                                     }
                                 }
                             }
+
+                            if (CheckIfUidInEquipmentTable(dev_call_status.ID))
+                            {
+                                sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip";
+                                sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
+                                    dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'";
+                                sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                sql_client.connect();
+                                sql_client.modify(sql_cmd);
+                                sql_client.disconnect();
+
+                                Call_status.Add(dev_call_status);
+                            }
                             
-
-                            sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip";
-                            sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
-                                dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress()+ "\'";
-                            sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-                            sql_client.connect();
-                            sql_client.modify(sql_cmd);
-                            sql_client.disconnect();
-
-                            Call_status.Add(dev_call_status);
                             break;
                         case "end_call":
                             string end_call_sn = string.Empty;
                             Device_call_status dev_call_off_status = new Device_call_status();
                             dev_call_off_status.ID = parse_package["source_id"].ToString();
+                            if (CheckIfUidInEquipmentTable(dev_call_off_status.ID))
+                            {}
+                            else
+                            {
+                                break;
+                            }
                             Device_call_status find_dev_call_off_sn = Call_status.Find(
                                  delegate(Device_call_status bk)
                                  {
@@ -1457,6 +1494,13 @@ LIMIT 1";
                                     Device_call_status dev_call_status = new Device_call_status();
                                     dev_call_status.call_type = "4";
                                     dev_call_status.ID = parse_package["source_id"].ToString();
+                                    if (CheckIfUidInEquipmentTable(dev_call_status.ID))
+                                    {
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
                                     dev_call_status.start_call_time = parse_package["start_call_time"].ToString();
                                     dev_call_status.end_call_time = parse_package["timestamp"].ToString();
                                     string start_call_today = DateTime.Now.ToString("yyyyMMdd");
@@ -1564,6 +1608,13 @@ LIMIT 1";
                                     Device_call_status dev_call_status = new Device_call_status();
                                     dev_call_status.call_type = "3";
                                     dev_call_status.ID = parse_package["source_id"].ToString();
+                                    if (CheckIfUidInEquipmentTable(dev_call_status.ID))
+                                    {
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
                                     dev_call_status.start_call_time = parse_package["start_call_time"].ToString();
                                     dev_call_status.end_call_time = parse_package["timestamp"].ToString();
                                     string start_call_today = DateTime.Now.ToString("yyyyMMdd");
@@ -1675,7 +1726,27 @@ LIMIT 1";
               Console.WriteLine("-sql_access");
             }
 
-            private static void InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(Device_power_status dev_power_status, string result, SortedDictionary<string, string> parse_package)
+        private static bool CheckIfUidInEquipmentTable(string id)
+        {
+            string regSqlCmd = @"SELECT
+  sd.equipment.uid
+  FROM
+  sd.equipment
+  where
+  sd.equipment.uid = '"+id+@"'";
+            var sql_client = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
+                            sql_client.connect();
+                            var dt = sql_client.get_DataTable(regSqlCmd);
+                            sql_client.disconnect();
+            if (dt != null && dt.Rows.Count != 0)
+                return true;
+            else
+            {
+                return false;
+            }
+        }
+
+        private static void InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(Device_power_status dev_power_status, string result, SortedDictionary<string, string> parse_package)
             {
                 AUTO_SQL_DATA gps_log = new AUTO_SQL_DATA();
                 
