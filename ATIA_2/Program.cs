@@ -397,6 +397,26 @@ namespace ATIA_2
         {
             var sqlClient = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
             DataTable dt = new DataTable();
+            /*SELECT  DISTINCT ON (custom.turn_onoff_log.uid)
+	custom.turn_onoff_log.uid,
+  custom.turn_onoff_log.create_time
+FROM
+  custom.turn_onoff_log
+  INNER JOIN sd.equipment ON (custom.turn_onoff_log.uid = sd.equipment.uid)
+WHERE
+  custom.turn_onoff_log.off_time IS NOT NULL AND 
+  custom.turn_onoff_log.create_time < current_timestamp- interval '1 hour' 
+  ORDER  BY custom.turn_onoff_log.uid, custom.turn_onoff_log.create_time DESC*/
+            /*SELECT  DISTINCT ON (1)
+	custom.turn_onoff_log.uid,
+  custom.turn_onoff_log.create_time
+FROM
+  custom.turn_onoff_log
+  INNER JOIN sd.equipment ON (custom.turn_onoff_log.uid = sd.equipment.uid)
+WHERE
+  custom.turn_onoff_log.off_time IS NOT NULL AND 
+  custom.turn_onoff_log.create_time < current_timestamp- interval '1 hour' 
+  ORDER  BY 1, 2 DESC*/
             string sqlCmd = @"SELECT  
 	custom.turn_onoff_log.uid,
   max(custom.turn_onoff_log.create_time)
