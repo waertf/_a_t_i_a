@@ -1235,7 +1235,10 @@ LIMIT 1";
 
 
 FROM
-  custom.turn_onoff_log INNER JOIN
+  custom.turn_onoff_log 
+  INNER JOIN 
+  sd.equipment ON (custom.turn_onoff_log.uid = sd.equipment.uid)
+  INNER JOIN
   custom.voice_connect
   ON
   custom.voice_connect.uid = " + "\'" + dev_power_off_status.ID + "\'" +//custom.turn_onoff_log.uid
