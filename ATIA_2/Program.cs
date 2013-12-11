@@ -40,7 +40,7 @@ namespace ATIA_2
             private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
             private static List<Device_power_status> Power_status = new List<Device_power_status>();
             private static List<Device_call_status> Call_status = new List<Device_call_status>();
-            private static string sql_table_columns = string.Empty, sql_table_column_value = string.Empty, sql_cmd = string.Empty, sql_condition = string.Empty;
+           
 
             // ManualResetEvent instances signal completion.
             private static ManualResetEvent connectDone =
@@ -1002,6 +1002,7 @@ WHERE
             private static void sql_access(ref SortedDictionary<string, string> parse_package)
             {
               Console.WriteLine("+sql_access");
+              string sql_table_columns = string.Empty, sql_table_column_value = string.Empty, sql_cmd = string.Empty;
                 if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off") || parse_package["result"].ToString().Equals("start_call") || parse_package["result"].ToString().Equals("end_call")))
                 {
                     if (parse_package.ContainsKey("call_type"))
