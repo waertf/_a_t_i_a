@@ -800,6 +800,7 @@ LIMIT 1";
                     TcpClient avls_tcpClient;
                     string send_string = string.Empty;
                     AVLS_UNIT_Report_Packet avls_package = new AVLS_UNIT_Report_Packet();
+                    avls_package.Message = "test";
                     //string ipAddress = "127.0.0.1";
                     string ipAddress = ConfigurationManager.AppSettings["AVLS_SERVER_IP"];
                     //int port = 23;
@@ -823,9 +824,11 @@ LIMIT 1";
                         {
                             case "power_on":
                                 avls_package.Event = "181,";
+                                avls_package.Message = parse_package["result"].ToString();
                                 break;
                             case "power_off":
                                 avls_package.Event = "182,";
+                                avls_package.Message = parse_package["result"].ToString();
                                 break;
                         }
 
@@ -926,7 +929,7 @@ LIMIT 1";
                         avls_package.Dir = "0,";
                         avls_package.Temp = "NA,";
                         avls_package.Status = "00000000,";
-                        avls_package.Message = "test";
+                        
 
                     //}
                     avls_package.ID += ",";
