@@ -181,7 +181,12 @@ namespace ATIA_2
                 Group_Affiliation =4,//for power on get gid/uid
                 Location_Registration=6,
                 //power off
-                Deregistration=7
+                Deregistration=7,
+                IncorrectSystemDeregistration =8,
+                //power on
+                RemoteZoneRegistration=12,
+                //power off
+                RemoteZoneDeregistration=13
             };
             enum Call_Status
             {
@@ -1034,6 +1039,20 @@ WHERE
                                 dev_power_status.power_on_time.Substring(10, 2) + ":" + dev_power_status.power_on_time.Substring(12, 2);
                             dev_power_status.power_on_time = device_on_time;
                             string power_on_today = DateTime.Now.ToString("yyyyMMdd");
+                            #region access power status
+
+                        {
+                            sql_cmd = @"UPDATE 
+  custom.atia_device_power_status
+SET
+  power = 'on'
+WHERE
+  custom.atia_device_power_status.uid = '"+parse_package["source_id"].ToString()+@"'";
+                            sql_client.connect();
+                            sql_client.modify(sql_cmd);
+                            sql_client.disconnect();
+                        }
+                            #endregion
                             /*SELECT 
   custom.turn_onoff_log.serial_no
 FROM
@@ -1145,7 +1164,21 @@ LIMIT 1";
                         
                             break;
                         case "power_off":
-                            
+
+                            #region access power status
+
+                            {
+                                sql_cmd = @"UPDATE 
+  custom.atia_device_power_status
+SET
+  power = 'on'
+WHERE
+  custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                sql_client.connect();
+                                sql_client.modify(sql_cmd);
+                                sql_client.disconnect();
+                            }
+                            #endregion
                             string power_off_sn = string.Empty;
                             Device_power_status dev_power_off_status = new Device_power_status();
                             dev_power_off_status.ID = parse_package["source_id"].ToString();
@@ -2296,8 +2329,20 @@ LIMIT 1";
                                 parse_package.Add("comment", "Deregistration");
                                 parse_package.Add("result", "power_off");
                                 break;
+                            case (ushort)Flexible_Mobility_Update_opcode.IncorrectSystemDeregistration:
+                                parse_package.Add("comment", "IncorrectSystemDeregistration");
+                                parse_package.Add("result", "power_off");
+                                break;
+                            case (ushort)Flexible_Mobility_Update_opcode.RemoteZoneDeregistration:
+                                parse_package.Add("comment", "RemoteZoneDeregistration");
+                                parse_package.Add("result", "power_off");
+                                break;
                             case (ushort)Flexible_Mobility_Update_opcode.Group_Affiliation:
                                 parse_package.Add("comment", "Group_Affiliation");// to get gid/uid
+                                parse_package.Add("result", "power_on");
+                                break;
+                            case (ushort)Flexible_Mobility_Update_opcode.RemoteZoneRegistration:
+                                parse_package.Add("comment", "RemoteZoneRegistration");// to get gid/uid
                                 parse_package.Add("result", "power_on");
                                 break;
                         }
