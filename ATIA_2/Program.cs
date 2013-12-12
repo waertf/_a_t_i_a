@@ -1854,6 +1854,10 @@ LIMIT 1";
                         }
                         gps_log._uid = "\'" + dev_power_status.ID + "\'";
                         string now = DateTime.Now.ToString("yyyyMMdd");
+            while (now == null || now == string.Empty)
+            {
+                now = DateTime.Now.ToString("yyyyMMdd");
+            }
                         
                         sqlClient.connect();
                         string auto_id_serial_command = sqlClient.get_DataTable("SELECT COUNT(_uid)   FROM public._gps_log").Rows[0].ItemArray[0].ToString();
