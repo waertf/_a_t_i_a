@@ -1,0 +1,7 @@
+CREATE TABLE custom.atia_device_power_status (
+  sn SERIAL,
+  uid VARCHAR(6),
+  power VARCHAR,
+  CONSTRAINT atia_device_power_status_pkey PRIMARY KEY(sn)
+) 
+WITH (oids = false);
