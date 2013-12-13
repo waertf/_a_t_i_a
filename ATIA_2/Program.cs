@@ -405,7 +405,7 @@ namespace ATIA_2
 
                 var aTimer = new System.Timers.Timer(int.Parse(ConfigurationManager.AppSettings["aTimer_interval_sec"])*1000);
                 aTimer.Elapsed += new ElapsedEventHandler(SendToAvlsEventColumnSetNegativeOneIfPowerOff);
-                aTimer.Enabled = true;
+                aTimer.Enabled = false;
                 Console.ReadLine();
             }
 
