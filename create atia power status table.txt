@@ -5,3 +5,6 @@ CREATE TABLE custom.atia_device_power_status (
   CONSTRAINT atia_device_power_status_pkey PRIMARY KEY(sn)
 ) 
 WITH (oids = false);
+
+ALTER TABLE custom.atia_device_power_status
+  ADD COLUMN "updateTime" TIMESTAMP(0) WITH TIME ZONE;
