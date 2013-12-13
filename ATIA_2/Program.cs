@@ -1883,6 +1883,9 @@ LIMIT 1";
                 sqlClient.disconnect();
 
                 //avls
+            
+                #region avls
+            /*
                 string avlsLat = string.Empty, avlsLon = string.Empty;
                 log.Info("+access_avls_server:if");
                 Console.WriteLine("+access_avls_server:if");
@@ -1958,7 +1961,8 @@ LIMIT 1";
                 avls_tcpClient.Close();
                 log.Info("-access_avls_server:if");
                 Console.WriteLine("-access_avls_server:if");
-
+             * */
+                #endregion
             }
 
             private static void parse_data_section(byte[] p, ref SortedDictionary<string, string> parse_package)
