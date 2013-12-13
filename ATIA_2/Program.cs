@@ -1064,12 +1064,14 @@ WHERE
                             #region access power status
 
                         {
+                            string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
                             sql_cmd = @"UPDATE 
   custom.atia_device_power_status
 SET
-  power = 'on'
+  power = 'on',
+""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
-  custom.atia_device_power_status.uid = '"+parse_package["source_id"].ToString()+@"'";
+  custom.atia_device_power_status.uid = '" +parse_package["source_id"].ToString()+@"'";
                             sql_client.connect();
                             sql_client.modify(sql_cmd);
                             sql_client.disconnect();
@@ -1190,10 +1192,12 @@ LIMIT 1";
                             #region access power status
 
                             {
+                                string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
                                 sql_cmd = @"UPDATE 
   custom.atia_device_power_status
 SET
-  power = 'on'
+  power = 'on',
+""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
                                 sql_client.connect();
@@ -1395,9 +1399,41 @@ VALUES
                                 
                                 case "Individual_Call":
                                     dev_call_status.call_type="2";
+                                    #region access power status
+
+                                    {
+                                        string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
+                                        sql_cmd = @"UPDATE 
+  custom.atia_device_power_status
+SET
+  ""callStatus"" = '" + parse_package["call_type"].ToString() + @"',
+""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
+WHERE
+  custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                        sql_client.connect();
+                                        sql_client.modify(sql_cmd);
+                                        sql_client.disconnect();
+                                    }
+                                    #endregion
                                     break;
                                 case "Group_Call":
                                     dev_call_status.call_type="1";
+                                    #region access power status
+
+                                    {
+                                        string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
+                                        sql_cmd = @"UPDATE 
+  custom.atia_device_power_status
+SET
+  ""callStatus"" = '" + parse_package["call_type"].ToString() + @"',
+""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
+WHERE
+  custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                        sql_client.connect();
+                                        sql_client.modify(sql_cmd);
+                                        sql_client.disconnect();
+                                    }
+                                    #endregion
                                     break; 
                             }
                             /*SELECT 
@@ -1499,6 +1535,22 @@ LIMIT 1";
                             
                             break;
                         case "end_call":
+                            #region access power status
+
+                            {
+                                string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
+                                sql_cmd = @"UPDATE 
+  custom.atia_device_power_status
+SET
+  ""callStatus"" = '" + parse_package["result"].ToString() + @"',
+""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
+WHERE
+  custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                sql_client.connect();
+                                sql_client.modify(sql_cmd);
+                                sql_client.disconnect();
+                            }
+                            #endregion
                             string end_call_sn = string.Empty;
                             Device_call_status dev_call_off_status = new Device_call_status();
                             dev_call_off_status.ID = parse_package["source_id"].ToString();
@@ -1546,6 +1598,22 @@ LIMIT 1";
                         {
                             case "Land_to_Mobile"://L
                                 {
+                                    #region access power status
+
+                                    {
+                                        string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
+                                        sql_cmd = @"UPDATE 
+  custom.atia_device_power_status
+SET
+  ""callStatus"" = '" + parse_package["call_type"].ToString() + @"',
+""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
+WHERE
+  custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                        sql_client.connect();
+                                        sql_client.modify(sql_cmd);
+                                        sql_client.disconnect();
+                                    }
+                                    #endregion
                                     Device_call_status dev_call_status = new Device_call_status();
                                     dev_call_status.call_type = "4";
                                     dev_call_status.ID = parse_package["source_id"].ToString();
@@ -1660,6 +1728,22 @@ LIMIT 1";
                                 break;
                             case "Mobile_to_Land"://M
                                 {
+                                    #region access power status
+
+                                    {
+                                        string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
+                                        sql_cmd = @"UPDATE 
+  custom.atia_device_power_status
+SET
+  ""callStatus"" = '" + parse_package["call_type"].ToString() + @"',
+""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
+WHERE
+  custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                        sql_client.connect();
+                                        sql_client.modify(sql_cmd);
+                                        sql_client.disconnect();
+                                    }
+                                    #endregion
                                     Device_call_status dev_call_status = new Device_call_status();
                                     dev_call_status.call_type = "3";
                                     dev_call_status.ID = parse_package["source_id"].ToString();
