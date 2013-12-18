@@ -38,8 +38,8 @@ namespace ATIA_2
             const int OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS = 18;
             const int DEVIATION_OF_OFFSET_FIELDS_OF_VALUES = 0;
             private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-            private static List<Device_power_status> Power_status = new List<Device_power_status>();
-            private static List<Device_call_status> Call_status = new List<Device_call_status>();
+            private static Hashtable Power_status = new Hashtable();
+            private static Hashtable Call_status = new Hashtable();
            
 
             // ManualResetEvent instances signal completion.
@@ -1179,7 +1179,8 @@ LIMIT 1";
 
                                 iVal.ToString("D3"); // = "001"
                                  * */
-                                Power_status.Add(dev_power_status);
+                                if (!Power_status.ContainsKey(dev_power_status.ID))
+                                    Power_status.Add(dev_power_status.ID,dev_power_status);
                             }
                             else
                             {
@@ -1216,7 +1217,21 @@ WHERE
                             {
                                 break;
                             }
+                            #region
 
+                            Device_power_status find_dev_sn;
+                            if (Power_status.ContainsKey(dev_power_off_status.ID))
+                            {
+                                 find_dev_sn = (Device_power_status)Power_status[dev_power_off_status.ID];
+                                power_off_sn = dev_power_off_status.SN = find_dev_sn.SN;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                            #endregion
+                            #region
+                            /*
                             Device_power_status find_dev_sn = Power_status.Find(
                                  delegate(Device_power_status bk)
                                  {
@@ -1233,6 +1248,8 @@ WHERE
                                 log.Info("power_off:Cannot fine device_id "+dev_power_off_status.ID);
                                 break;
                             }
+                            */
+                            #endregion
 
                             //string power_off_sn = ConfigurationManager.AppSettings[dev_power_off_status.ID].ToString();
                             // string[] power_off_sn_sub = power_off_sn.Split(',');
@@ -1382,9 +1399,9 @@ VALUES
                                     sql_client.disconnect();
                                 }
                             }
-                            
 
-                            Power_status.Remove(find_dev_sn);
+
+                            Power_status.Remove(dev_power_off_status.ID);
                             break;
                         case "start_call":
                             Device_call_status dev_call_status = new Device_call_status();
@@ -1530,7 +1547,11 @@ LIMIT 1";
                                 sql_client.modify(sql_cmd);
                                 sql_client.disconnect();
 
-                                Call_status.Add(dev_call_status);
+                                //Call_status.Add(dev_call_status);
+                                if (!Call_status.ContainsKey(dev_call_status.ID))
+                                {
+                                    Call_status.Add(dev_call_status.ID, dev_call_status);
+                                }
                             }
                             
                             break;
@@ -1560,6 +1581,21 @@ WHERE
                             {
                                 break;
                             }
+                            #region                               
+
+                            Device_call_status find_dev_call_off_sn;
+                            if (Call_status.ContainsKey(dev_call_off_status.ID))
+                            {
+                                find_dev_call_off_sn = (Device_call_status)Call_status[dev_call_off_status.ID];
+                                end_call_sn = dev_call_off_status.SN = find_dev_call_off_sn.SN;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                            #endregion
+                            #region
+                            /*
                             Device_call_status find_dev_call_off_sn = Call_status.Find(
                                  delegate(Device_call_status bk)
                                  {
@@ -1576,6 +1612,8 @@ WHERE
                                 log.Info("end_call:Cannot fine device_id "+dev_call_off_status.ID);
                                 break;
                             }
+                            */
+                            #endregion
                             //string power_off_sn = ConfigurationManager.AppSettings[dev_power_off_status.ID].ToString();
                             // string[] power_off_sn_sub = power_off_sn.Split(',');
                             //dev_power_off_status.SN = dev_power_off_status.ID + power_off_sn_sub[0] + uint.Parse(power_off_sn_sub[1]).ToString("D3");
@@ -1589,7 +1627,7 @@ WHERE
                             sql_client.connect();
                             sql_client.modify(sql_cmd);
                             sql_client.disconnect();
-                            Call_status.Remove(find_dev_call_off_sn);
+                            Call_status.Remove(dev_call_off_status.ID);
                             break;
                     }
                     if (parse_package.ContainsKey("call_type"))
