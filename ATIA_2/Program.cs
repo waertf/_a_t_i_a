@@ -391,6 +391,7 @@ namespace ATIA_2
               Console.WriteLine(System.Environment.UserName);//current username
               Console.WriteLine(DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
               Console.WriteLine(DateTime.Now.ToString("O"));
+              Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-us");
                 DateTime test = DateTime.Now;
                 string test1 = test.ToString("yyyyMMddHHmmss").Substring(2, 12);
                 DateTime tempDatetime = DateTime.ParseExact(test1, "yyMMddHHmmss", null);
@@ -411,6 +412,7 @@ namespace ATIA_2
 
         private static void SendToAvlsEventColumnSetNegativeOneIfPowerOff(object sender, ElapsedEventArgs e)
         {
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-us");
             var sqlClient = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
             DataTable dt = new DataTable();
             /*select DISTINCT ON (1) 
@@ -487,6 +489,7 @@ custom.turn_onoff_log.off_time is NULL and
 
         private static void SendPackageToAvlsOnlyByUidAndLocGetFromSql(string uid, string eventStatus)
         {
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-us");
             TcpClient avls_tcpClient;
             string send_string = string.Empty;
             AVLS_UNIT_Report_Packet avls_package = new AVLS_UNIT_Report_Packet();
@@ -611,7 +614,7 @@ LIMIT 1";
 
         static void udp_server_t(int port)
             {
-              
+                Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-us"); 
                 UdpClient udpClient = new UdpClient(port);
                 //IPEndPoint object will allow us to read datagrams sent from any source.
                 IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
