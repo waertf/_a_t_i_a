@@ -500,7 +500,7 @@ custom.turn_onoff_log.off_time is NULL and
 
             avls_tcpClient = new TcpClient();
             connectDone.Reset();
-            avls_tcpClient.BeginConnect(ipAddress, port, new AsyncCallback(ConnectCallback), avls_tcpClient);
+            avls_tcpClient.BeginConnect(ipAddress, port, new AsyncCallback(AvlsConnectCallback), avls_tcpClient);
             connectDone.WaitOne();
 
             //avls_tcpClient.NoDelay = false;
@@ -813,7 +813,7 @@ LIMIT 1";
 
                     //avls_tcpClient.Connect(ipAddress, port);
                     connectDone.Reset();
-                    avls_tcpClient.BeginConnect(ipAddress, port, new AsyncCallback(ConnectCallback), avls_tcpClient);
+                    avls_tcpClient.BeginConnect(ipAddress, port, new AsyncCallback(AvlsConnectCallback), avls_tcpClient);
                     connectDone.WaitOne();
 
                     //avls_tcpClient.NoDelay = false;
@@ -1021,18 +1021,49 @@ WHERE
 
             public static void avls_myWriteCallBack(IAsyncResult ar)
             {
-
-                NetworkStream myNetworkStream = (NetworkStream)ar.AsyncState;
-                myNetworkStream.EndWrite(ar);
-                sendDone.Set();
+                try
+                {
+                    NetworkStream myNetworkStream = (NetworkStream)ar.AsyncState;
+                    myNetworkStream.EndWrite(ar);
+                    sendDone.Set();
+                }
+                catch (Exception ex)
+                {
+                    
+                    Console.WriteLine(ex.Message);
+                    log.Info(ex.Message);
+                }
+               
 
             }
 
-            static void ConnectCallback(IAsyncResult ar)
+            static void AvlsConnectCallback(IAsyncResult ar)
             {
-                connectDone.Set();
-                TcpClient t = (TcpClient)ar.AsyncState;
-                t.EndConnect(ar);
+                try
+                {
+                    TcpClient t = (TcpClient)ar.AsyncState;
+                    if (t != null && t.Client != null)
+                    {
+                        t.EndConnect(ar);
+                        connectDone.Set();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    
+                    Console.WriteLine(ex.Message);
+                    log.Error(ex.Message);
+                    //string ipAddress = "127.0.0.1";
+                    string ipAddress = ConfigurationManager.AppSettings["AVLS_SERVER_IP"];
+                    //int port = 23;
+                    int port = int.Parse(ConfigurationManager.AppSettings["AVLS_SERVER_PORT"]);
+                    var avlsTcpClient = new TcpClient();
+                    connectDone.Reset();
+                    avlsTcpClient.BeginConnect(ipAddress, port, new AsyncCallback(AvlsConnectCallback), avlsTcpClient);
+                    connectDone.WaitOne();
+                }
+                
+                
             }
 
             private static void sql_access(ref SortedDictionary<string, string> parse_package)
@@ -2026,7 +2057,7 @@ LIMIT 1";
 
                 //avls_tcpClient.Connect(ipAddress, port);
                 connectDone.Reset();
-                avls_tcpClient.BeginConnect(ipAddress, port, new AsyncCallback(ConnectCallback), avls_tcpClient);
+                avls_tcpClient.BeginConnect(ipAddress, port, new AsyncCallback(AvlsConnectCallback), avls_tcpClient);
                 connectDone.WaitOne();
 
                 //avls_tcpClient.NoDelay = false;
