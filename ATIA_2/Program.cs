@@ -609,8 +609,8 @@ LIMIT 1";
             //ReadLine(avls_tcpClient, netStream, send_string.Length);
             netStream.Close();
             avls_tcpClient.Close();
-            log.Info("-access_avls_server:if");
-            Console.WriteLine("-access_avls_server:if");
+            log.Info("-AccessAvlsServer:if");
+            Console.WriteLine("-AccessAvlsServer:if");
         }
 
         static void udp_server_t(int port)
@@ -718,11 +718,25 @@ LIMIT 1";
                     {
                         continue;
                     }
-                    
+                    Thread accessSql = new Thread(() => AccessSqlServer(ref parse_package));
+                    Thread accessAvls = new Thread(() => AccessAvlsServer(ref parse_package));
                     if (bool.Parse(ConfigurationManager.AppSettings["SQL_ACCESS"]))
-                        sql_access(ref parse_package);
+                    {
+                        
+                        accessSql.Start();
+                    }
+                        
                     if (bool.Parse(ConfigurationManager.AppSettings["AVLS_ACCESS"]))
-                        access_avls_server(ref parse_package);
+                    {
+                        
+                        accessAvls.Start();
+                    }
+                    if (bool.Parse(ConfigurationManager.AppSettings["SQL_ACCESS"]))
+                        accessSql.Join();
+                    if (bool.Parse(ConfigurationManager.AppSettings["AVLS_ACCESS"]))
+                        accessAvls.Join();
+
+
                     if (parse_package.Count != 0)
                     {
                         StringBuilder s = new StringBuilder();
@@ -784,7 +798,7 @@ LIMIT 1";
             }
         }
 
-        private static void access_avls_server(ref SortedDictionary<string, string> parse_package)
+        private static void AccessAvlsServer(ref SortedDictionary<string, string> parse_package)
             {
                 if (CheckIfUidExist(parse_package["source_id"].ToString()))
                 {}
@@ -792,15 +806,15 @@ LIMIT 1";
                 {
                     return;
                 }
-                log.Info("+access_avls_server");
-                Console.WriteLine("+access_avls_server");
+                log.Info("+AccessAvlsServer");
+                Console.WriteLine("+AccessAvlsServer");
                 if (parse_package.ContainsKey("result") &&
                     (parse_package["result"].ToString().Equals("power_on") ||
                      parse_package["result"].ToString().Equals("power_off")
                      ))
                 {
-                    log.Info("+access_avls_server:if");
-                    Console.WriteLine("+access_avls_server:if");
+                    log.Info("+AccessAvlsServer:if");
+                    Console.WriteLine("+AccessAvlsServer:if");
                     TcpClient avls_tcpClient;
                     string send_string = string.Empty;
                     AVLS_UNIT_Report_Packet avls_package = new AVLS_UNIT_Report_Packet();
@@ -947,11 +961,11 @@ LIMIT 1";
                     //ReadLine(avls_tcpClient, netStream, send_string.Length);
                     netStream.Close();
                     avls_tcpClient.Close();
-                    log.Info("-access_avls_server:if");
-                    Console.WriteLine("-access_avls_server:if");
+                    log.Info("-AccessAvlsServer:if");
+                    Console.WriteLine("-AccessAvlsServer:if");
                 }
-                log.Info("-access_avls_server");
-                Console.WriteLine("-access_avls_server");
+                log.Info("-AccessAvlsServer");
+                Console.WriteLine("-AccessAvlsServer");
             }
 
             private static void GetInitialLocationFromSql(ref string lat, ref string lon, string id)
@@ -1067,21 +1081,21 @@ WHERE
                 
             }
 
-            private static void sql_access(ref SortedDictionary<string, string> parse_package)
+            private static void AccessSqlServer(ref SortedDictionary<string, string> parse_package)
             {
-              Console.WriteLine("+sql_access");
+              Console.WriteLine("+AccessSqlServer");
               string sql_table_columns = string.Empty, sql_table_column_value = string.Empty, sql_cmd = string.Empty;
                 if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off") || parse_package["result"].ToString().Equals("start_call") || parse_package["result"].ToString().Equals("end_call")))
                 {
                     if (parse_package.ContainsKey("call_type"))
                     {
                       Console.WriteLine("call_type=" + parse_package["call_type"]);
-                        log.Info(Thread.CurrentThread.Name+"@"+"sql_access:call_type=" + parse_package["call_type"]);
+                        log.Info(Thread.CurrentThread.Name+"@"+"AccessSqlServer:call_type=" + parse_package["call_type"]);
                     }
                     else
                     {
                       Console.WriteLine("call_type=unknown");
-                        log.Info(Thread.CurrentThread.Name+"@"+"sql_access:call_type=unknown");
+                        log.Info(Thread.CurrentThread.Name+"@"+"AccessSqlServer:call_type=unknown");
                     }
                     SqlClient sql_client = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
                     
@@ -1985,7 +1999,7 @@ LIMIT 1";
                     log.Info(sql_cmd);
                     
                 }
-              Console.WriteLine("-sql_access");
+              Console.WriteLine("-AccessSqlServer");
             }
 
         private static bool CheckIfUidInEquipmentTable(string id)
@@ -2094,8 +2108,8 @@ LIMIT 1";
                 #region avls
             /*
                 string avlsLat = string.Empty, avlsLon = string.Empty;
-                log.Info("+access_avls_server:if");
-                Console.WriteLine("+access_avls_server:if");
+                log.Info("+AccessAvlsServer:if");
+                Console.WriteLine("+AccessAvlsServer:if");
                 TcpClient avls_tcpClient;
                 string send_string = string.Empty;
                 AVLS_UNIT_Report_Packet avls_package = new AVLS_UNIT_Report_Packet();
@@ -2166,8 +2180,8 @@ LIMIT 1";
                 //ReadLine(avls_tcpClient, netStream, send_string.Length);
                 netStream.Close();
                 avls_tcpClient.Close();
-                log.Info("-access_avls_server:if");
-                Console.WriteLine("-access_avls_server:if");
+                log.Info("-AccessAvlsServer:if");
+                Console.WriteLine("-AccessAvlsServer:if");
              * */
                 #endregion
             }
