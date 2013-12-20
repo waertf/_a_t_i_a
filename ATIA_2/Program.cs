@@ -387,7 +387,7 @@ namespace ATIA_2
             }
             static void Main(string[] args)
             {
-                //test
+
               Console.WriteLine(GetLocalIPAddress());//current ip address
               Console.WriteLine(System.Environment.UserName);//current username
               Console.WriteLine(DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
