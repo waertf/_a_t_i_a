@@ -1409,8 +1409,58 @@ limit 1
                                 }
                                 else
                                 {
+                                    #region
+
+                                    string sn = string.Empty, serial_no=string.Empty;
+                                    string power_off_today = DateTime.Now.ToString("yyyyMMdd");
+                                    string sqlCmd = @"SELECT 
+  custom.location_control_log.serial_no
+FROM
+  custom.location_control_log
+WHERE
+  custom.location_control_log.uid = '"+data_table.Rows[0]["uid"].ToString()+@"'
+ORDER BY
+  custom.location_control_log.serial_no DESC
+LIMIT 1";
+                                    sql_client.connect();
+                                    var dt = sql_client.get_DataTable(sqlCmd);
+                                    sql_client.disconnect();
+                                    if (dt != null && dt.Rows.Count != 0)
+                                    {
+                                        foreach (DataRow row in dt.Rows)
+                                        {
+                                            sn = row[0].ToString();
+                                        }
+
+
+                                        string yyyyMMdd = sn.Substring(data_table.Rows[0]["uid"].ToString().Length, 8);
+                                        string count = sn.Substring(data_table.Rows[0]["uid"].ToString().Length + yyyyMMdd.Length, 3);
+
+                                        if (power_off_today.Equals(yyyyMMdd))
+                                        {
+                                            uint addCount = (uint.Parse(count) + 1);
+                                            serial_no = data_table.Rows[0]["uid"].ToString() + power_off_today + addCount.ToString("D3");
+                                        }
+                                        else
+                                        {
+                                            int iVal = 0;
+
+                                            serial_no = data_table.Rows[0]["uid"].ToString() + power_off_today + iVal.ToString("D3");
+                                        }
+
+                                        
+                                    }
+                                    else
+                                    {
+                                        int iVal = 0;
+
+                                        serial_no = data_table.Rows[0]["uid"].ToString() + power_off_today + iVal.ToString("D3");
+                                        
+
+                                    }
+                                    #endregion
                                     Console.WriteLine("data_table != null");
-                                    string ssql_insert_value = @"'" + data_table.Rows[0]["serial_no"].ToString() + @"'" +
+                                    string ssql_insert_value = @"'" + serial_no + @"'" +
                                         "," + @"'" + data_table.Rows[0]["uid"].ToString() + @"'" +
                                         "," + @"'" + data_table.Rows[0]["on_time"].ToString() + @"'" +
                                         "," + @"'" + data_table.Rows[0]["off_time"].ToString() + @"'" +
