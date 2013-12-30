@@ -50,8 +50,8 @@ namespace ATIA_2
             catch (PgSqlException ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Connect xception occurs: {0}", ex.Error);
-                log.Error("Connect xception occurs: "+ ex.Error);
+                Console.WriteLine("Connect exception occurs: {0}", ex.Error);
+                log.Error("Connect exception occurs: "+ ex.Error);
                 Console.ResetColor();
                 return false;
             }
