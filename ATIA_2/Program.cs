@@ -473,7 +473,11 @@ custom.turn_onoff_log.off_time is NULL and
   ORDER  BY 1, 2 DESC
 ) AS R
 )";
-            sqlClient.connect();
+            while (!sqlClient.connect())
+            {
+                Thread.Sleep(300);
+            }
+            
             dt = sqlClient.get_DataTable(sqlCmd);
             sqlClient.disconnect();
             string uid = string.Empty;
@@ -528,7 +532,11 @@ ORDER BY
   public._gps_log._time DESC
 LIMIT 1";
                 log.Info("avlsSqlCmd=" + Environment.NewLine + avlsSqlCmd);
-                avlsSqlClient.connect();
+                while (!avlsSqlClient.connect())
+                {
+                    Thread.Sleep(300);
+                }
+                
                 var dt = avlsSqlClient.get_DataTable(avlsSqlCmd);
                 avlsSqlClient.disconnect();
                 if (dt != null && dt.Rows.Count != 0)
@@ -785,7 +793,10 @@ FROM
 WHERE
   sd.equipment.uid = '"+uid+@"'
 LIMIT 1";
-            sql_client.connect();
+            while (!sql_client.connect())
+            {
+                Thread.Sleep(300);
+            }
             var dt = sql_client.get_DataTable(sqlCmd);
             sql_client.disconnect();
             if (dt != null && dt.Rows.Count != 0)
@@ -890,7 +901,11 @@ ORDER BY
   public._gps_log._time DESC
 LIMIT 1";
                         log.Info("avlsSqlCmd=" + Environment.NewLine + avlsSqlCmd);
-                        avlsSqlClient.connect();
+                        while (!avlsSqlClient.connect())
+                        {
+                            Thread.Sleep(300);
+                        }
+
                         var dt = avlsSqlClient.get_DataTable(avlsSqlCmd);
                         avlsSqlClient.disconnect();
                         if (dt != null && dt.Rows.Count != 0)
@@ -979,7 +994,11 @@ FROM
 WHERE
   sd.initial_location.uid = '" + id + @"'";
                         log.Info("GetInitialLocationFromSqllCmd=" + Environment.NewLine + sqlCmd);
-                        sqlClient.connect();
+                        while (!sqlClient.connect())
+                        {
+                            Thread.Sleep(300);
+                        }
+
                         var dt = sqlClient.get_DataTable(sqlCmd);
                         sqlClient.disconnect();
                 if (dt != null && dt.Rows.Count != 0)
@@ -1121,7 +1140,11 @@ SET
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" +parse_package["source_id"].ToString()+@"'";
-                            sql_client.connect();
+                            while (!sql_client.connect())
+                            {
+                                Thread.Sleep(300);
+                            }
+
                             sql_client.modify(sql_cmd);
                             sql_client.disconnect();
                         }
@@ -1150,7 +1173,10 @@ custom.turn_onoff_log.on_time IS NOT NULL AND
 ORDER BY
   custom.turn_onoff_log.create_time DESC
 LIMIT 1";
-                                sql_client.connect();
+                            while (!sql_client.connect())
+                            {
+                                Thread.Sleep(300);
+                            }
                                 var dt = sql_client.get_DataTable(sql_cmd);
                                 sql_client.disconnect();
                             if (dt != null && dt.Rows.Count != 0)
@@ -1173,7 +1199,10 @@ custom.turn_onoff_log.on_time IS NOT NULL AND
 ORDER BY
   custom.turn_onoff_log.create_time DESC
 LIMIT 1";
-                                sql_client.connect();
+                                while (!sql_client.connect())
+                                {
+                                    Thread.Sleep(300);
+                                }
                                 var dt = sql_client.get_DataTable(sql_cmd);
                                 sql_client.disconnect();
                                 if (dt != null && dt.Rows.Count != 0)
@@ -1220,7 +1249,10 @@ LIMIT 1";
                                 sql_table_column_value = "\'" + dev_power_status.SN + "\'" + "," + "\'" + dev_power_status.ID + "\'" + "," + "\'" +
                                     device_on_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'";
                                 sql_cmd = "INSERT INTO custom.turn_onoff_log (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-                                sql_client.connect();
+                                while (!sql_client.connect())
+                                {
+                                    Thread.Sleep(300);
+                                }
                                 sql_client.modify(sql_cmd);
                                 sql_client.disconnect();
                                 /*
@@ -1250,7 +1282,10 @@ SET
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
-                                sql_client.connect();
+                                while (!sql_client.connect())
+                                {
+                                    Thread.Sleep(300);
+                                }
                                 sql_client.modify(sql_cmd);
                                 sql_client.disconnect();
                             }
@@ -1323,7 +1358,10 @@ custom.turn_onoff_log.on_time IS NOT NULL AND
 ORDER BY
   custom.turn_onoff_log.create_time DESC
 LIMIT 1";
-                                sql_client.connect();
+                                while (!sql_client.connect())
+                                {
+                                    Thread.Sleep(300);
+                                }
                                 var dt = sql_client.get_DataTable(sql_cmd);
                                 sql_client.disconnect();
                                 if (dt != null && dt.Rows.Count != 0)
@@ -1349,7 +1387,10 @@ custom.turn_onoff_log.on_time IS NOT NULL AND
 ORDER BY
   custom.turn_onoff_log.create_time DESC
 LIMIT 1";
-                            sql_client.connect();
+                            while (!sql_client.connect())
+                            {
+                                Thread.Sleep(300);
+                            }
                             var dt2 = sql_client.get_DataTable(sql_cmd);
                             sql_client.disconnect();
                             if (dt2 != null && dt2.Rows.Count != 0)
@@ -1357,7 +1398,10 @@ LIMIT 1";
                                 InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_off_status, parse_package["result"].ToString(),parse_package);
                                 sql_table_columns = "custom.turn_onoff_log";
                                 sql_cmd = "UPDATE " + sql_table_columns + " SET off_time=\'" + device_off_time + "\' WHERE serial_no=\'" + dev_power_off_status.SN + "\'";
-                                sql_client.connect();
+                                while (!sql_client.connect())
+                                {
+                                    Thread.Sleep(300);
+                                }
                                 sql_client.modify(sql_cmd);
                                 sql_client.disconnect();
                                 // TODO: insert information control present to sql server
@@ -1411,7 +1455,10 @@ GROUP BY
                 DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))
 limit 1
                                 ";
-                                sql_client.connect();
+                                while (!sql_client.connect())
+                                {
+                                    Thread.Sleep(300);
+                                }
                                 DataTable data_table = sql_client.get_DataTable(sql_select);
                                 sql_client.disconnect();
                                 Console.WriteLine(sql_select);
@@ -1437,7 +1484,10 @@ WHERE
 ORDER BY
   custom.location_control_log.serial_no DESC
 LIMIT 1";
-                                    sql_client.connect();
+                                    while (!sql_client.connect())
+                                    {
+                                        Thread.Sleep(300);
+                                    }
                                     var dt = sql_client.get_DataTable(sqlCmd);
                                     sql_client.disconnect();
                                     if (dt != null && dt.Rows.Count != 0)
@@ -1493,7 +1543,10 @@ VALUES
                                     //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[device]:" + data_table.Rows[0]["device"]);
                                     //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[longitude]:" + data_table.Rows[0]["longitude"]);
                                     //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[latitude]:" + data_table.Rows[0]["latitude"]);
-                                    sql_client.connect();
+                                    while (!sql_client.connect())
+                                    {
+                                        Thread.Sleep(300);
+                                    }
                                     sql_client.modify(sql_insert);
                                     sql_client.disconnect();
                                 }
@@ -1526,7 +1579,10 @@ SET
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
-                                        sql_client.connect();
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
                                         sql_client.modify(sql_cmd);
                                         sql_client.disconnect();
                                     }
@@ -1545,7 +1601,10 @@ SET
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
-                                        sql_client.connect();
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
                                         sql_client.modify(sql_cmd);
                                         sql_client.disconnect();
                                     }
@@ -1574,7 +1633,10 @@ WHERE
 ORDER BY
   custom.voice_connect.create_time DESC
 LIMIT 1";
-                                sql_client.connect();
+                                while (!sql_client.connect())
+                                {
+                                    Thread.Sleep(300);
+                                }
                                 var dt = sql_client.get_DataTable(sql_cmd);
                                 sql_client.disconnect();
                                 if (dt != null && dt.Rows.Count != 0)
@@ -1642,7 +1704,10 @@ LIMIT 1";
                                 sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
                                     dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'";
                                 sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-                                sql_client.connect();
+                                while (!sql_client.connect())
+                                {
+                                    Thread.Sleep(300);
+                                }
                                 sql_client.modify(sql_cmd);
                                 sql_client.disconnect();
 
@@ -1666,7 +1731,10 @@ SET
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
-                                sql_client.connect();
+                                while (!sql_client.connect())
+                                {
+                                    Thread.Sleep(300);
+                                }
                                 sql_client.modify(sql_cmd);
                                 sql_client.disconnect();
                             }
@@ -1723,7 +1791,10 @@ WHERE
                                 dev_call_off_status.end_call_time.Substring(10, 2) + ":" + dev_call_off_status.end_call_time.Substring(12, 2);
                             sql_table_columns = "custom.voice_connect";
                             sql_cmd = "UPDATE " + sql_table_columns + " SET end_time=\'" + device_end_call_time + "\' WHERE serial_no=\'" + dev_call_off_status.SN + "\'";
-                            sql_client.connect();
+                            while (!sql_client.connect())
+                            {
+                                Thread.Sleep(300);
+                            }
                             sql_client.modify(sql_cmd);
                             sql_client.disconnect();
                             Call_status.Remove(dev_call_off_status.ID);
@@ -1746,7 +1817,10 @@ SET
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
-                                        sql_client.connect();
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
                                         sql_client.modify(sql_cmd);
                                         sql_client.disconnect();
                                     }
@@ -1792,7 +1866,10 @@ WHERE
 ORDER BY
   custom.voice_connect.create_time DESC
 LIMIT 1";
-                                        sql_client.connect();
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
                                         var dt = sql_client.get_DataTable(sql_cmd);
                                         sql_client.disconnect();
                                         if (dt != null && dt.Rows.Count != 0)
@@ -1858,7 +1935,10 @@ LIMIT 1";
                                         dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'"+
                                         "," + "0" + "," + "\'" +GetLocalIPAddress()+ "\'";
                                     sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-                                    sql_client.connect();
+                                    while (!sql_client.connect())
+                                    {
+                                        Thread.Sleep(300);
+                                    }
                                     sql_client.modify(sql_cmd);
                                     sql_client.disconnect();
                                 }
@@ -1876,7 +1956,10 @@ SET
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
-                                        sql_client.connect();
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
                                         sql_client.modify(sql_cmd);
                                         sql_client.disconnect();
                                     }
@@ -1922,7 +2005,10 @@ WHERE
 ORDER BY
   custom.voice_connect.create_time DESC
 LIMIT 1";
-                                        sql_client.connect();
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
                                         var dt = sql_client.get_DataTable(sql_cmd);
                                         sql_client.disconnect();
                                         if (dt != null && dt.Rows.Count != 0)
@@ -1988,7 +2074,10 @@ LIMIT 1";
                                         dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'" +
                                         "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'";
                                     sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-                                    sql_client.connect();
+                                    while (!sql_client.connect())
+                                    {
+                                        Thread.Sleep(300);
+                                    }
                                     sql_client.modify(sql_cmd);
                                     sql_client.disconnect();
                                 }
@@ -2011,7 +2100,10 @@ LIMIT 1";
   where
   sd.equipment.uid = '"+id+@"'";
             var sql_client = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
-                            sql_client.connect();
+            while (!sql_client.connect())
+            {
+                Thread.Sleep(300);
+            }
                             var dt = sql_client.get_DataTable(regSqlCmd);
                             sql_client.disconnect();
             if (dt != null && dt.Rows.Count != 0)
@@ -2048,7 +2140,10 @@ ORDER BY
   public._gps_log._time DESC
 LIMIT 1";
                         log.Info("avlsSqlCmd=" + Environment.NewLine + sqlCmd);
-                        sqlClient.connect();
+                        while (!sqlClient.connect())
+                        {
+                            Thread.Sleep(300);
+                        }
                         var dt = sqlClient.get_DataTable(sqlCmd);
                         sqlClient.disconnect();
                         string lat = string.Empty, lon = string.Empty;
@@ -2079,8 +2174,11 @@ LIMIT 1";
             {
                 now = DateTime.Now.ToString("yyyyMMdd");
             }
-                        
-                        sqlClient.connect();
+
+            while (!sqlClient.connect())
+            {
+                Thread.Sleep(300);
+            }
                         string auto_id_serial_command = sqlClient.get_DataTable("SELECT COUNT(_uid)   FROM public._gps_log").Rows[0].ItemArray[0].ToString();
                         sqlClient.disconnect();
 
@@ -2099,7 +2197,10 @@ LIMIT 1";
                                        "," + gps_log._lon +
                                        "," + gps_log._validity;
                         string cmd = "INSERT INTO public._gps_log (" + table_columns + ") VALUES (" + table_column_value + ")";
-                sqlClient.connect();
+                        while (!sqlClient.connect())
+                        {
+                            Thread.Sleep(300);
+                        }
                 sqlClient.modify(cmd);
                 sqlClient.disconnect();
 

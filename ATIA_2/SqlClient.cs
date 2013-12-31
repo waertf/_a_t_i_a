@@ -28,7 +28,6 @@ namespace ATIA_2
             pgCSB.MaxPoolSize = int.Parse(MaxPoolSize);
             pgCSB.ConnectionLifetime = int.Parse(ConnectionLifetime); ;
 
-            pgCSB.ConnectionTimeout = 30;
             pgCSB.Unicode = true;
             pgSqlConnection = new PgSqlConnection(pgCSB.ConnectionString);
         }
