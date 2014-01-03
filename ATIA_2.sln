@@ -5,6 +5,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATIA_2", "ATIA_2\ATIA_2.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApplication1SqlTest", "ConsoleApplication1SqlTest\ConsoleApplication1SqlTest.csproj", "{52035A30-0D5F-4CEB-9D61-D3B336621A6C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsService1ATIA", "WindowsService1ATIA\WindowsService1ATIA.csproj", "{4C3B047B-2BEE-4DA7-B3F6-F45ED5573C9E}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup1ATIA", "Setup1ATIA\Setup1ATIA.vdproj", "{94BFED61-A21B-4DCD-BF2F-91856909FBA9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +23,12 @@ Global
 		{52035A30-0D5F-4CEB-9D61-D3B336621A6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52035A30-0D5F-4CEB-9D61-D3B336621A6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52035A30-0D5F-4CEB-9D61-D3B336621A6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C3B047B-2BEE-4DA7-B3F6-F45ED5573C9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C3B047B-2BEE-4DA7-B3F6-F45ED5573C9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C3B047B-2BEE-4DA7-B3F6-F45ED5573C9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C3B047B-2BEE-4DA7-B3F6-F45ED5573C9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94BFED61-A21B-4DCD-BF2F-91856909FBA9}.Debug|Any CPU.ActiveCfg = Debug
+		{94BFED61-A21B-4DCD-BF2F-91856909FBA9}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
