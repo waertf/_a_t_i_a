@@ -1568,6 +1568,7 @@ VALUES
                                 
                                 case "Individual_Call":
                                     dev_call_status.call_type="2";
+                                    dev_call_status.targetID = parse_package["target_id"];
                                     #region access power status
 
                                     {
@@ -1590,6 +1591,7 @@ WHERE
                                     break;
                                 case "Group_Call":
                                     dev_call_status.call_type="1";
+                                    dev_call_status.targetID = parse_package["target_id"];
                                     #region access power status
 
                                     {
@@ -1967,6 +1969,7 @@ WHERE
                                     Device_call_status dev_call_status = new Device_call_status();
                                     dev_call_status.call_type = "3";
                                     dev_call_status.ID = parse_package["source_id"].ToString();
+                                    dev_call_status.targetID = parse_package["target_id"];
                                     if (CheckIfUidInEquipmentTable(dev_call_status.ID))
                                     {
                                     }
@@ -2882,6 +2885,7 @@ LIMIT 1";
         public string call_type { get; set; }
         public string start_call_time { get; set; }
         public string end_call_time { get; set; }
+        public string targetID { get; set; }
 
     }
     public class GeoAngle
