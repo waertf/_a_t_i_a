@@ -17,7 +17,13 @@ using log4net;
 using log4net.Config;
 using System.Globalization;
 using System.Data;
-
+/*
+ * get channel condition
+ * "Call Activity Update"->"Active RF Sites/Channel Info List" only-
+ * private call :Call State Change
+ * group call : Start of Call
+ * land<->mobile : Start of Call
+ * **/
 
 namespace ATIA_2
 {
