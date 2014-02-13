@@ -24,9 +24,9 @@ using System.Data;
  * group call : Start of Call
  * land<->mobile : Call State Change
  * 
- * private_call:Radio Type Qualifier = (Astro call)
- * radioToLan:Radio Type Qualifier = (Interconnect,Astro call)
- * lanToRadio:Radio Type Qualifier = (Interconnect,Landline call,Astro call)
+ * private_call:Radio Type Qualifier = (Astro call),Device Type = Radio
+ * radioToLan:Radio Type Qualifier = (Interconnect,Astro call),Device Type = Radio
+ * lanToRadio:Radio Type Qualifier = (Interconnect,Landline call,Astro call),Device Type = Landline
  * 
  * callType:
  * Individual_Call:2
