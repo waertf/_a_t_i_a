@@ -215,7 +215,7 @@ namespace ATIA_2
                 PTT_ID_Update_Active_No_Control = 3,
                 PTT_ID_Update_Busy = 4,
                 PTT_ID_Update_Busy_No_Control=5,
-                //End_of_Call = 7
+                Call_State_Change =8
             };
             enum Flexible_End_of_Call_opcode
             { 
@@ -2369,11 +2369,15 @@ LIMIT 1";
                                 byte[] uid = new byte[4];
                                 byte[] ucn = new byte[4];//Universal Call Number
                                 byte[] snd_id = new byte[4];
+                                byte[] channel = new byte[2];
                                 byte call_status, reason_for_busy;
                                 uint Offset_to_Call_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 2).Take(2).Reverse().ToArray(), 0);
                                 uint Offset_to_Busy_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 4).Take(2).Reverse().ToArray(), 0);
                                 uint Offset_to_Requester_section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 8).Take(2).Reverse().ToArray(), 0);
                                 uint Offset_to_Target_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 10).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_RF_Sites_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 18).Take(2).Reverse().ToArray(), 0);
+                                uint Offset_to_Active_RFSites_Channel_Info = BitConverter.ToUInt16(p.Skip((int)Offset_to_RF_Sites_Section+8).Take(2).Reverse().ToArray(), 0);
+                                uint Num_Active_RF_Site_Channels = BitConverter.ToUInt16(p.Skip((int)Offset_to_RF_Sites_Section + (int)Offset_to_Active_RFSites_Channel_Info).Take(2).Reverse().ToArray(), 0);
                                 const int offset_to_call_section_Timestamp = 0;
                                 const int offset_to_call_section_ucn = 8;
                                 const int offset_to_call_section_call_status = 31;
@@ -2386,6 +2390,12 @@ LIMIT 1";
                                 ucn = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
                                 //call_status = p[Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_status-1];
                                 //reason_for_busy = p[Offset_to_Busy_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_busy_section_reason_of_busy-1];
+                                if (!Num_Active_RF_Site_Channels.Equals(0))
+                                {
+                                    channel = p.Skip((int)Offset_to_RF_Sites_Section + (int)Offset_to_Active_RFSites_Channel_Info + 4).Take(channel.Length).Reverse().ToArray();
+                                    parse_channel(channel, ref parse_package);
+                                }
+                                    
                                 parse_timestamp(timestamp,ref  parse_package);
                                 parse_uid(uid,ref  parse_package);
                                 parse_snd_id(snd_id,ref  parse_package);
@@ -2461,7 +2471,20 @@ LIMIT 1";
                 }
             }
 
-            private static void parse_phone(byte[] phone, ref SortedDictionary<string, string> parse_package)
+        private static void parse_channel(byte[] channel, ref SortedDictionary<string, string> parsePackage)
+        {
+            string channelStr = string.Empty;
+            uint channel_uint = BitConverter.ToUInt16(channel.Take(channel.Length).ToArray(), 0);
+            channelStr = channel_uint.ToString(CultureInfo.InvariantCulture);
+            if (!string.IsNullOrEmpty(channelStr))
+                parsePackage.Add("channel",channelStr);
+            else
+            {
+                parsePackage.Add("channel", "null");
+            }
+        }
+
+        private static void parse_phone(byte[] phone, ref SortedDictionary<string, string> parse_package)
             {
                 string result = string.Empty;
                 foreach (byte x in phone)
