@@ -1571,6 +1571,7 @@ VALUES
 
                             Power_status.Remove(dev_power_off_status.ID);
                             break;
+                        case "Start_of_Call":
                         case "start_call":
                             Device_call_status dev_call_status = new Device_call_status();
                             dev_call_status.ID = parse_package["source_id"].ToString();
@@ -1608,7 +1609,8 @@ WHERE
                                 case "Group_Call":
                                     dev_call_status.call_type="1";
                                     dev_call_status.targetID = parse_package["target_id"];
-                                    dev_call_status.channel = parse_package["channel"];
+                                    if (parse_package.ContainsKey("channel"))
+                                        dev_call_status.channel = parse_package["channel"];
                                     #region access power status
 
                                     {
@@ -1719,7 +1721,7 @@ LIMIT 1";
 
                             if (CheckIfUidInEquipmentTable(dev_call_status.ID))
                             {
-                                if (dev_call_status.call_type.Equals("1"))
+                                if (dev_call_status.call_type.Equals("1") && parse_package.ContainsKey("channel"))
                                 {
                                     sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target,channel";
                                     sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
@@ -1833,6 +1835,44 @@ WHERE
                             Call_status.Remove(dev_call_off_status.ID);
                             break;
                         case "Call_State_Change":
+                            #region Individual_Call
+
+                            string callStateChangeSn = string.Empty;
+                            Device_call_status dev_call_state_change = new Device_call_status();
+                            dev_call_state_change.ID = parse_package["source_id"].ToString();
+                            if (parse_package.ContainsKey("channel"))
+                                dev_call_state_change.channel = parse_package["channel"];
+                            if (CheckIfUidInEquipmentTable(dev_call_state_change.ID))
+                            { }
+                            else
+                            {
+                                break;
+                            }
+                            #region Individual_Call or land<->mobile
+
+                            Device_call_status find_call_state_change_sn;
+                            if (Call_status.ContainsKey(dev_call_state_change.ID))
+                            {
+                                //Individual_Call
+                                find_call_state_change_sn = (Device_call_status)Call_status[dev_call_state_change.ID];
+                                callStateChangeSn = dev_call_state_change.SN = find_call_state_change_sn.SN;
+
+                                sql_table_columns = "custom.voice_connect";
+                                sql_cmd = "UPDATE " + sql_table_columns + " SET channel=\'" + dev_call_state_change.channel + "\' WHERE serial_no=\'" + callStateChangeSn + "\'";
+                                while (!sql_client.connect())
+                                {
+                                    Thread.Sleep(300);
+                                }
+                                sql_client.modify(sql_cmd);
+                                sql_client.disconnect();
+                            }
+                            else
+                            {
+                                #region land<->mobile
+                                #endregion land<->mobile
+                            }
+                            #endregion
+                            #endregion Individual_Call
                             break;
                     }
                     if (parse_package.ContainsKey("call_type"))
@@ -2397,6 +2437,7 @@ LIMIT 1";
                                 byte[] ucn = new byte[4];//Universal Call Number
                                 byte[] snd_id = new byte[4];
                                 byte[] channel = new byte[2];
+                                byte[] call_type = new byte[1];
                                 byte call_status, reason_for_busy;
                                 uint Offset_to_Call_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 2).Take(2).Reverse().ToArray(), 0);
                                 uint Offset_to_Busy_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 4).Take(2).Reverse().ToArray(), 0);
@@ -2411,10 +2452,12 @@ LIMIT 1";
                                 const int offset_to_busy_section_reason_of_busy = 0;
                                 const int offset_to_req_section_Primary_ID = 0;
                                 const int Offset_to_Target_Section_Secondary_ID = 0;
+                                const int offset_to_call_section_call_type = 16;
                                 timestamp = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
                                 uid = p.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
                                 snd_id = p.Skip((int)Offset_to_Target_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Target_Section_Secondary_ID).Take(snd_id.Length).Reverse().ToArray();
                                 ucn = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
+                                call_type = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_type).Take(call_type.Length).Reverse().ToArray();
                                 //call_status = p[Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_status-1];
                                 //reason_for_busy = p[Offset_to_Busy_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_busy_section_reason_of_busy-1];
                                 if (!Num_Active_RF_Site_Channels.Equals(0))
@@ -2427,6 +2470,7 @@ LIMIT 1";
                                 parse_uid(uid,ref  parse_package);
                                 parse_snd_id(snd_id,ref  parse_package);
                                 parse_ucn(ucn,ref  parse_package);
+                                parse_call_type(call_type[0], ref parse_package);
                                 //parse_call_status(call_status);
                                 //parse_reason_for_busy(reason_for_busy);                                 
                             }
