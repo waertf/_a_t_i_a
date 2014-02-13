@@ -1120,7 +1120,7 @@ WHERE
             {
               Console.WriteLine("+AccessSqlServer");
               string sql_table_columns = string.Empty, sql_table_column_value = string.Empty, sql_cmd = string.Empty;
-              if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off") || parse_package["result"].ToString().Equals("start_call") || parse_package["result"].ToString().Equals("end_call") || parse_package["result"].ToString().Equals("Call_State_Change")))
+              if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off") || parse_package["result"].ToString().Equals("start_call") || parse_package["result"].ToString().Equals("end_call") || parse_package["result"].ToString().Equals("Call_State_Change") || parse_package["result"].Equals("Start_of_Call")))
                 {
                     if (parse_package.ContainsKey("call_type"))
                     {
