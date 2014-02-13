@@ -1120,7 +1120,7 @@ WHERE
             {
               Console.WriteLine("+AccessSqlServer");
               string sql_table_columns = string.Empty, sql_table_column_value = string.Empty, sql_cmd = string.Empty;
-                if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off") || parse_package["result"].ToString().Equals("start_call") || parse_package["result"].ToString().Equals("end_call")))
+              if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off") || parse_package["result"].ToString().Equals("start_call") || parse_package["result"].ToString().Equals("end_call") || parse_package["result"].ToString().Equals("Call_State_Change")))
                 {
                     if (parse_package.ContainsKey("call_type"))
                     {
@@ -1831,6 +1831,8 @@ WHERE
                             sql_client.modify(sql_cmd);
                             sql_client.disconnect();
                             Call_status.Remove(dev_call_off_status.ID);
+                            break;
+                        case "Call_State_Change":
                             break;
                     }
                     if (parse_package.ContainsKey("call_type"))
@@ -2784,6 +2786,9 @@ LIMIT 1";
                                 case (ushort)Flexible_Call_Activity_Update_opcode.Start_of_Call:
 //                                    parse_package.Add("opcode", "Start_of_Call");
                                     parse_package.Add("result", "Start_of_Call");
+                                    break;
+                                case (ushort)Flexible_Call_Activity_Update_opcode.Call_State_Change:
+                                    parse_package.Add("result", "Call_State_Change");
                                     break;
                             }
                         }
