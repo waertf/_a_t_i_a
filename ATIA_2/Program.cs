@@ -1608,6 +1608,7 @@ WHERE
                                 case "Group_Call":
                                     dev_call_status.call_type="1";
                                     dev_call_status.targetID = parse_package["target_id"];
+                                    dev_call_status.channel = parse_package["channel"];
                                     #region access power status
 
                                     {
@@ -1718,10 +1719,24 @@ LIMIT 1";
 
                             if (CheckIfUidInEquipmentTable(dev_call_status.ID))
                             {
-                                sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target";
-                                sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
-                                    dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + dev_call_status.targetID + "\'";
-                                sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                if (dev_call_status.call_type.Equals("1"))
+                                {
+                                    sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target,channel";
+                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
+                                        dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" 
+                                        + "," + "\'" + dev_call_status.targetID + "\'"
+                                        + "," + "\'" + dev_call_status.channel + "\'";
+                                    sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                
+                                }
+                                else
+                                {
+                                    sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target";
+                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
+                                        dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + dev_call_status.targetID + "\'";
+                                    sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                
+                                }
                                 while (!sql_client.connect())
                                 {
                                     Thread.Sleep(300);
@@ -2925,6 +2940,7 @@ LIMIT 1";
         public string start_call_time { get; set; }
         public string end_call_time { get; set; }
         public string targetID { get; set; }
+        public string channel { get; set; }
 
     }
     public class GeoAngle
