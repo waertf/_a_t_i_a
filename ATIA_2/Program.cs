@@ -22,7 +22,11 @@ using System.Data;
  * "Call Activity Update"->"Active RF Sites/Channel Info List" only-
  * private call :Call State Change
  * group call : Start of Call
- * land<->mobile : Start of Call
+ * land<->mobile : Call State Change
+ * 
+ * private_call:Radio Type Qualifier = (Astro call)
+ * radioToLan:Radio Type Qualifier = (Interconnect,Astro call)
+ * lanToRadio:Radio Type Qualifier = (Interconnect,Landline call,Astro call)
  * 
  * callType:
  * Individual_Call:2
