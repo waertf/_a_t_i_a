@@ -23,6 +23,12 @@ using System.Data;
  * private call :Call State Change
  * group call : Start of Call
  * land<->mobile : Start of Call
+ * 
+ * callType:
+ * Individual_Call:2
+ * Group_Call:1
+ * Land_to_Mobile:4
+ * Mobile_to_Land:3
  * **/
 
 namespace ATIA_2
