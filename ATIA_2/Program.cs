@@ -20,7 +20,7 @@ using System.Data;
 /*
  * get channel condition
  * "Call Activity Update"->"Active RF Sites/Channel Info List" only-
- * private call :Call State Change
+ * private call :Start of Call(Call State Change)
  * group call : Start of Call
  * land<->mobile : Call State Change
  * 
