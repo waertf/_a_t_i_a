@@ -1592,7 +1592,7 @@ VALUES
                                     
                                     if (Call_status.ContainsKey(dev_call_status.ID))
                                     {
-                                        break;
+                                        
                                     }
                                     
                                     #endregion
@@ -1742,36 +1742,60 @@ LIMIT 1";
 
                                     if (CheckIfUidInEquipmentTable(dev_call_status.ID))
                                     {
-                                        if (dev_call_status.call_type.Equals("1") && parse_package.ContainsKey("channel"))
+                                        if (!Call_status.ContainsKey(dev_call_status.ID))
                                         {
-                                            sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target,channel";
-                                            sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
-                                                dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'"
-                                                + "," + "\'" + dev_call_status.targetID + "\'"
-                                                + "," + "\'" + dev_call_status.channel + "\'";
-                                            sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                            if (dev_call_status.call_type.Equals("1") && parse_package.ContainsKey("channel"))
+                                            {
+                                                sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target,channel";
+                                                sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
+                                                    dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'"
+                                                    + "," + "\'" + dev_call_status.targetID + "\'"
+                                                    + "," + "\'" + dev_call_status.channel + "\'";
+                                                sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
 
+                                            }
+                                            else
+                                            {
+                                                sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target";
+                                                sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
+                                                    dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + dev_call_status.targetID + "\'";
+                                                sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+
+                                            }
+                                            while (!sql_client.connect())
+                                            {
+                                                Thread.Sleep(300);
+                                            }
+                                            sql_client.modify(sql_cmd);
+                                            sql_client.disconnect();
+
+                                            //Call_status.Add(dev_call_status);
+                                            if (!Call_status.ContainsKey(dev_call_status.ID))
+                                            {
+                                                Call_status.Add(dev_call_status.ID, dev_call_status);
+                                            }
                                         }
                                         else
                                         {
-                                            sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target";
-                                            sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
-                                                dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + dev_call_status.targetID + "\'";
-                                            sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-
+                                            var find_dev_call_status = (Device_call_status)Call_status[dev_call_status.ID];
+                                            if (dev_call_status.call_type.Equals("1") &&
+                                                parse_package.ContainsKey("channel"))
+                                            {
+                                                sql_cmd = @"UPDATE 
+  custom.voice_connect
+SET
+  channel = "+ "\'" + dev_call_status.channel + "\'"+@"
+WHERE
+  custom.voice_connect.serial_no = " + "\'" + find_dev_call_status.SN + "\'";
+                                                while (!sql_client.connect())
+                                                {
+                                                    Thread.Sleep(300);
+                                                }
+                                                sql_client.modify(sql_cmd);
+                                                sql_client.disconnect();
+                                            }
                                         }
-                                        while (!sql_client.connect())
-                                        {
-                                            Thread.Sleep(300);
-                                        }
-                                        sql_client.modify(sql_cmd);
-                                        sql_client.disconnect();
-
-                                        //Call_status.Add(dev_call_status);
-                                        if (!Call_status.ContainsKey(dev_call_status.ID))
-                                        {
-                                            Call_status.Add(dev_call_status.ID, dev_call_status);
-                                        }
+                                        
                                     }
 
                                     break;
