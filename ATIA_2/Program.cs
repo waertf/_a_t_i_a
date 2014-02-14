@@ -404,6 +404,8 @@ namespace ATIA_2
             static void Main(string[] args)
             {
 
+                byte[] testByte = new byte[]{0x01,0x34};
+                parse_Radio_Type_Qualifier(testByte);
               Console.WriteLine(GetLocalIPAddress());//current ip address
               Console.WriteLine(System.Environment.UserName);//current username
               Console.WriteLine(DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
@@ -1925,6 +1927,7 @@ WHERE
                                     #endregion Individual_Call
                                     break;
                             }
+
                             if (parse_package.ContainsKey("call_type"))
                             {
                                 switch (parse_package["call_type"].ToString())
@@ -2491,6 +2494,7 @@ LIMIT 1";
                                 byte[] snd_id = new byte[4];
                                 byte[] channel = new byte[2];
                                 byte[] call_type = new byte[1];
+                                byte[] Radio_Type_Qualifier = new byte[4];
                                 byte call_status, reason_for_busy;
                                 uint Offset_to_Call_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 2).Take(2).Reverse().ToArray(), 0);
                                 uint Offset_to_Busy_Section = BitConverter.ToUInt16(p.Skip(OFFSET_TO_THE_FILE_NEXT_TO_NUM_OFFSETS + 4).Take(2).Reverse().ToArray(), 0);
@@ -2506,11 +2510,13 @@ LIMIT 1";
                                 const int offset_to_req_section_Primary_ID = 0;
                                 const int Offset_to_Target_Section_Secondary_ID = 0;
                                 const int offset_to_call_section_call_type = 16;
+                                const int offset_to_call_section_Radio_Type_Qualifier = 18;
                                 timestamp = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
                                 uid = p.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
                                 snd_id = p.Skip((int)Offset_to_Target_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Target_Section_Secondary_ID).Take(snd_id.Length).Reverse().ToArray();
                                 ucn = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
                                 call_type = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_type).Take(call_type.Length).Reverse().ToArray();
+                                Radio_Type_Qualifier = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Radio_Type_Qualifier).Take(Radio_Type_Qualifier.Length).Reverse().ToArray();
                                 //call_status = p[Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_status-1];
                                 //reason_for_busy = p[Offset_to_Busy_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_busy_section_reason_of_busy-1];
                                 if (!Num_Active_RF_Site_Channels.Equals(0))
@@ -2524,6 +2530,7 @@ LIMIT 1";
                                 parse_snd_id(snd_id,ref  parse_package);
                                 parse_ucn(ucn,ref  parse_package);
                                 parse_call_type(call_type[0], ref parse_package);
+                                parse_Radio_Type_Qualifier(Radio_Type_Qualifier, ref parse_package);
                                 //parse_call_status(call_status);
                                 //parse_reason_for_busy(reason_for_busy);                                 
                             }
@@ -2595,6 +2602,60 @@ LIMIT 1";
                 }
             }
 
+        private static void parse_Radio_Type_Qualifier(byte[] radioTypeQualifier, ref SortedDictionary<string, string> parsePackage)
+        {
+            string s = string.Join("",
+    radioTypeQualifier.Select(x => Convert.ToString(x, 2).PadLeft(8, '0')).ToArray());
+            /*
+            Console.WriteLine(ByteToHexBitFiddle(radioTypeQualifier));
+            Console.WriteLine(s);
+            Console.WriteLine(s.ToCharArray());
+            Console.WriteLine(Reverse(s));
+            char[] charArray = Reverse(s).ToCharArray();
+            foreach (var VARIABLE in charArray)
+            {
+                Console.WriteLine(VARIABLE);
+            }
+             */
+            char[] flag = Reverse(s).ToCharArray();
+            if (flag[27].Equals('1')) //Interconnect
+            {
+                if (flag[25].Equals('1'))//Landline Call
+                {
+                    
+                }
+            }
+
+        }
+        private static string Reverse(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            StringBuilder builder = new StringBuilder(text.Length);
+            for (int i = text.Length - 1; i >= 0; i--)
+            {
+                builder.Append(text[i]);
+            }
+
+            return builder.ToString();
+        }
+        private static void parse_Radio_Type_Qualifier(byte[] radioTypeQualifier)
+        {
+            string s = string.Join("",
+    radioTypeQualifier.Select(x => Convert.ToString(x, 2).PadLeft(8, '0')).ToArray());
+            Console.WriteLine(ByteToHexBitFiddle(radioTypeQualifier));
+            Console.WriteLine(s);
+            Console.WriteLine(s.ToCharArray());
+            Console.WriteLine(Reverse(s));
+            char[] charArray = Reverse(s).ToCharArray();
+            foreach (var VARIABLE in charArray)
+            {
+                Console.WriteLine(VARIABLE);
+            }
+        }
         private static void parse_channel(byte[] channel, ref SortedDictionary<string, string> parsePackage)
         {
             string channelStr = string.Empty;
