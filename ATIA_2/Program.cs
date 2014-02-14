@@ -1744,7 +1744,10 @@ LIMIT 1";
                                     {
                                         if (!Call_status.ContainsKey(dev_call_status.ID))
                                         {
-                                            if (dev_call_status.call_type.Equals("1") && parse_package.ContainsKey("channel"))
+                                            if (
+                                                (dev_call_status.call_type.Equals("1") ||
+                                                dev_call_status.call_type.Equals("2"))
+                                                && parse_package.ContainsKey("channel"))
                                             {
                                                 sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target,channel";
                                                 sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
@@ -1778,8 +1781,10 @@ LIMIT 1";
                                         else
                                         {
                                             var find_dev_call_status = (Device_call_status)Call_status[dev_call_status.ID];
-                                            if (dev_call_status.call_type.Equals("1") &&
-                                                parse_package.ContainsKey("channel"))
+                                            if (
+                                                (dev_call_status.call_type.Equals("1") ||
+                                                dev_call_status.call_type.Equals("2"))
+                                                && parse_package.ContainsKey("channel"))
                                             {
                                                 sql_cmd = @"UPDATE 
   custom.voice_connect
