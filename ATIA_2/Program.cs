@@ -1609,6 +1609,20 @@ VALUES
                                         case "Individual_Call":
                                             dev_call_status.call_type = "2";
                                             dev_call_status.targetID = parse_package["target_id"];
+                                            if (parse_package.ContainsKey("Radio_Type_Qualifier"))
+                                            {
+                                                switch (parse_package["Radio_Type_Qualifier"])
+                                                {
+                                                       // Land_to_Mobile:4
+                                                       // Mobile_to_Land:3
+                                                    case "Land_to_Mobile":
+                                                        dev_call_status.call_type = "4";
+                                                        break;
+                                                    case "Mobile_to_Land":
+                                                        dev_call_status.call_type = "3";
+                                                        break;
+                                                }
+                                            }
                                             #region access power status
 
                                             {
@@ -1928,7 +1942,7 @@ WHERE
                                     break;
                             }
 
-                            if (parse_package.ContainsKey("call_type"))
+                            if (parse_package.ContainsKey("call_type") && false)
                             {
                                 switch (parse_package["call_type"].ToString())
                                 {
@@ -2622,7 +2636,11 @@ LIMIT 1";
             {
                 if (flag[25].Equals('1'))//Landline Call
                 {
-                    
+                    parsePackage.Add("Radio_Type_Qualifier", "Land_to_Mobile");
+                }
+                else
+                {
+                    parsePackage.Add("Radio_Type_Qualifier", "Mobile_to_Land");
                 }
             }
 
