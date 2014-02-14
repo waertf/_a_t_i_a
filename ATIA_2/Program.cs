@@ -45,7 +45,7 @@ namespace ATIA_2
 
         private static object fileStreaWriteLock = new object();
         private static Mutex mut = new Mutex();
-        
+        static object SpinLock = new object();
             //static Byte[] receiveBytes;
             //static ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
             //static string returnData;
@@ -1118,54 +1118,59 @@ WHERE
 
             private static void AccessSqlServer(ref SortedDictionary<string, string> parse_package)
             {
-              Console.WriteLine("+AccessSqlServer");
-              string sql_table_columns = string.Empty, sql_table_column_value = string.Empty, sql_cmd = string.Empty;
-              if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off") || parse_package["result"].ToString().Equals("start_call") || parse_package["result"].ToString().Equals("end_call") || parse_package["result"].ToString().Equals("Call_State_Change") || parse_package["result"].Equals("Start_of_Call")))
+                lock (SpinLock)
                 {
-                    if (parse_package.ContainsKey("call_type"))
-                    {
-                      Console.WriteLine("call_type=" + parse_package["call_type"]);
-                        log.Info(Thread.CurrentThread.Name+"@"+"AccessSqlServer:call_type=" + parse_package["call_type"]);
-                    }
-                    else
-                    {
-                      Console.WriteLine("call_type=unknown");
-                        log.Info(Thread.CurrentThread.Name+"@"+"AccessSqlServer:call_type=unknown");
-                    }
-                    SqlClient sql_client = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
-                    
-                    switch (parse_package["result"].ToString())
-                    {
-                        case "power_on":
-                            Device_power_status dev_power_status = new Device_power_status();
-                            dev_power_status.ID = parse_package["source_id"].ToString();
-                            dev_power_status.power_on_time = parse_package["timestamp"].ToString();
-                            string device_on_time = dev_power_status.power_on_time.Substring(0, 4) + "-" + dev_power_status.power_on_time.Substring(4, 2) + "-" +
-                                dev_power_status.power_on_time.Substring(6, 2) + " " + dev_power_status.power_on_time.Substring(8, 2) + ":" +
-                                dev_power_status.power_on_time.Substring(10, 2) + ":" + dev_power_status.power_on_time.Substring(12, 2);
-                            dev_power_status.power_on_time = device_on_time;
-                            string power_on_today = DateTime.Now.ToString("yyyyMMdd");
-                            #region access power status
 
+                    {
+                        
+                        Console.WriteLine("+AccessSqlServer");
+                        string sql_table_columns = string.Empty, sql_table_column_value = string.Empty, sql_cmd = string.Empty;
+                        if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off") || parse_package["result"].ToString().Equals("start_call") || parse_package["result"].ToString().Equals("end_call") || parse_package["result"].ToString().Equals("Call_State_Change") || parse_package["result"].Equals("Start_of_Call")))
                         {
-                            string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
-                            sql_cmd = @"UPDATE 
+                            if (parse_package.ContainsKey("call_type"))
+                            {
+                                Console.WriteLine("call_type=" + parse_package["call_type"]);
+                                log.Info(Thread.CurrentThread.Name + "@" + "AccessSqlServer:call_type=" + parse_package["call_type"]);
+                            }
+                            else
+                            {
+                                Console.WriteLine("call_type=unknown");
+                                log.Info(Thread.CurrentThread.Name + "@" + "AccessSqlServer:call_type=unknown");
+                            }
+                            SqlClient sql_client = new SqlClient(ConfigurationManager.AppSettings["SQL_SERVER_IP"], ConfigurationManager.AppSettings["SQL_SERVER_PORT"], ConfigurationManager.AppSettings["SQL_SERVER_USER_ID"], ConfigurationManager.AppSettings["SQL_SERVER_PASSWORD"], ConfigurationManager.AppSettings["SQL_SERVER_DATABASE"], ConfigurationManager.AppSettings["Pooling"], ConfigurationManager.AppSettings["MinPoolSize"], ConfigurationManager.AppSettings["MaxPoolSize"], ConfigurationManager.AppSettings["ConnectionLifetime"]);
+
+                            switch (parse_package["result"].ToString())
+                            {
+                                case "power_on":
+                                    Device_power_status dev_power_status = new Device_power_status();
+                                    dev_power_status.ID = parse_package["source_id"].ToString();
+                                    dev_power_status.power_on_time = parse_package["timestamp"].ToString();
+                                    string device_on_time = dev_power_status.power_on_time.Substring(0, 4) + "-" + dev_power_status.power_on_time.Substring(4, 2) + "-" +
+                                        dev_power_status.power_on_time.Substring(6, 2) + " " + dev_power_status.power_on_time.Substring(8, 2) + ":" +
+                                        dev_power_status.power_on_time.Substring(10, 2) + ":" + dev_power_status.power_on_time.Substring(12, 2);
+                                    dev_power_status.power_on_time = device_on_time;
+                                    string power_on_today = DateTime.Now.ToString("yyyyMMdd");
+                                    #region access power status
+
+                                    {
+                                        string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
+                                        sql_cmd = @"UPDATE 
   custom.atia_device_power_status
 SET
   power = 'on',
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
-  custom.atia_device_power_status.uid = '" +parse_package["source_id"].ToString()+@"'";
-                            while (!sql_client.connect())
-                            {
-                                Thread.Sleep(300);
-                            }
+  custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
 
-                            sql_client.modify(sql_cmd);
-                            sql_client.disconnect();
-                        }
-                            #endregion
-                            /*SELECT 
+                                        sql_client.modify(sql_cmd);
+                                        sql_client.disconnect();
+                                    }
+                                    #endregion
+                                    /*SELECT 
   custom.turn_onoff_log.serial_no
 FROM
   custom.turn_onoff_log
@@ -1175,9 +1180,9 @@ ORDER BY
   custom.turn_onoff_log.create_time DESC
 LIMIT 1
                              */
-                            //if (true)
-                        {
-                            sql_cmd = @"SELECT 
+                                    //if (true)
+                                    {
+                                        sql_cmd = @"SELECT 
   custom.turn_onoff_log.serial_no
 FROM
   custom.turn_onoff_log
@@ -1189,21 +1194,21 @@ custom.turn_onoff_log.on_time IS NOT NULL AND
 ORDER BY
   custom.turn_onoff_log.create_time DESC
 LIMIT 1";
-                            while (!sql_client.connect())
-                            {
-                                Thread.Sleep(300);
-                            }
-                                var dt = sql_client.get_DataTable(sql_cmd);
-                                sql_client.disconnect();
-                            if (dt != null && dt.Rows.Count != 0)
-                            {
-                                break;
-                            }
-                        }
-                        #region
-                        {
-                                string sn = string.Empty;
-                                sql_cmd = @"SELECT 
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
+                                        var dt = sql_client.get_DataTable(sql_cmd);
+                                        sql_client.disconnect();
+                                        if (dt != null && dt.Rows.Count != 0)
+                                        {
+                                            break;
+                                        }
+                                    }
+                                    #region
+                                    {
+                                        string sn = string.Empty;
+                                        sql_cmd = @"SELECT 
   custom.turn_onoff_log.serial_no
 FROM
   custom.turn_onoff_log
@@ -1215,123 +1220,123 @@ custom.turn_onoff_log.on_time IS NOT NULL AND
 ORDER BY
   custom.turn_onoff_log.create_time DESC
 LIMIT 1";
-                                while (!sql_client.connect())
-                                {
-                                    Thread.Sleep(300);
-                                }
-                                var dt = sql_client.get_DataTable(sql_cmd);
-                                sql_client.disconnect();
-                                if (dt != null && dt.Rows.Count != 0)
-                                {
-                                    foreach (DataRow row in dt.Rows)
-                                    {
-                                        sn = row[0].ToString();
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
+                                        var dt = sql_client.get_DataTable(sql_cmd);
+                                        sql_client.disconnect();
+                                        if (dt != null && dt.Rows.Count != 0)
+                                        {
+                                            foreach (DataRow row in dt.Rows)
+                                            {
+                                                sn = row[0].ToString();
+                                            }
+
+                                            Console.WriteLine("dev_power_status.ID.Length=" + dev_power_status.ID.Length);
+                                            Console.WriteLine("dev_power_status.ID=" + dev_power_status.ID);
+
+                                            string yyyyMMdd = sn.Substring(dev_power_status.ID.Length, 8);
+                                            string count = sn.Substring(dev_power_status.ID.Length + yyyyMMdd.Length, 3);
+
+                                            if (power_on_today.Equals(yyyyMMdd))
+                                            {
+                                                uint addCount = (uint.Parse(count) + 1);
+                                                dev_power_status.SN = dev_power_status.ID + power_on_today + addCount.ToString("D3");
+                                            }
+                                            else
+                                            {
+                                                int iVal = 0;
+
+                                                dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
+                                            }
+
+                                            InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_status, parse_package["result"].ToString(), parse_package);
+                                        }
+                                        else
+                                        {
+                                            int iVal = 0;
+
+                                            dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
+                                            InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_status, parse_package["result"].ToString(), parse_package);
+
+                                        }
                                     }
+                                    #endregion
 
-                                  Console.WriteLine("dev_power_status.ID.Length=" + dev_power_status.ID.Length);
-                                  Console.WriteLine("dev_power_status.ID=" + dev_power_status.ID);
-
-                                    string yyyyMMdd = sn.Substring(dev_power_status.ID.Length, 8);
-                                    string count = sn.Substring(dev_power_status.ID.Length + yyyyMMdd.Length, 3);
-                                    
-                                    if (power_on_today.Equals(yyyyMMdd))
+                                    if (CheckIfUidInEquipmentTable(dev_power_status.ID))
                                     {
-                                        uint addCount = (uint.Parse(count) + 1);
-                                        dev_power_status.SN = dev_power_status.ID + power_on_today + addCount.ToString("D3");
+                                        sql_table_columns = "serial_no,uid,on_time,create_user,create_ip";
+                                        sql_table_column_value = "\'" + dev_power_status.SN + "\'" + "," + "\'" + dev_power_status.ID + "\'" + "," + "\'" +
+                                            device_on_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'";
+                                        sql_cmd = "INSERT INTO custom.turn_onoff_log (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
+                                        sql_client.modify(sql_cmd);
+                                        sql_client.disconnect();
+                                        /*
+                                        int iVal = 1;
+
+                                        iVal.ToString("D3"); // = "001"
+                                         * */
+                                        if (!Power_status.ContainsKey(dev_power_status.ID))
+                                            Power_status.Add(dev_power_status.ID, dev_power_status);
                                     }
                                     else
                                     {
-                                        int iVal = 0;
 
-                                        dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
                                     }
 
-                                    InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_status, parse_package["result"].ToString(),parse_package);
-                                }
-                                else
-                                {
-                                    int iVal = 0;
+                                    break;
+                                case "power_off":
 
-                                    dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
-                                    InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_status, parse_package["result"].ToString(),parse_package);
+                                    #region access power status
 
-                                }
-                        }
-                        #endregion
-
-                            if (CheckIfUidInEquipmentTable(dev_power_status.ID))
-                            {
-                                sql_table_columns = "serial_no,uid,on_time,create_user,create_ip";
-                                sql_table_column_value = "\'" + dev_power_status.SN + "\'" + "," + "\'" + dev_power_status.ID + "\'" + "," + "\'" +
-                                    device_on_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'";
-                                sql_cmd = "INSERT INTO custom.turn_onoff_log (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-                                while (!sql_client.connect())
-                                {
-                                    Thread.Sleep(300);
-                                }
-                                sql_client.modify(sql_cmd);
-                                sql_client.disconnect();
-                                /*
-                                int iVal = 1;
-
-                                iVal.ToString("D3"); // = "001"
-                                 * */
-                                if (!Power_status.ContainsKey(dev_power_status.ID))
-                                    Power_status.Add(dev_power_status.ID,dev_power_status);
-                            }
-                            else
-                            {
-                                
-                            }
-                        
-                            break;
-                        case "power_off":
-
-                            #region access power status
-
-                            {
-                                string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
-                                sql_cmd = @"UPDATE 
+                                    {
+                                        string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
+                                        sql_cmd = @"UPDATE 
   custom.atia_device_power_status
 SET
   power = 'on',
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
-                                while (!sql_client.connect())
-                                {
-                                    Thread.Sleep(300);
-                                }
-                                sql_client.modify(sql_cmd);
-                                sql_client.disconnect();
-                            }
-                            #endregion
-                            string power_off_sn = string.Empty;
-                            Device_power_status dev_power_off_status = new Device_power_status();
-                            dev_power_off_status.ID = parse_package["source_id"].ToString();
-                            if (CheckIfUidInEquipmentTable(dev_power_off_status.ID))
-                            {
-                                
-                            }
-                            else
-                            {
-                                break;
-                            }
-                            #region
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
+                                        sql_client.modify(sql_cmd);
+                                        sql_client.disconnect();
+                                    }
+                                    #endregion
+                                    string power_off_sn = string.Empty;
+                                    Device_power_status dev_power_off_status = new Device_power_status();
+                                    dev_power_off_status.ID = parse_package["source_id"].ToString();
+                                    if (CheckIfUidInEquipmentTable(dev_power_off_status.ID))
+                                    {
 
-                            Device_power_status find_dev_sn;
-                            if (Power_status.ContainsKey(dev_power_off_status.ID))
-                            {
-                                 find_dev_sn = (Device_power_status)Power_status[dev_power_off_status.ID];
-                                power_off_sn = dev_power_off_status.SN = find_dev_sn.SN;
-                            }
-                            else
-                            {
-                                break;
-                            }
-                            #endregion
-                            #region
-                            /*
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                    #region
+
+                                    Device_power_status find_dev_sn;
+                                    if (Power_status.ContainsKey(dev_power_off_status.ID))
+                                    {
+                                        find_dev_sn = (Device_power_status)Power_status[dev_power_off_status.ID];
+                                        power_off_sn = dev_power_off_status.SN = find_dev_sn.SN;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                    #endregion
+                                    #region
+                                    /*
                             Device_power_status find_dev_sn = Power_status.Find(
                                  delegate(Device_power_status bk)
                                  {
@@ -1349,20 +1354,20 @@ WHERE
                                 break;
                             }
                             */
-                            #endregion
+                                    #endregion
 
-                            //string power_off_sn = ConfigurationManager.AppSettings[dev_power_off_status.ID].ToString();
-                            // string[] power_off_sn_sub = power_off_sn.Split(',');
-                            //dev_power_off_status.SN = dev_power_off_status.ID + power_off_sn_sub[0] + uint.Parse(power_off_sn_sub[1]).ToString("D3");
-                            dev_power_off_status.power_off_time = parse_package["timestamp"].ToString();
-                            //parse_package.Add("timestamp", date_time.ToString("yyyyMMddHHmmssffff"));
-                            string device_off_time = dev_power_off_status.power_off_time.Substring(0, 4) + "-" + dev_power_off_status.power_off_time.Substring(4, 2) + "-" +
-                                dev_power_off_status.power_off_time.Substring(6, 2) + " " + dev_power_off_status.power_off_time.Substring(8, 2) + ":" +
-                                dev_power_off_status.power_off_time.Substring(10, 2) + ":" + dev_power_off_status.power_off_time.Substring(12, 2);
-                            dev_power_off_status.power_off_time = find_dev_sn.power_off_time = device_off_time;
-                            dev_power_off_status = find_dev_sn;
-                            {
-                                sql_cmd = @"SELECT 
+                                    //string power_off_sn = ConfigurationManager.AppSettings[dev_power_off_status.ID].ToString();
+                                    // string[] power_off_sn_sub = power_off_sn.Split(',');
+                                    //dev_power_off_status.SN = dev_power_off_status.ID + power_off_sn_sub[0] + uint.Parse(power_off_sn_sub[1]).ToString("D3");
+                                    dev_power_off_status.power_off_time = parse_package["timestamp"].ToString();
+                                    //parse_package.Add("timestamp", date_time.ToString("yyyyMMddHHmmssffff"));
+                                    string device_off_time = dev_power_off_status.power_off_time.Substring(0, 4) + "-" + dev_power_off_status.power_off_time.Substring(4, 2) + "-" +
+                                        dev_power_off_status.power_off_time.Substring(6, 2) + " " + dev_power_off_status.power_off_time.Substring(8, 2) + ":" +
+                                        dev_power_off_status.power_off_time.Substring(10, 2) + ":" + dev_power_off_status.power_off_time.Substring(12, 2);
+                                    dev_power_off_status.power_off_time = find_dev_sn.power_off_time = device_off_time;
+                                    dev_power_off_status = find_dev_sn;
+                                    {
+                                        sql_cmd = @"SELECT 
   custom.turn_onoff_log.serial_no
 FROM
   custom.turn_onoff_log
@@ -1374,24 +1379,24 @@ custom.turn_onoff_log.on_time IS NOT NULL AND
 ORDER BY
   custom.turn_onoff_log.create_time DESC
 LIMIT 1";
-                                while (!sql_client.connect())
-                                {
-                                    Thread.Sleep(300);
-                                }
-                                var dt = sql_client.get_DataTable(sql_cmd);
-                                sql_client.disconnect();
-                                if (dt != null && dt.Rows.Count != 0)
-                                {
-                                    InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_off_status, parse_package["result"].ToString(), parse_package);
-                                }
-                                else
-                                {
-                                    break;
-                                    
-                                }
-                            }
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
+                                        var dt = sql_client.get_DataTable(sql_cmd);
+                                        sql_client.disconnect();
+                                        if (dt != null && dt.Rows.Count != 0)
+                                        {
+                                            InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_off_status, parse_package["result"].ToString(), parse_package);
+                                        }
+                                        else
+                                        {
+                                            break;
 
-                            sql_cmd = @"SELECT 
+                                        }
+                                    }
+
+                                    sql_cmd = @"SELECT 
   custom.turn_onoff_log.serial_no
 FROM
   custom.turn_onoff_log
@@ -1403,32 +1408,32 @@ custom.turn_onoff_log.on_time IS NOT NULL AND
 ORDER BY
   custom.turn_onoff_log.create_time DESC
 LIMIT 1";
-                            while (!sql_client.connect())
-                            {
-                                Thread.Sleep(300);
-                            }
-                            var dt2 = sql_client.get_DataTable(sql_cmd);
-                            sql_client.disconnect();
-                            if (dt2 != null && dt2.Rows.Count != 0)
-                            {
-                                InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_off_status, parse_package["result"].ToString(),parse_package);
-                                sql_table_columns = "custom.turn_onoff_log";
-                                sql_cmd = "UPDATE " + sql_table_columns + " SET off_time=\'" + device_off_time + "\' WHERE serial_no=\'" + dev_power_off_status.SN + "\'";
-                                while (!sql_client.connect())
-                                {
-                                    Thread.Sleep(300);
-                                }
-                                sql_client.modify(sql_cmd);
-                                sql_client.disconnect();
-                                // TODO: insert information control present to sql server
-                                /*
-                                 * SELECT ((((DATE_PART('day', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp) * 24 +
-                    DATE_PART('hour', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp)) * 60 +
-                    DATE_PART('minute', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp)) * 60 +
-                    DATE_PART('second', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp))/time_trigger_interval)*100;
-                                 */
-                                int time_trigger_interval = int.Parse(ConfigurationManager.AppSettings["time_trigger_interval"]);
-                                string sql_select = @"
+                                    while (!sql_client.connect())
+                                    {
+                                        Thread.Sleep(300);
+                                    }
+                                    var dt2 = sql_client.get_DataTable(sql_cmd);
+                                    sql_client.disconnect();
+                                    if (dt2 != null && dt2.Rows.Count != 0)
+                                    {
+                                        InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_off_status, parse_package["result"].ToString(), parse_package);
+                                        sql_table_columns = "custom.turn_onoff_log";
+                                        sql_cmd = "UPDATE " + sql_table_columns + " SET off_time=\'" + device_off_time + "\' WHERE serial_no=\'" + dev_power_off_status.SN + "\'";
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
+                                        sql_client.modify(sql_cmd);
+                                        sql_client.disconnect();
+                                        // TODO: insert information control present to sql server
+                                        /*
+                                         * SELECT ((((DATE_PART('day', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp) * 24 +
+                            DATE_PART('hour', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp)) * 60 +
+                            DATE_PART('minute', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp)) * 60 +
+                            DATE_PART('second', '2011-12-30 08:56:10'::timestamp - '2011-12-30 08:54:55'::timestamp))/time_trigger_interval)*100;
+                                         */
+                                        int time_trigger_interval = int.Parse(ConfigurationManager.AppSettings["time_trigger_interval"]);
+                                        string sql_select = @"
                             
                                SELECT
   custom.turn_onoff_log.serial_no,
@@ -1455,7 +1460,7 @@ FROM
   custom.voice_connect
   ON
   custom.voice_connect.uid = " + "\'" + dev_power_off_status.ID + "\'" +//custom.turn_onoff_log.uid
-                                   @"
+                                           @"
 WHERE
   
   custom.voice_connect.end_time > custom.turn_onoff_log.on_time AND
@@ -1471,333 +1476,349 @@ GROUP BY
                 DATE_PART('second', custom.turn_onoff_log.off_time::timestamp - custom.turn_onoff_log.on_time::timestamp))
 limit 1
                                 ";
-                                while (!sql_client.connect())
-                                {
-                                    Thread.Sleep(300);
-                                }
-                                DataTable data_table = sql_client.get_DataTable(sql_select);
-                                sql_client.disconnect();
-                                Console.WriteLine(sql_select);
-                                log.Info(sql_select);
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
+                                        DataTable data_table = sql_client.get_DataTable(sql_select);
+                                        sql_client.disconnect();
+                                        Console.WriteLine(sql_select);
+                                        log.Info(sql_select);
 
 
-                                if ((data_table == null) || (data_table.Rows.Count == 0))
-                                {
-                                    Console.WriteLine("data_table == null");
-                                }
-                                else
-                                {
-                                    #region
+                                        if ((data_table == null) || (data_table.Rows.Count == 0))
+                                        {
+                                            Console.WriteLine("data_table == null");
+                                        }
+                                        else
+                                        {
+                                            #region
 
-                                    string sn = string.Empty, serial_no=string.Empty;
-                                    string power_off_today = DateTime.Now.ToString("yyyyMMdd");
-                                    string sqlCmd = @"SELECT 
+                                            string sn = string.Empty, serial_no = string.Empty;
+                                            string power_off_today = DateTime.Now.ToString("yyyyMMdd");
+                                            string sqlCmd = @"SELECT 
   custom.location_control_log.serial_no
 FROM
   custom.location_control_log
 WHERE
-  custom.location_control_log.uid = '"+data_table.Rows[0]["uid"].ToString()+@"'
+  custom.location_control_log.uid = '" + data_table.Rows[0]["uid"].ToString() + @"'
 ORDER BY
   custom.location_control_log.serial_no DESC
 LIMIT 1";
-                                    while (!sql_client.connect())
-                                    {
-                                        Thread.Sleep(300);
-                                    }
-                                    var dt = sql_client.get_DataTable(sqlCmd);
-                                    sql_client.disconnect();
-                                    if (dt != null && dt.Rows.Count != 0)
-                                    {
-                                        foreach (DataRow row in dt.Rows)
-                                        {
-                                            sn = row[0].ToString();
-                                        }
+                                            while (!sql_client.connect())
+                                            {
+                                                Thread.Sleep(300);
+                                            }
+                                            var dt = sql_client.get_DataTable(sqlCmd);
+                                            sql_client.disconnect();
+                                            if (dt != null && dt.Rows.Count != 0)
+                                            {
+                                                foreach (DataRow row in dt.Rows)
+                                                {
+                                                    sn = row[0].ToString();
+                                                }
 
 
-                                        string yyyyMMdd = sn.Substring(data_table.Rows[0]["uid"].ToString().Length, 8);
-                                        string count = sn.Substring(data_table.Rows[0]["uid"].ToString().Length + yyyyMMdd.Length, 3);
+                                                string yyyyMMdd = sn.Substring(data_table.Rows[0]["uid"].ToString().Length, 8);
+                                                string count = sn.Substring(data_table.Rows[0]["uid"].ToString().Length + yyyyMMdd.Length, 3);
 
-                                        if (power_off_today.Equals(yyyyMMdd))
-                                        {
-                                            uint addCount = (uint.Parse(count) + 1);
-                                            serial_no = data_table.Rows[0]["uid"].ToString() + power_off_today + addCount.ToString("D3");
-                                        }
-                                        else
-                                        {
-                                            int iVal = 0;
+                                                if (power_off_today.Equals(yyyyMMdd))
+                                                {
+                                                    uint addCount = (uint.Parse(count) + 1);
+                                                    serial_no = data_table.Rows[0]["uid"].ToString() + power_off_today + addCount.ToString("D3");
+                                                }
+                                                else
+                                                {
+                                                    int iVal = 0;
 
-                                            serial_no = data_table.Rows[0]["uid"].ToString() + power_off_today + iVal.ToString("D3");
-                                        }
+                                                    serial_no = data_table.Rows[0]["uid"].ToString() + power_off_today + iVal.ToString("D3");
+                                                }
 
-                                        
-                                    }
-                                    else
-                                    {
-                                        int iVal = 0;
 
-                                        serial_no = data_table.Rows[0]["uid"].ToString() + power_off_today + iVal.ToString("D3");
-                                        
+                                            }
+                                            else
+                                            {
+                                                int iVal = 0;
 
-                                    }
-                                    #endregion
-                                    Console.WriteLine("data_table != null");
-                                    string ssql_insert_value = @"'" + serial_no + @"'" +
-                                        "," + @"'" + data_table.Rows[0]["uid"].ToString() + @"'" +
-                                        "," + @"'" + data_table.Rows[0]["on_time"].ToString() + @"'" +
-                                        "," + @"'" + data_table.Rows[0]["off_time"].ToString() + @"'" +
-                                        "," + @"'" + data_table.Rows[0]["all_time_count"].ToString() + @"'" +
-                                        "," + @"'" + data_table.Rows[0]["location_count"].ToString() + @"'" +
-                                        "," + @"'" + data_table.Rows[0]["location_percentage"].ToString() + @"'";
-                                    string sql_insert = @"
+                                                serial_no = data_table.Rows[0]["uid"].ToString() + power_off_today + iVal.ToString("D3");
+
+
+                                            }
+                                            #endregion
+                                            Console.WriteLine("data_table != null");
+                                            string ssql_insert_value = @"'" + serial_no + @"'" +
+                                                "," + @"'" + data_table.Rows[0]["uid"].ToString() + @"'" +
+                                                "," + @"'" + data_table.Rows[0]["on_time"].ToString() + @"'" +
+                                                "," + @"'" + data_table.Rows[0]["off_time"].ToString() + @"'" +
+                                                "," + @"'" + data_table.Rows[0]["all_time_count"].ToString() + @"'" +
+                                                "," + @"'" + data_table.Rows[0]["location_count"].ToString() + @"'" +
+                                                "," + @"'" + data_table.Rows[0]["location_percentage"].ToString() + @"'";
+                                            string sql_insert = @"
 INSERT INTO custom.location_control_log 
 (serial_no, uid, on_time, off_time, all_time_count, location_count, location_percentage) 
 VALUES 
 (" + ssql_insert_value + @");
 ";
-                                    Console.WriteLine(sql_insert);
-                                    log.Info(sql_insert);
-                                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[device]:" + data_table.Rows[0]["device"]);
-                                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[longitude]:" + data_table.Rows[0]["longitude"]);
-                                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[latitude]:" + data_table.Rows[0]["latitude"]);
-                                    while (!sql_client.connect())
-                                    {
-                                        Thread.Sleep(300);
-                                    }
-                                    sql_client.modify(sql_insert);
-                                    sql_client.disconnect();
-                                }
-                            }
-
-
-                            Power_status.Remove(dev_power_off_status.ID);
-                            break;
-                        case "Start_of_Call":
-                        case "start_call":
-                            Device_call_status dev_call_status = new Device_call_status();
-                            dev_call_status.ID = parse_package["source_id"].ToString();
-                            dev_call_status.start_call_time = parse_package["timestamp"].ToString();
-                            string start_call_time = dev_call_status.start_call_time.Substring(0, 4) + "-" + dev_call_status.start_call_time.Substring(4, 2) + "-" +
-                                dev_call_status.start_call_time.Substring(6, 2) + " " + dev_call_status.start_call_time.Substring(8, 2) + ":" +
-                                dev_call_status.start_call_time.Substring(10, 2) + ":" + dev_call_status.start_call_time.Substring(12, 2);
-                            string start_call_today = DateTime.Now.ToString("yyyyMMdd");
-                            switch(parse_package["call_type"].ToString())
-                            {
-                                
-                                case "Individual_Call":
-                                    dev_call_status.call_type="2";
-                                    dev_call_status.targetID = parse_package["target_id"];
-                                    #region access power status
-
-                                    {
-                                        string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
-                                        sql_cmd = @"UPDATE 
-  custom.atia_device_power_status
-SET
-  ""callStatus"" = '" + parse_package["call_type"].ToString() + @"',
-""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
-WHERE
-  custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
-                                        while (!sql_client.connect())
-                                        {
-                                            Thread.Sleep(300);
+                                            Console.WriteLine(sql_insert);
+                                            log.Info(sql_insert);
+                                            //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[device]:" + data_table.Rows[0]["device"]);
+                                            //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[longitude]:" + data_table.Rows[0]["longitude"]);
+                                            //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"[latitude]:" + data_table.Rows[0]["latitude"]);
+                                            while (!sql_client.connect())
+                                            {
+                                                Thread.Sleep(300);
+                                            }
+                                            sql_client.modify(sql_insert);
+                                            sql_client.disconnect();
                                         }
-                                        sql_client.modify(sql_cmd);
-                                        sql_client.disconnect();
                                     }
-                                    #endregion
+
+
+                                    Power_status.Remove(dev_power_off_status.ID);
                                     break;
-                                case "Group_Call":
-                                    dev_call_status.call_type="1";
-                                    dev_call_status.targetID = parse_package["target_id"];
-                                    if (parse_package.ContainsKey("channel"))
-                                        dev_call_status.channel = parse_package["channel"];
-                                    #region access power status
+                                case "Start_of_Call":
+                                case "start_call":
+                                    Device_call_status dev_call_status = new Device_call_status();
+                                    dev_call_status.ID = parse_package["source_id"].ToString();
+                                    dev_call_status.start_call_time = parse_package["timestamp"].ToString();
 
+                                    if (!CheckIfUidInEquipmentTable(dev_call_status.ID))
                                     {
-                                        string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
-                                        sql_cmd = @"UPDATE 
+                                        break;
+                                    }
+                                    
+                                    #region
+
+                                    
+                                    if (Call_status.ContainsKey(dev_call_status.ID))
+                                    {
+                                        break;
+                                    }
+                                    
+                                    #endregion
+
+                                    string start_call_time = dev_call_status.start_call_time.Substring(0, 4) + "-" + dev_call_status.start_call_time.Substring(4, 2) + "-" +
+                                        dev_call_status.start_call_time.Substring(6, 2) + " " + dev_call_status.start_call_time.Substring(8, 2) + ":" +
+                                        dev_call_status.start_call_time.Substring(10, 2) + ":" + dev_call_status.start_call_time.Substring(12, 2);
+                                    string start_call_today = DateTime.Now.ToString("yyyyMMdd");
+                                    switch (parse_package["call_type"].ToString())
+                                    {
+
+                                        case "Individual_Call":
+                                            dev_call_status.call_type = "2";
+                                            dev_call_status.targetID = parse_package["target_id"];
+                                            #region access power status
+
+                                            {
+                                                string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
+                                                sql_cmd = @"UPDATE 
   custom.atia_device_power_status
 SET
   ""callStatus"" = '" + parse_package["call_type"].ToString() + @"',
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
-                                        while (!sql_client.connect())
-                                        {
-                                            Thread.Sleep(300);
-                                        }
-                                        sql_client.modify(sql_cmd);
-                                        sql_client.disconnect();
+                                                while (!sql_client.connect())
+                                                {
+                                                    Thread.Sleep(300);
+                                                }
+                                                sql_client.modify(sql_cmd);
+                                                sql_client.disconnect();
+                                            }
+                                            #endregion
+                                            break;
+                                        case "Group_Call":
+                                            dev_call_status.call_type = "1";
+                                            dev_call_status.targetID = parse_package["target_id"];
+                                            if (parse_package.ContainsKey("channel"))
+                                                dev_call_status.channel = parse_package["channel"];
+                                            #region access power status
+
+                                            {
+                                                string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
+                                                sql_cmd = @"UPDATE 
+  custom.atia_device_power_status
+SET
+  ""callStatus"" = '" + parse_package["call_type"].ToString() + @"',
+""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
+WHERE
+  custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                                while (!sql_client.connect())
+                                                {
+                                                    Thread.Sleep(300);
+                                                }
+                                                sql_client.modify(sql_cmd);
+                                                sql_client.disconnect();
+                                            }
+                                            #endregion
+                                            break;
                                     }
-                                    #endregion
-                                    break; 
-                            }
-                            /*SELECT 
+                                    /*SELECT 
+          custom.voice_connect.serial_no
+        FROM
+          custom.voice_connect
+        WHERE
+          custom.voice_connect.connect_type = '3' AND 
+          custom.voice_connect.uid = '930000'
+        ORDER BY
+          custom.voice_connect.create_time DESC
+        LIMIT 1*/
+                                    if (true)
+                                    {
+                                        string sn = string.Empty;
+                                        sql_cmd = @"SELECT 
   custom.voice_connect.serial_no
 FROM
   custom.voice_connect
 WHERE
-  custom.voice_connect.connect_type = '3' AND 
-  custom.voice_connect.uid = '930000'
-ORDER BY
-  custom.voice_connect.create_time DESC
-LIMIT 1*/
-                            if (true)
-                            {
-                                string sn = string.Empty;
-                                sql_cmd = @"SELECT 
-  custom.voice_connect.serial_no
-FROM
-  custom.voice_connect
-WHERE
-  custom.voice_connect.uid = '"+dev_call_status.ID+@"'
+  custom.voice_connect.uid = '" + dev_call_status.ID + @"'
 ORDER BY
   custom.voice_connect.create_time DESC
 LIMIT 1";
-                                while (!sql_client.connect())
-                                {
-                                    Thread.Sleep(300);
-                                }
-                                var dt = sql_client.get_DataTable(sql_cmd);
-                                sql_client.disconnect();
-                                if (dt != null && dt.Rows.Count != 0)
-                                {
-                                    foreach (DataRow row in dt.Rows)
-                                    {
-                                        sn = row[0].ToString();
-                                    }
-                                  Console.WriteLine("dev_call_status.ID.Length="+dev_call_status.ID.Length);
-                                  Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
+                                        var dt = sql_client.get_DataTable(sql_cmd);
+                                        sql_client.disconnect();
+                                        if (dt != null && dt.Rows.Count != 0)
+                                        {
+                                            foreach (DataRow row in dt.Rows)
+                                            {
+                                                sn = row[0].ToString();
+                                            }
+                                            Console.WriteLine("dev_call_status.ID.Length=" + dev_call_status.ID.Length);
+                                            Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
 
-                                    string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
-                                    string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
+                                            string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
+                                            string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
 
-                                    if (start_call_today.Equals(yyyyMMdd))
-                                    {
-                                        uint addCount = (uint.Parse(count) + 1);
-                                        dev_call_status.SN = dev_call_status.ID + start_call_today + addCount.ToString("D5");
-                                    }
-                                    else
-                                    {
-                                        int iVal = 0;
+                                            if (start_call_today.Equals(yyyyMMdd))
+                                            {
+                                                uint addCount = (uint.Parse(count) + 1);
+                                                dev_call_status.SN = dev_call_status.ID + start_call_today + addCount.ToString("D5");
+                                            }
+                                            else
+                                            {
+                                                int iVal = 0;
 
-                                        dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                    }
-                                }
-                                else
-                                {
-                                    int iVal = 0;
+                                                dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            int iVal = 0;
 
-                                    dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                }
-                            }
-                            else
-                            {
-                                if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
-                                {
-                                    int iVal = 0;
-
-                                    dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                }
-                                else
-                                {
-                                    string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
-                                    string[] sn_sub = sn.Split(',');
-                                    if (sn_sub[0] != start_call_today)
-                                    {
-                                        int iVal = 0;
-
-                                        dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                        ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                            dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                        }
                                     }
                                     else
                                     {
-                                        uint count = uint.Parse(sn_sub[1]) + 1;
-                                        dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
-                                        ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                        if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
+                                        {
+                                            int iVal = 0;
+
+                                            dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                        }
+                                        else
+                                        {
+                                            string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
+                                            string[] sn_sub = sn.Split(',');
+                                            if (sn_sub[0] != start_call_today)
+                                            {
+                                                int iVal = 0;
+
+                                                dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                                ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                            }
+                                            else
+                                            {
+                                                uint count = uint.Parse(sn_sub[1]) + 1;
+                                                dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
+                                                ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                            }
+                                        }
                                     }
-                                }
-                            }
 
-                            if (CheckIfUidInEquipmentTable(dev_call_status.ID))
-                            {
-                                if (dev_call_status.call_type.Equals("1") && parse_package.ContainsKey("channel"))
-                                {
-                                    sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target,channel";
-                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
-                                        dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" 
-                                        + "," + "\'" + dev_call_status.targetID + "\'"
-                                        + "," + "\'" + dev_call_status.channel + "\'";
-                                    sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-                                
-                                }
-                                else
-                                {
-                                    sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target";
-                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
-                                        dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + dev_call_status.targetID + "\'";
-                                    sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-                                
-                                }
-                                while (!sql_client.connect())
-                                {
-                                    Thread.Sleep(300);
-                                }
-                                sql_client.modify(sql_cmd);
-                                sql_client.disconnect();
+                                    if (CheckIfUidInEquipmentTable(dev_call_status.ID))
+                                    {
+                                        if (dev_call_status.call_type.Equals("1") && parse_package.ContainsKey("channel"))
+                                        {
+                                            sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target,channel";
+                                            sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
+                                                dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'"
+                                                + "," + "\'" + dev_call_status.targetID + "\'"
+                                                + "," + "\'" + dev_call_status.channel + "\'";
+                                            sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
 
-                                //Call_status.Add(dev_call_status);
-                                if (!Call_status.ContainsKey(dev_call_status.ID))
-                                {
-                                    Call_status.Add(dev_call_status.ID, dev_call_status);
-                                }
-                            }
-                            
-                            break;
-                        case "end_call":
-                            #region access power status
+                                        }
+                                        else
+                                        {
+                                            sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target";
+                                            sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
+                                                dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + dev_call_status.targetID + "\'";
+                                            sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
 
-                            {
-                                string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
-                                sql_cmd = @"UPDATE 
+                                        }
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
+                                        sql_client.modify(sql_cmd);
+                                        sql_client.disconnect();
+
+                                        //Call_status.Add(dev_call_status);
+                                        if (!Call_status.ContainsKey(dev_call_status.ID))
+                                        {
+                                            Call_status.Add(dev_call_status.ID, dev_call_status);
+                                        }
+                                    }
+
+                                    break;
+                                case "end_call":
+                                    #region access power status
+
+                                    {
+                                        string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
+                                        sql_cmd = @"UPDATE 
   custom.atia_device_power_status
 SET
   ""callStatus"" = '" + parse_package["result"].ToString() + @"',
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
-                                while (!sql_client.connect())
-                                {
-                                    Thread.Sleep(300);
-                                }
-                                sql_client.modify(sql_cmd);
-                                sql_client.disconnect();
-                            }
-                            #endregion
-                            string end_call_sn = string.Empty;
-                            Device_call_status dev_call_off_status = new Device_call_status();
-                            dev_call_off_status.ID = parse_package["source_id"].ToString();
-                            if (CheckIfUidInEquipmentTable(dev_call_off_status.ID))
-                            {}
-                            else
-                            {
-                                break;
-                            }
-                            #region                               
+                                        while (!sql_client.connect())
+                                        {
+                                            Thread.Sleep(300);
+                                        }
+                                        sql_client.modify(sql_cmd);
+                                        sql_client.disconnect();
+                                    }
+                                    #endregion
+                                    string end_call_sn = string.Empty;
+                                    Device_call_status dev_call_off_status = new Device_call_status();
+                                    dev_call_off_status.ID = parse_package["source_id"].ToString();
+                                    if (CheckIfUidInEquipmentTable(dev_call_off_status.ID))
+                                    { }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                    #region
 
-                            Device_call_status find_dev_call_off_sn;
-                            if (Call_status.ContainsKey(dev_call_off_status.ID))
-                            {
-                                find_dev_call_off_sn = (Device_call_status)Call_status[dev_call_off_status.ID];
-                                end_call_sn = dev_call_off_status.SN = find_dev_call_off_sn.SN;
-                            }
-                            else
-                            {
-                                break;
-                            }
-                            #endregion
-                            #region
-                            /*
+                                    Device_call_status find_dev_call_off_sn;
+                                    if (Call_status.ContainsKey(dev_call_off_status.ID))
+                                    {
+                                        find_dev_call_off_sn = (Device_call_status)Call_status[dev_call_off_status.ID];
+                                        end_call_sn = dev_call_off_status.SN = find_dev_call_off_sn.SN;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                    #endregion
+                                    #region
+                                    /*
                             Device_call_status find_dev_call_off_sn = Call_status.Find(
                                  delegate(Device_call_status bk)
                                  {
@@ -1815,83 +1836,50 @@ WHERE
                                 break;
                             }
                             */
-                            #endregion
-                            //string power_off_sn = ConfigurationManager.AppSettings[dev_power_off_status.ID].ToString();
-                            // string[] power_off_sn_sub = power_off_sn.Split(',');
-                            //dev_power_off_status.SN = dev_power_off_status.ID + power_off_sn_sub[0] + uint.Parse(power_off_sn_sub[1]).ToString("D3");
-                            dev_call_off_status.end_call_time = parse_package["timestamp"].ToString();
-                            //parse_package.Add("timestamp", date_time.ToString("yyyyMMddHHmmssffff"));
-                            string device_end_call_time = dev_call_off_status.end_call_time.Substring(0, 4) + "-" + dev_call_off_status.end_call_time.Substring(4, 2) + "-" +
-                                dev_call_off_status.end_call_time.Substring(6, 2) + " " + dev_call_off_status.end_call_time.Substring(8, 2) + ":" +
-                                dev_call_off_status.end_call_time.Substring(10, 2) + ":" + dev_call_off_status.end_call_time.Substring(12, 2);
-                            sql_table_columns = "custom.voice_connect";
-                            sql_cmd = "UPDATE " + sql_table_columns + " SET end_time=\'" + device_end_call_time + "\' WHERE serial_no=\'" + dev_call_off_status.SN + "\'";
-                            while (!sql_client.connect())
-                            {
-                                Thread.Sleep(300);
-                            }
-                            sql_client.modify(sql_cmd);
-                            sql_client.disconnect();
-                            Call_status.Remove(dev_call_off_status.ID);
-                            break;
-                        case "Call_State_Change":
-                            #region Individual_Call
-
-                            string callStateChangeSn = string.Empty;
-                            Device_call_status dev_call_state_change = new Device_call_status();
-                            dev_call_state_change.ID = parse_package["source_id"].ToString();
-                            if (parse_package.ContainsKey("channel"))
-                                dev_call_state_change.channel = parse_package["channel"];
-                            if (CheckIfUidInEquipmentTable(dev_call_state_change.ID))
-                            { }
-                            else
-                            {
-                                break;
-                            }
-                            #region Individual_Call or land<->mobile
-
-                            Device_call_status find_call_state_change_sn;
-                            if (Call_status.ContainsKey(dev_call_state_change.ID))
-                            {
-                                //Individual_Call
-                                find_call_state_change_sn = (Device_call_status)Call_status[dev_call_state_change.ID];
-                                callStateChangeSn = dev_call_state_change.SN = find_call_state_change_sn.SN;
-
-                                sql_table_columns = "custom.voice_connect";
-                                sql_cmd = "UPDATE " + sql_table_columns + " SET channel=\'" + dev_call_state_change.channel + "\' WHERE serial_no=\'" + callStateChangeSn + "\'";
-                                while (!sql_client.connect())
-                                {
-                                    Thread.Sleep(300);
-                                }
-                                sql_client.modify(sql_cmd);
-                                sql_client.disconnect();
-                            }
-                            else
-                            {
-                                #region land<->mobile
-                                #endregion land<->mobile
-                            }
-                            #endregion
-                            #endregion Individual_Call
-                            break;
-                    }
-                    if (parse_package.ContainsKey("call_type"))
-                    {
-                        switch (parse_package["call_type"].ToString())
-                        {
-                            case "Land_to_Mobile"://L
-                                {
-                                    #region access power status
-
+                                    #endregion
+                                    //string power_off_sn = ConfigurationManager.AppSettings[dev_power_off_status.ID].ToString();
+                                    // string[] power_off_sn_sub = power_off_sn.Split(',');
+                                    //dev_power_off_status.SN = dev_power_off_status.ID + power_off_sn_sub[0] + uint.Parse(power_off_sn_sub[1]).ToString("D3");
+                                    dev_call_off_status.end_call_time = parse_package["timestamp"].ToString();
+                                    //parse_package.Add("timestamp", date_time.ToString("yyyyMMddHHmmssffff"));
+                                    string device_end_call_time = dev_call_off_status.end_call_time.Substring(0, 4) + "-" + dev_call_off_status.end_call_time.Substring(4, 2) + "-" +
+                                        dev_call_off_status.end_call_time.Substring(6, 2) + " " + dev_call_off_status.end_call_time.Substring(8, 2) + ":" +
+                                        dev_call_off_status.end_call_time.Substring(10, 2) + ":" + dev_call_off_status.end_call_time.Substring(12, 2);
+                                    sql_table_columns = "custom.voice_connect";
+                                    sql_cmd = "UPDATE " + sql_table_columns + " SET end_time=\'" + device_end_call_time + "\' WHERE serial_no=\'" + dev_call_off_status.SN + "\'";
+                                    while (!sql_client.connect())
                                     {
-                                        string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
-                                        sql_cmd = @"UPDATE 
-  custom.atia_device_power_status
-SET
-  ""callStatus"" = '" + parse_package["call_type"].ToString() + @"',
-""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
-WHERE
-  custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                        Thread.Sleep(300);
+                                    }
+                                    sql_client.modify(sql_cmd);
+                                    sql_client.disconnect();
+                                    Call_status.Remove(dev_call_off_status.ID);
+                                    break;
+                                case "Call_State_Change":
+                                    #region Individual_Call
+
+                                    string callStateChangeSn = string.Empty;
+                                    Device_call_status dev_call_state_change = new Device_call_status();
+                                    dev_call_state_change.ID = parse_package["source_id"].ToString();
+                                    if (parse_package.ContainsKey("channel"))
+                                        dev_call_state_change.channel = parse_package["channel"];
+                                    if (CheckIfUidInEquipmentTable(dev_call_state_change.ID))
+                                    { }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                    #region Individual_Call or land<->mobile
+
+                                    Device_call_status find_call_state_change_sn;
+                                    if (Call_status.ContainsKey(dev_call_state_change.ID))
+                                    {
+                                        //Individual_Call
+                                        find_call_state_change_sn = (Device_call_status)Call_status[dev_call_state_change.ID];
+                                        callStateChangeSn = dev_call_state_change.SN = find_call_state_change_sn.SN;
+
+                                        sql_table_columns = "custom.voice_connect";
+                                        sql_cmd = "UPDATE " + sql_table_columns + " SET channel=\'" + dev_call_state_change.channel + "\' WHERE serial_no=\'" + callStateChangeSn + "\'";
                                         while (!sql_client.connect())
                                         {
                                             Thread.Sleep(300);
@@ -1899,40 +1887,73 @@ WHERE
                                         sql_client.modify(sql_cmd);
                                         sql_client.disconnect();
                                     }
-                                    #endregion
-                                    Device_call_status dev_call_status = new Device_call_status();
-                                    dev_call_status.call_type = "4";
-                                    dev_call_status.ID = parse_package["source_id"].ToString();
-                                    if (CheckIfUidInEquipmentTable(dev_call_status.ID))
-                                    {
-                                    }
                                     else
                                     {
-                                        break;
+                                        #region land<->mobile
+                                        #endregion land<->mobile
                                     }
-                                    dev_call_status.start_call_time = parse_package["start_call_time"].ToString();
-                                    dev_call_status.end_call_time = parse_package["timestamp"].ToString();
-                                    string start_call_today = DateTime.Now.ToString("yyyyMMdd");
-                                    string start_call_time = dev_call_status.start_call_time.Substring(0, 4) + "-" + dev_call_status.start_call_time.Substring(4, 2) + "-" +
-                                    dev_call_status.start_call_time.Substring(6, 2) + " " + dev_call_status.start_call_time.Substring(8, 2) + ":" +
-                                    dev_call_status.start_call_time.Substring(10, 2) + ":" + dev_call_status.start_call_time.Substring(12, 2);
-                                    string end_call_time = dev_call_status.end_call_time.Substring(0, 4) + "-" + dev_call_status.end_call_time.Substring(4, 2) + "-" +
-                                    dev_call_status.end_call_time.Substring(6, 2) + " " + dev_call_status.end_call_time.Substring(8, 2) + ":" +
-                                    dev_call_status.end_call_time.Substring(10, 2) + ":" + dev_call_status.end_call_time.Substring(12, 2);
-                                    /*SELECT 
-custom.voice_connect.serial_no
-FROM
-custom.voice_connect
+                                    #endregion
+                                    #endregion Individual_Call
+                                    break;
+                            }
+                            if (parse_package.ContainsKey("call_type"))
+                            {
+                                switch (parse_package["call_type"].ToString())
+                                {
+                                    case "Land_to_Mobile"://L
+                                        {
+                                            #region access power status
+
+                                            {
+                                                string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
+                                                sql_cmd = @"UPDATE 
+  custom.atia_device_power_status
+SET
+  ""callStatus"" = '" + parse_package["call_type"].ToString() + @"',
+""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
-custom.voice_connect.connect_type = '3' AND 
-custom.voice_connect.uid = '930000'
-ORDER BY
-custom.voice_connect.create_time DESC
-LIMIT 1*/
-                                    if (true)
-                                    {
-                                        string sn = string.Empty;
-                                        sql_cmd = @"SELECT 
+  custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                                while (!sql_client.connect())
+                                                {
+                                                    Thread.Sleep(300);
+                                                }
+                                                sql_client.modify(sql_cmd);
+                                                sql_client.disconnect();
+                                            }
+                                            #endregion
+                                            Device_call_status dev_call_status = new Device_call_status();
+                                            dev_call_status.call_type = "4";
+                                            dev_call_status.ID = parse_package["source_id"].ToString();
+                                            if (CheckIfUidInEquipmentTable(dev_call_status.ID))
+                                            {
+                                            }
+                                            else
+                                            {
+                                                break;
+                                            }
+                                            dev_call_status.start_call_time = parse_package["start_call_time"].ToString();
+                                            dev_call_status.end_call_time = parse_package["timestamp"].ToString();
+                                            string start_call_today = DateTime.Now.ToString("yyyyMMdd");
+                                            string start_call_time = dev_call_status.start_call_time.Substring(0, 4) + "-" + dev_call_status.start_call_time.Substring(4, 2) + "-" +
+                                            dev_call_status.start_call_time.Substring(6, 2) + " " + dev_call_status.start_call_time.Substring(8, 2) + ":" +
+                                            dev_call_status.start_call_time.Substring(10, 2) + ":" + dev_call_status.start_call_time.Substring(12, 2);
+                                            string end_call_time = dev_call_status.end_call_time.Substring(0, 4) + "-" + dev_call_status.end_call_time.Substring(4, 2) + "-" +
+                                            dev_call_status.end_call_time.Substring(6, 2) + " " + dev_call_status.end_call_time.Substring(8, 2) + ":" +
+                                            dev_call_status.end_call_time.Substring(10, 2) + ":" + dev_call_status.end_call_time.Substring(12, 2);
+                                            /*SELECT 
+        custom.voice_connect.serial_no
+        FROM
+        custom.voice_connect
+        WHERE
+        custom.voice_connect.connect_type = '3' AND 
+        custom.voice_connect.uid = '930000'
+        ORDER BY
+        custom.voice_connect.create_time DESC
+        LIMIT 1*/
+                                            if (true)
+                                            {
+                                                string sn = string.Empty;
+                                                sql_cmd = @"SELECT 
   custom.voice_connect.serial_no
 FROM
   custom.voice_connect
@@ -1941,138 +1962,138 @@ WHERE
 ORDER BY
   custom.voice_connect.create_time DESC
 LIMIT 1";
-                                        while (!sql_client.connect())
-                                        {
-                                            Thread.Sleep(300);
-                                        }
-                                        var dt = sql_client.get_DataTable(sql_cmd);
-                                        sql_client.disconnect();
-                                        if (dt != null && dt.Rows.Count != 0)
-                                        {
-                                            foreach (DataRow row in dt.Rows)
-                                            {
-                                                sn = row[0].ToString();
-                                            }
-                                          Console.WriteLine("dev_call_status.ID.Length=" + dev_call_status.ID.Length);
-                                          Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
+                                                while (!sql_client.connect())
+                                                {
+                                                    Thread.Sleep(300);
+                                                }
+                                                var dt = sql_client.get_DataTable(sql_cmd);
+                                                sql_client.disconnect();
+                                                if (dt != null && dt.Rows.Count != 0)
+                                                {
+                                                    foreach (DataRow row in dt.Rows)
+                                                    {
+                                                        sn = row[0].ToString();
+                                                    }
+                                                    Console.WriteLine("dev_call_status.ID.Length=" + dev_call_status.ID.Length);
+                                                    Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
 
-                                            string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
-                                            string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
-                                            if (start_call_today.Equals(yyyyMMdd))
-                                            {
-                                                uint addCount = (uint.Parse(count) + 1);
-                                                dev_call_status.SN = dev_call_status.ID + start_call_today + addCount.ToString("D5");
-                                            }
-                                            else
-                                            {
-                                                int iVal = 0;
+                                                    string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
+                                                    string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
+                                                    if (start_call_today.Equals(yyyyMMdd))
+                                                    {
+                                                        uint addCount = (uint.Parse(count) + 1);
+                                                        dev_call_status.SN = dev_call_status.ID + start_call_today + addCount.ToString("D5");
+                                                    }
+                                                    else
+                                                    {
+                                                        int iVal = 0;
 
-                                                dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                            }
-                                        }
-                                        else
-                                        {
-                                            int iVal = 0;
+                                                        dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    int iVal = 0;
 
-                                            dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
-                                        {
-                                            int iVal = 0;
-
-                                            dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                        }
-                                        else
-                                        {
-                                            string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
-                                            string[] sn_sub = sn.Split(',');
-                                            if (sn_sub[0] != start_call_today)
-                                            {
-                                                int iVal = 0;
-
-                                                dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                                ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                                    dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                                }
                                             }
                                             else
                                             {
-                                                uint count = uint.Parse(sn_sub[1]) + 1;
-                                                dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
-                                                ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
-                                            }
-                                        }
-                                    }
-                                    
-                                    sql_table_columns = "serial_no,uid,connect_type,start_time,end_time,create_user,create_ip";
-                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" + 
-                                        dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'"+
-                                        "," + "0" + "," + "\'" +GetLocalIPAddress()+ "\'";
-                                    sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-                                    while (!sql_client.connect())
-                                    {
-                                        Thread.Sleep(300);
-                                    }
-                                    sql_client.modify(sql_cmd);
-                                    sql_client.disconnect();
-                                }
-                                break;
-                            case "Mobile_to_Land"://M
-                                {
-                                    #region access power status
+                                                if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
+                                                {
+                                                    int iVal = 0;
 
-                                    {
-                                        string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
-                                        sql_cmd = @"UPDATE 
+                                                    dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                                }
+                                                else
+                                                {
+                                                    string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
+                                                    string[] sn_sub = sn.Split(',');
+                                                    if (sn_sub[0] != start_call_today)
+                                                    {
+                                                        int iVal = 0;
+
+                                                        dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                                        ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                                    }
+                                                    else
+                                                    {
+                                                        uint count = uint.Parse(sn_sub[1]) + 1;
+                                                        dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
+                                                        ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                                    }
+                                                }
+                                            }
+
+                                            sql_table_columns = "serial_no,uid,connect_type,start_time,end_time,create_user,create_ip";
+                                            sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
+                                                dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'" +
+                                                "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'";
+                                            sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                            while (!sql_client.connect())
+                                            {
+                                                Thread.Sleep(300);
+                                            }
+                                            sql_client.modify(sql_cmd);
+                                            sql_client.disconnect();
+                                        }
+                                        break;
+                                    case "Mobile_to_Land"://M
+                                        {
+                                            #region access power status
+
+                                            {
+                                                string unsUpdateTimeStamp = DateTime.Now.ToString("yyyyMMdd HHmmss+8");
+                                                sql_cmd = @"UPDATE 
   custom.atia_device_power_status
 SET
   ""callStatus"" = '" + parse_package["call_type"].ToString() + @"',
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
-                                        while (!sql_client.connect())
-                                        {
-                                            Thread.Sleep(300);
-                                        }
-                                        sql_client.modify(sql_cmd);
-                                        sql_client.disconnect();
-                                    }
-                                    #endregion
-                                    Device_call_status dev_call_status = new Device_call_status();
-                                    dev_call_status.call_type = "3";
-                                    dev_call_status.ID = parse_package["source_id"].ToString();
-                                    dev_call_status.targetID = parse_package["target_id"];
-                                    if (CheckIfUidInEquipmentTable(dev_call_status.ID))
-                                    {
-                                    }
-                                    else
-                                    {
-                                        break;
-                                    }
-                                    dev_call_status.start_call_time = parse_package["start_call_time"].ToString();
-                                    dev_call_status.end_call_time = parse_package["timestamp"].ToString();
-                                    string start_call_today = DateTime.Now.ToString("yyyyMMdd");
-                                    string start_call_time = dev_call_status.start_call_time.Substring(0, 4) + "-" + dev_call_status.start_call_time.Substring(4, 2) + "-" +
-                                    dev_call_status.start_call_time.Substring(6, 2) + " " + dev_call_status.start_call_time.Substring(8, 2) + ":" +
-                                    dev_call_status.start_call_time.Substring(10, 2) + ":" + dev_call_status.start_call_time.Substring(12, 2);
-                                    string end_call_time = dev_call_status.end_call_time.Substring(0, 4) + "-" + dev_call_status.end_call_time.Substring(4, 2) + "-" +
-                                    dev_call_status.end_call_time.Substring(6, 2) + " " + dev_call_status.end_call_time.Substring(8, 2) + ":" +
-                                    dev_call_status.end_call_time.Substring(10, 2) + ":" + dev_call_status.end_call_time.Substring(12, 2);
-                                    /*SELECT 
-custom.voice_connect.serial_no
-FROM
-custom.voice_connect
-WHERE
-custom.voice_connect.connect_type = '3' AND 
-custom.voice_connect.uid = '930000'
-ORDER BY
-custom.voice_connect.create_time DESC
-LIMIT 1*/
-                                    if (true)
-                                    {
-                                        string sn = string.Empty;
-                                        sql_cmd = @"SELECT 
+                                                while (!sql_client.connect())
+                                                {
+                                                    Thread.Sleep(300);
+                                                }
+                                                sql_client.modify(sql_cmd);
+                                                sql_client.disconnect();
+                                            }
+                                            #endregion
+                                            Device_call_status dev_call_status = new Device_call_status();
+                                            dev_call_status.call_type = "3";
+                                            dev_call_status.ID = parse_package["source_id"].ToString();
+                                            dev_call_status.targetID = parse_package["target_id"];
+                                            if (CheckIfUidInEquipmentTable(dev_call_status.ID))
+                                            {
+                                            }
+                                            else
+                                            {
+                                                break;
+                                            }
+                                            dev_call_status.start_call_time = parse_package["start_call_time"].ToString();
+                                            dev_call_status.end_call_time = parse_package["timestamp"].ToString();
+                                            string start_call_today = DateTime.Now.ToString("yyyyMMdd");
+                                            string start_call_time = dev_call_status.start_call_time.Substring(0, 4) + "-" + dev_call_status.start_call_time.Substring(4, 2) + "-" +
+                                            dev_call_status.start_call_time.Substring(6, 2) + " " + dev_call_status.start_call_time.Substring(8, 2) + ":" +
+                                            dev_call_status.start_call_time.Substring(10, 2) + ":" + dev_call_status.start_call_time.Substring(12, 2);
+                                            string end_call_time = dev_call_status.end_call_time.Substring(0, 4) + "-" + dev_call_status.end_call_time.Substring(4, 2) + "-" +
+                                            dev_call_status.end_call_time.Substring(6, 2) + " " + dev_call_status.end_call_time.Substring(8, 2) + ":" +
+                                            dev_call_status.end_call_time.Substring(10, 2) + ":" + dev_call_status.end_call_time.Substring(12, 2);
+                                            /*SELECT 
+        custom.voice_connect.serial_no
+        FROM
+        custom.voice_connect
+        WHERE
+        custom.voice_connect.connect_type = '3' AND 
+        custom.voice_connect.uid = '930000'
+        ORDER BY
+        custom.voice_connect.create_time DESC
+        LIMIT 1*/
+                                            if (true)
+                                            {
+                                                string sn = string.Empty;
+                                                sql_cmd = @"SELECT 
   custom.voice_connect.serial_no
 FROM
   custom.voice_connect
@@ -2081,90 +2102,93 @@ WHERE
 ORDER BY
   custom.voice_connect.create_time DESC
 LIMIT 1";
-                                        while (!sql_client.connect())
-                                        {
-                                            Thread.Sleep(300);
-                                        }
-                                        var dt = sql_client.get_DataTable(sql_cmd);
-                                        sql_client.disconnect();
-                                        if (dt != null && dt.Rows.Count != 0)
-                                        {
-                                            foreach (DataRow row in dt.Rows)
-                                            {
-                                                sn = row[0].ToString();
-                                            }
-                                          Console.WriteLine("dev_call_status.ID.Length=" + dev_call_status.ID.Length);
-                                          Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
+                                                while (!sql_client.connect())
+                                                {
+                                                    Thread.Sleep(300);
+                                                }
+                                                var dt = sql_client.get_DataTable(sql_cmd);
+                                                sql_client.disconnect();
+                                                if (dt != null && dt.Rows.Count != 0)
+                                                {
+                                                    foreach (DataRow row in dt.Rows)
+                                                    {
+                                                        sn = row[0].ToString();
+                                                    }
+                                                    Console.WriteLine("dev_call_status.ID.Length=" + dev_call_status.ID.Length);
+                                                    Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
 
-                                            string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
-                                            string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
-                                            if (start_call_today.Equals(yyyyMMdd))
-                                            {
-                                                uint addCount = (uint.Parse(count) + 1);
-                                                dev_call_status.SN = dev_call_status.ID + start_call_today + addCount.ToString("D5");
-                                            }
-                                            else
-                                            {
-                                                int iVal = 0;
+                                                    string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
+                                                    string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
+                                                    if (start_call_today.Equals(yyyyMMdd))
+                                                    {
+                                                        uint addCount = (uint.Parse(count) + 1);
+                                                        dev_call_status.SN = dev_call_status.ID + start_call_today + addCount.ToString("D5");
+                                                    }
+                                                    else
+                                                    {
+                                                        int iVal = 0;
 
-                                                dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                            }
-                                        }
-                                        else
-                                        {
-                                            int iVal = 0;
+                                                        dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    int iVal = 0;
 
-                                            dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
-                                        {
-                                            int iVal = 0;
-
-                                            dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                        }
-                                        else
-                                        {
-                                            string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
-                                            string[] sn_sub = sn.Split(',');
-                                            if (sn_sub[0] != start_call_today)
-                                            {
-                                                int iVal = 0;
-
-                                                dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                                ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                                    dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                                }
                                             }
                                             else
                                             {
-                                                uint count = uint.Parse(sn_sub[1]) + 1;
-                                                dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
-                                                ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
-                                            }
-                                        }
-                                    }
+                                                if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
+                                                {
+                                                    int iVal = 0;
 
-                                    sql_table_columns = "serial_no,uid,connect_type,start_time,end_time,create_user,create_ip,target";
-                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
-                                        dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'" +
-                                        "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" +dev_call_status.targetID+ "\'";
-                                    sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-                                    while (!sql_client.connect())
-                                    {
-                                        Thread.Sleep(300);
-                                    }
-                                    sql_client.modify(sql_cmd);
-                                    sql_client.disconnect();
+                                                    dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                                }
+                                                else
+                                                {
+                                                    string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
+                                                    string[] sn_sub = sn.Split(',');
+                                                    if (sn_sub[0] != start_call_today)
+                                                    {
+                                                        int iVal = 0;
+
+                                                        dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                                        ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                                    }
+                                                    else
+                                                    {
+                                                        uint count = uint.Parse(sn_sub[1]) + 1;
+                                                        dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
+                                                        ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                                    }
+                                                }
+                                            }
+
+                                            sql_table_columns = "serial_no,uid,connect_type,start_time,end_time,create_user,create_ip,target";
+                                            sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
+                                                dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "\'" + end_call_time + "\'" +
+                                                "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + dev_call_status.targetID + "\'";
+                                            sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                            while (!sql_client.connect())
+                                            {
+                                                Thread.Sleep(300);
+                                            }
+                                            sql_client.modify(sql_cmd);
+                                            sql_client.disconnect();
+                                        }
+                                        break;
                                 }
-                                break;
+                            }
+                            Console.WriteLine(sql_cmd);
+                            log.Info(sql_cmd);
+
                         }
+                        Console.WriteLine("-AccessSqlServer");
                     }
-                  Console.WriteLine(sql_cmd);
-                    log.Info(sql_cmd);
-                    
                 }
-              Console.WriteLine("-AccessSqlServer");
+                
             }
 
         private static bool CheckIfUidInEquipmentTable(string id)
