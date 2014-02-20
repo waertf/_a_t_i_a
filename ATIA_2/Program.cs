@@ -1780,7 +1780,7 @@ LIMIT 1";
                                             {
                                                 if (dev_call_status.call_type.Equals("1") && parse_package.ContainsKey("channel") && parse_package.ContainsKey("site"))
                                                 {
-                                                    sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,gTarget,channel,site";
+                                                    sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,\"gTarget\",channel,site";
                                                     sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
                                                         dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'"
                                                         + "," + "\'" + dev_call_status.targetID + "\'"
