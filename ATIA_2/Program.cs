@@ -1648,6 +1648,8 @@ WHERE
                                             dev_call_status.targetID = parse_package["target_id"];
                                             if (parse_package.ContainsKey("channel"))
                                                 dev_call_status.channel = parse_package["channel"];
+                                            if (parse_package.ContainsKey("site"))
+                                                dev_call_status.site = parse_package["site"];
                                             #region access power status
 
                                             {
@@ -1763,25 +1765,27 @@ LIMIT 1";
                                             if (
                                                 (
                                                 dev_call_status.call_type.Equals("2"))
-                                                && parse_package.ContainsKey("channel"))
+                                                && parse_package.ContainsKey("channel") && parse_package.ContainsKey("site"))
                                             {
-                                                sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target,channel";
+                                                sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target,channel,site";
                                                 sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
                                                     dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'"
                                                     + "," + "\'" + dev_call_status.targetID + "\'"
-                                                    + "," + "\'" + dev_call_status.channel + "\'";
+                                                    + "," + "\'" + dev_call_status.channel + "\'"
+                                                    + "," + "\'" + dev_call_status.site + "\'";
                                                 sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
                                                 //test
                                             }
                                             else
                                             {
-                                                if (dev_call_status.call_type.Equals("1"))
+                                                if (dev_call_status.call_type.Equals("1") && parse_package.ContainsKey("channel") && parse_package.ContainsKey("site"))
                                                 {
-                                                    sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,gTarget,channel";
+                                                    sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,gTarget,channel,site";
                                                     sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
                                                         dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'"
                                                         + "," + "\'" + dev_call_status.targetID + "\'"
-                                                        + "," + "\'" + dev_call_status.channel + "\'";
+                                                        + "," + "\'" + dev_call_status.channel + "\'"
+                                                        + "," + "\'" + dev_call_status.site + "\'";
                                                     sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
 
                                                 }
@@ -1814,12 +1818,13 @@ LIMIT 1";
                                             if (
                                                 (dev_call_status.call_type.Equals("1") ||
                                                 dev_call_status.call_type.Equals("2"))
-                                                && parse_package.ContainsKey("channel"))
+                                                && parse_package.ContainsKey("channel") && parse_package.ContainsKey("site"))
                                             {
                                                 sql_cmd = @"UPDATE 
   custom.voice_connect
 SET
-  channel = "+ "\'" + dev_call_status.channel + "\'"+@"
+  channel = "+ "\'" + dev_call_status.channel + "\'"+","+
+             "site = " + "\'" + dev_call_status.site + "\'" + @"
 WHERE
   custom.voice_connect.serial_no = " + "\'" + find_dev_call_status.SN + "\'";
                                                 while (!sql_client.connect())
@@ -1922,6 +1927,8 @@ WHERE
                                     dev_call_state_change.ID = parse_package["source_id"].ToString();
                                     if (parse_package.ContainsKey("channel"))
                                         dev_call_state_change.channel = parse_package["channel"];
+                                    if (parse_package.ContainsKey("site"))
+                                        dev_call_state_change.channel = parse_package["site"];
                                     if (CheckIfUidInEquipmentTable(dev_call_state_change.ID))
                                     { }
                                     else
@@ -1938,7 +1945,8 @@ WHERE
                                         callStateChangeSn = dev_call_state_change.SN = find_call_state_change_sn.SN;
 
                                         sql_table_columns = "custom.voice_connect";
-                                        sql_cmd = "UPDATE " + sql_table_columns + " SET channel=\'" + dev_call_state_change.channel + "\' WHERE serial_no=\'" + callStateChangeSn + "\'";
+                                        sql_cmd = "UPDATE " + sql_table_columns + " SET channel=\'" + dev_call_state_change.channel + "\'"+","+
+                                            "site=\'" + dev_call_state_change.site+"\' WHERE serial_no=\'" + callStateChangeSn + "\'";
                                         while (!sql_client.connect())
                                         {
                                             Thread.Sleep(300);
@@ -2521,6 +2529,7 @@ LIMIT 1";
                                 byte[] ucn = new byte[4];//Universal Call Number
                                 byte[] snd_id = new byte[4];
                                 byte[] channel = new byte[2];
+                                byte[] site = new byte[2];
                                 byte[] call_type = new byte[1];
                                 byte[] Radio_Type_Qualifier = new byte[4];
                                 byte call_status, reason_for_busy;
@@ -2551,6 +2560,8 @@ LIMIT 1";
                                 {
                                     channel = p.Skip((int)Offset_to_RF_Sites_Section + (int)Offset_to_Active_RFSites_Channel_Info + 4).Take(channel.Length).Reverse().ToArray();
                                     parse_channel(channel, ref parse_package);
+                                    site = p.Skip((int)Offset_to_RF_Sites_Section + (int)Offset_to_Active_RFSites_Channel_Info + 2).Take(site.Length).Reverse().ToArray();
+                                    parse_site(site, ref parse_package);
                                 }
                                     
                                 parse_timestamp(timestamp,ref  parse_package);
@@ -2627,6 +2638,19 @@ LIMIT 1";
                             }
                             break;
                     }
+                }
+            }
+
+            private static void parse_site(byte[] site, ref SortedDictionary<string, string> parsePackage)
+            {
+                string siteString = string.Empty;
+                uint site_uint = BitConverter.ToUInt16(site.Take(site.Length).ToArray(), 0);
+                siteString = site_uint.ToString(CultureInfo.InvariantCulture);
+                if (!string.IsNullOrEmpty(siteString))
+                    parsePackage.Add("site", siteString);
+                else
+                {
+                    parsePackage.Add("site", "null");
                 }
             }
 
@@ -3136,6 +3160,7 @@ LIMIT 1";
         public string end_call_time { get; set; }
         public string targetID { get; set; }
         public string channel { get; set; }
+        public string site { get; set; }
 
     }
     public class GeoAngle
