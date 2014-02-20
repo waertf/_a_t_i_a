@@ -1761,7 +1761,7 @@ LIMIT 1";
                                         if (!Call_status.ContainsKey(dev_call_status.ID))
                                         {
                                             if (
-                                                (dev_call_status.call_type.Equals("1") ||
+                                                (
                                                 dev_call_status.call_type.Equals("2"))
                                                 && parse_package.ContainsKey("channel"))
                                             {
@@ -1775,11 +1775,25 @@ LIMIT 1";
                                             }
                                             else
                                             {
-                                                sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target";
-                                                sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
-                                                    dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + dev_call_status.targetID + "\'";
-                                                sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+                                                if (dev_call_status.call_type.Equals("1"))
+                                                {
+                                                    sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,gTarget,channel";
+                                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
+                                                        dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'"
+                                                        + "," + "\'" + dev_call_status.targetID + "\'"
+                                                        + "," + "\'" + dev_call_status.channel + "\'";
+                                                    sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
 
+                                                }
+                                                else
+                                                {
+                                                    sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target";
+                                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
+                                                        dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + dev_call_status.targetID + "\'";
+                                                    sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
+
+                                                }
+                                               
                                             }
                                             while (!sql_client.connect())
                                             {
