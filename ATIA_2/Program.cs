@@ -1771,7 +1771,7 @@ LIMIT 1";
                                                     + "," + "\'" + dev_call_status.targetID + "\'"
                                                     + "," + "\'" + dev_call_status.channel + "\'";
                                                 sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
-
+                                                //test
                                             }
                                             else
                                             {
