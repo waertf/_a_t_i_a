@@ -1580,11 +1580,14 @@ VALUES
                                     break;
                                 case "Start_of_Call":
                                 case "start_call":
-                                    Device_call_status dev_call_status = new Device_call_status();
-                                    dev_call_status.ID = parse_package["source_id"].ToString();
-                                    dev_call_status.start_call_time = parse_package["timestamp"].ToString();
+                                    object startCallLock = new object();
+                                    Device_call_status devCallStatus = new Device_call_status
+                                    {
+                                        ID = parse_package["source_id"].ToString(),
+                                        start_call_time = parse_package["timestamp"].ToString()
+                                    };
 
-                                    if (!CheckIfUidInEquipmentTable(dev_call_status.ID))
+                                    if (!CheckIfUidInEquipmentTable(devCallStatus.ID))
                                     {
                                         break;
                                     }
@@ -1592,23 +1595,32 @@ VALUES
                                     #region
 
                                     
-                                    if (Call_status.ContainsKey(dev_call_status.ID))
+                                    if (Call_status.ContainsKey(devCallStatus.ID))
                                     {
                                         
                                     }
                                     
                                     #endregion
 
-                                    string start_call_time = dev_call_status.start_call_time.Substring(0, 4) + "-" + dev_call_status.start_call_time.Substring(4, 2) + "-" +
-                                        dev_call_status.start_call_time.Substring(6, 2) + " " + dev_call_status.start_call_time.Substring(8, 2) + ":" +
-                                        dev_call_status.start_call_time.Substring(10, 2) + ":" + dev_call_status.start_call_time.Substring(12, 2);
+                                    string start_call_time = devCallStatus.start_call_time.Substring(0, 4) + "-" + devCallStatus.start_call_time.Substring(4, 2) + "-" +
+                                        devCallStatus.start_call_time.Substring(6, 2) + " " + devCallStatus.start_call_time.Substring(8, 2) + ":" +
+                                        devCallStatus.start_call_time.Substring(10, 2) + ":" + devCallStatus.start_call_time.Substring(12, 2);
                                     string start_call_today = DateTime.Now.ToString("yyyyMMdd");
                                     switch (parse_package["call_type"].ToString())
                                     {
 
                                         case "Individual_Call":
-                                            dev_call_status.call_type = "2";
-                                            dev_call_status.targetID = parse_package["target_id"];
+                                            lock (startCallLock)
+                                            {
+                                                devCallStatus.call_type = "2";
+                                                devCallStatus.targetID = parse_package["target_id"];
+                                                if (parse_package.ContainsKey("channel"))
+                                                    devCallStatus.channel = parse_package["channel"];
+                                                if (parse_package.ContainsKey("site"))
+                                                    devCallStatus.site = parse_package["site"];
+                                            }
+                                            
+                                            
                                             if (parse_package.ContainsKey("Radio_Type_Qualifier"))
                                             {
                                                 switch (parse_package["Radio_Type_Qualifier"])
@@ -1616,10 +1628,14 @@ VALUES
                                                        // Land_to_Mobile:4
                                                        // Mobile_to_Land:3
                                                     case "Land_to_Mobile":
-                                                        dev_call_status.call_type = "4";
+                                                        lock (startCallLock)
+                                                        { devCallStatus.call_type = "4"; }
+                                                        
                                                         break;
                                                     case "Mobile_to_Land":
-                                                        dev_call_status.call_type = "3";
+                                                        lock (startCallLock)
+                                                        { devCallStatus.call_type = "3"; }
+                                                        
                                                         break;
                                                 }
                                             }
@@ -1644,12 +1660,16 @@ WHERE
                                             #endregion
                                             break;
                                         case "Group_Call":
-                                            dev_call_status.call_type = "1";
-                                            dev_call_status.targetID = parse_package["target_id"];
-                                            if (parse_package.ContainsKey("channel"))
-                                                dev_call_status.channel = parse_package["channel"];
-                                            if (parse_package.ContainsKey("site"))
-                                                dev_call_status.site = parse_package["site"];
+                                            lock (startCallLock)
+                                            {
+                                                devCallStatus.call_type = "1";
+                                                devCallStatus.gTarget = parse_package["target_id"];
+                                                if (parse_package.ContainsKey("channel"))
+                                                    devCallStatus.channel = parse_package["channel"];
+                                                if (parse_package.ContainsKey("site"))
+                                                    devCallStatus.site = parse_package["site"];
+                                            }
+                                            
                                             #region access power status
 
                                             {
@@ -1689,7 +1709,7 @@ WHERE
 FROM
   custom.voice_connect
 WHERE
-  custom.voice_connect.uid = '" + dev_call_status.ID + @"'
+  custom.voice_connect.uid = '" + devCallStatus.ID + @"'
 ORDER BY
   custom.voice_connect.create_time DESC
 LIMIT 1";
@@ -1705,97 +1725,108 @@ LIMIT 1";
                                             {
                                                 sn = row[0].ToString();
                                             }
-                                            Console.WriteLine("dev_call_status.ID.Length=" + dev_call_status.ID.Length);
-                                            Console.WriteLine("dev_call_status.ID=" + dev_call_status.ID);
+                                            Console.WriteLine("dev_call_status.ID.Length=" + devCallStatus.ID.Length);
+                                            Console.WriteLine("dev_call_status.ID=" + devCallStatus.ID);
 
-                                            string yyyyMMdd = sn.Substring(dev_call_status.ID.Length, 8);
-                                            string count = sn.Substring(dev_call_status.ID.Length + yyyyMMdd.Length, 5);
+                                            string yyyyMMdd = sn.Substring(devCallStatus.ID.Length, 8);
+                                            string count = sn.Substring(devCallStatus.ID.Length + yyyyMMdd.Length, 5);
 
                                             if (start_call_today.Equals(yyyyMMdd))
                                             {
                                                 uint addCount = (uint.Parse(count) + 1);
-                                                dev_call_status.SN = dev_call_status.ID + start_call_today + addCount.ToString("D5");
+                                                lock (startCallLock)
+                                                {
+                                                    devCallStatus.SN = devCallStatus.ID + start_call_today + addCount.ToString("D5");
+                                                }
+                                                
                                             }
                                             else
                                             {
                                                 int iVal = 0;
-
-                                                dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                                lock (startCallLock)
+                                                {
+                                                    devCallStatus.SN = devCallStatus.ID + start_call_today + iVal.ToString("D5");
+                                                }
+                                                
                                             }
                                         }
                                         else
                                         {
                                             int iVal = 0;
-
-                                            dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                            lock (startCallLock)
+                                            { devCallStatus.SN = devCallStatus.ID + start_call_today + iVal.ToString("D5"); }
+                                            
                                         }
                                     }
                                     else
                                     {
-                                        if (AddValue(dev_call_status.ID, start_call_today + "," + "00000"))
+                                        if (AddValue(devCallStatus.ID, start_call_today + "," + "00000"))
                                         {
                                             int iVal = 0;
 
-                                            dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
+                                            devCallStatus.SN = devCallStatus.ID + start_call_today + iVal.ToString("D5");
                                         }
                                         else
                                         {
-                                            string sn = ConfigurationManager.AppSettings[dev_call_status.ID].ToString();
+                                            string sn = ConfigurationManager.AppSettings[devCallStatus.ID].ToString();
                                             string[] sn_sub = sn.Split(',');
                                             if (sn_sub[0] != start_call_today)
                                             {
                                                 int iVal = 0;
 
-                                                dev_call_status.SN = dev_call_status.ID + start_call_today + iVal.ToString("D5");
-                                                ModifyValue(dev_call_status.ID, start_call_today + "," + "00000");
+                                                devCallStatus.SN = devCallStatus.ID + start_call_today + iVal.ToString("D5");
+                                                ModifyValue(devCallStatus.ID, start_call_today + "," + "00000");
                                             }
                                             else
                                             {
                                                 uint count = uint.Parse(sn_sub[1]) + 1;
-                                                dev_call_status.SN = dev_call_status.ID + start_call_today + count.ToString("D5");
-                                                ModifyValue(dev_call_status.ID, start_call_today + "," + count.ToString("D5"));
+                                                devCallStatus.SN = devCallStatus.ID + start_call_today + count.ToString("D5");
+                                                ModifyValue(devCallStatus.ID, start_call_today + "," + count.ToString("D5"));
                                             }
                                         }
                                     }
 
-                                    if (CheckIfUidInEquipmentTable(dev_call_status.ID))
+                                    if (CheckIfUidInEquipmentTable(devCallStatus.ID))
                                     {
-                                        if (!Call_status.ContainsKey(dev_call_status.ID))
+                                        if (!Call_status.ContainsKey(devCallStatus.ID))
                                         {
                                             if (
-                                                (
-                                                dev_call_status.call_type.Equals("2"))
+                                                devCallStatus.call_type.Equals("2")
                                                 && parse_package.ContainsKey("channel") && parse_package.ContainsKey("site"))
                                             {
                                                 sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target,channel,site";
-                                                sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
-                                                    dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'"
-                                                    + "," + "\'" + dev_call_status.targetID + "\'"
-                                                    + "," + "\'" + dev_call_status.channel + "\'"
-                                                    + "," + "\'" + dev_call_status.site + "\'";
+                                                sql_table_column_value = "\'" + devCallStatus.SN + "\'" + "," + "\'" + devCallStatus.ID + "\'" + "," + "\'" +
+                                                    devCallStatus.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'"
+                                                    + "," + "\'" + devCallStatus.targetID + "\'"
+                                                    + "," + "\'" + devCallStatus.channel + "\'"
+                                                    + "," + "\'" + devCallStatus.site + "\'";
                                                 sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
                                                 //test
                                             }
                                             else
                                             {
-                                                if (dev_call_status.call_type.Equals("1") && parse_package.ContainsKey("channel") && parse_package.ContainsKey("site"))
+                                                if (parse_package["call_type"].Equals("Group_Call") && parse_package.ContainsKey("channel") && parse_package.ContainsKey("site"))
                                                 {
                                                     sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,\"gTarget\",channel,site";
-                                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
-                                                        dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'"
-                                                        + "," + "\'" + dev_call_status.targetID + "\'"
-                                                        + "," + "\'" + dev_call_status.channel + "\'"
-                                                        + "," + "\'" + dev_call_status.site + "\'";
+                                                    sql_table_column_value = "\'" + devCallStatus.SN + "\'" + "," + "\'" + devCallStatus.ID + "\'" + "," + "\'" +
+                                                        devCallStatus.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'"
+                                                        + "," + "\'" + devCallStatus.gTarget + "\'"
+                                                        + "," + "\'" + devCallStatus.channel + "\'"
+                                                        + "," + "\'" + devCallStatus.site + "\'";
                                                     sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
 
                                                 }
                                                 else
                                                 {
-                                                    sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target";
-                                                    sql_table_column_value = "\'" + dev_call_status.SN + "\'" + "," + "\'" + dev_call_status.ID + "\'" + "," + "\'" +
-                                                        dev_call_status.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + dev_call_status.targetID + "\'";
+                                                    if (!(parse_package["call_type"].Equals("Group_Call") || devCallStatus.call_type.Equals("2")))
+                                                    {
+                                                        sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target";
+                                                    sql_table_column_value = "\'" + devCallStatus.SN + "\'" + "," + "\'" + devCallStatus.ID + "\'" + "," + "\'" +
+                                                        devCallStatus.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + parse_package["target_id"] + "\'";
                                                     sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
 
+                                                    }
+                                                    
                                                 }
                                                
                                             }
@@ -1807,24 +1838,24 @@ LIMIT 1";
                                             sql_client.disconnect();
 
                                             //Call_status.Add(dev_call_status);
-                                            if (!Call_status.ContainsKey(dev_call_status.ID))
+                                            if (!Call_status.ContainsKey(devCallStatus.ID))
                                             {
-                                                Call_status.Add(dev_call_status.ID, dev_call_status);
+                                                Call_status.Add(devCallStatus.ID, devCallStatus);
                                             }
                                         }
                                         else
                                         {
-                                            var find_dev_call_status = (Device_call_status)Call_status[dev_call_status.ID];
+                                            var find_dev_call_status = (Device_call_status)Call_status[devCallStatus.ID];
                                             if (
-                                                (dev_call_status.call_type.Equals("1") ||
-                                                dev_call_status.call_type.Equals("2"))
+                                                (devCallStatus.call_type.Equals("1") ||
+                                                devCallStatus.call_type.Equals("2"))
                                                 && parse_package.ContainsKey("channel") && parse_package.ContainsKey("site"))
                                             {
                                                 sql_cmd = @"UPDATE 
   custom.voice_connect
 SET
-  channel = "+ "\'" + dev_call_status.channel + "\'"+","+
-             "site = " + "\'" + dev_call_status.site + "\'" + @"
+  channel = "+ "\'" + devCallStatus.channel + "\'"+","+
+             "site = " + "\'" + devCallStatus.site + "\'" + @"
 WHERE
   custom.voice_connect.serial_no = " + "\'" + find_dev_call_status.SN + "\'";
                                                 while (!sql_client.connect())
@@ -1921,14 +1952,18 @@ WHERE
                                     break;
                                 case "Call_State_Change":
                                     #region Individual_Call
-
+                                    object CSClock = new object();
                                     string callStateChangeSn = string.Empty;
                                     Device_call_status dev_call_state_change = new Device_call_status();
-                                    dev_call_state_change.ID = parse_package["source_id"].ToString();
-                                    if (parse_package.ContainsKey("channel"))
-                                        dev_call_state_change.channel = parse_package["channel"];
-                                    if (parse_package.ContainsKey("site"))
-                                        dev_call_state_change.channel = parse_package["site"];
+                                    lock (CSClock)
+                                    {
+                                        dev_call_state_change.ID = parse_package["source_id"].ToString();
+                                        if (parse_package.ContainsKey("channel"))
+                                            dev_call_state_change.channel = parse_package["channel"];
+                                        if (parse_package.ContainsKey("site"))
+                                            dev_call_state_change.site = parse_package["site"];
+                                    }
+                                    
                                     if (CheckIfUidInEquipmentTable(dev_call_state_change.ID))
                                     { }
                                     else
@@ -2906,7 +2941,7 @@ LIMIT 1";
                             case (ushort)Flexible_Controlling_Zone_Update_opcode.Start_of_Call:
                                 opcode = Flexible_Controlling_Zone_Update_opcode.Start_of_Call.ToString("G");
 //                                parse_package.Add("opcode", "Start_of_Call");
-                                parse_package.Add("result", "start_call");
+                                //parse_package.Add("result", "start_call");
                                 break;
                             case (ushort)Flexible_Controlling_Zone_Update_opcode.End_of_Call:
                                 opcode = Flexible_Controlling_Zone_Update_opcode.End_of_Call.ToString("G");
@@ -3161,6 +3196,7 @@ LIMIT 1";
         public string targetID { get; set; }
         public string channel { get; set; }
         public string site { get; set; }
+        public string gTarget { get; set; }
 
     }
     public class GeoAngle
