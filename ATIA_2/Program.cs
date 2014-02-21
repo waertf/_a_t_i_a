@@ -20,7 +20,7 @@ using System.Data;
 /*--------------------------------------------------
  * 2014/02/21
  * 
- * Todo change:get site value from "Requester's Affiliated Site"
+ * Todo change:get site value from "Requester's Affiliated Site" in condition :Call Activity Update - Start of Call
  *---------------------------------------------------
  * get channel condition
  * "Call Activity Update"->"Active RF Sites/Channel Info List" only-
