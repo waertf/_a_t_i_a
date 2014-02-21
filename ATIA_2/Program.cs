@@ -20,9 +20,11 @@ using System.Data;
 /*
  * get channel condition
  * "Call Activity Update"->"Active RF Sites/Channel Info List" only-
- * private call :Start of Call(Call State Change)
+ * private call :Start of Call
  * group call : Start of Call
- * land<->mobile : Call State Change
+ * land<->mobile : 
+ * 1.Start of Call->get channel/site and uid by Radio Type Qualifier
+ * 2.Interconnect Call Billing Info Packet-> get target, communication time period by call type
  * 
  * private_call:Radio Type Qualifier = (Astro call),Device Type = Radio
  * radioToLan:Radio Type Qualifier = (Interconnect,Astro call),Device Type = Radio
@@ -1950,7 +1952,7 @@ WHERE
                                     sql_client.disconnect();
                                     Call_status.Remove(dev_call_off_status.ID);
                                     break;
-                                case "Call_State_Change":
+                                case "Call_State_Change"://channel/site change
                                     #region Individual_Call
                                     object CSClock = new object();
                                     string callStateChangeSn = string.Empty;
