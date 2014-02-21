@@ -17,7 +17,11 @@ using log4net;
 using log4net.Config;
 using System.Globalization;
 using System.Data;
-/*
+/*--------------------------------------------------
+ * 2014/02/21
+ * 
+ * Todo change:get site value from "Requester's Affiliated Site"
+ *---------------------------------------------------
  * get channel condition
  * "Call Activity Update"->"Active RF Sites/Channel Info List" only-
  * private call :Start of Call
