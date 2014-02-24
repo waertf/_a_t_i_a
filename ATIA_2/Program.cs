@@ -2700,7 +2700,12 @@ LIMIT 1";
                                 parse_ucn(ucn,ref  parse_package);
                                 //parse_call_status(call_status);
                                 //parse_reason_for_busy(reason_for_busy);
-                                parse_snd_id(snd_id,ref  parse_package);
+                                if (!Offset_to_Target_Section.Equals(0))
+                                    parse_snd_id(snd_id,ref  parse_package);
+                                else
+                                {
+                                    parse_package.Add("target_id", "null");
+                                }
                                 parse_call_type(call_type[0],ref parse_package);
                             }
                             break;
@@ -2774,7 +2779,12 @@ LIMIT 1";
                                 parse_site(site, ref parse_package);    
                                 parse_timestamp(timestamp,ref  parse_package);
                                 parse_uid(uid,ref  parse_package);
-                                parse_snd_id(snd_id,ref  parse_package);
+                                if (!Offset_to_Target_Section.Equals(0))
+                                    parse_snd_id(snd_id,ref  parse_package);
+                                else
+                                {
+                                    parse_package.Add("target_id", "null");
+                                }
                                 parse_ucn(ucn,ref  parse_package);
                                 parse_call_type(call_type[0], ref parse_package);
                                 parse_Radio_Type_Qualifier(Radio_Type_Qualifier, ref parse_package);
@@ -2838,7 +2848,12 @@ LIMIT 1";
                                 
                                 byte[] phone = new byte[phone_length_uint];
                                 phone = p.Skip((int)Offset_to_Phone_Number_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_phone_Phone_Number).Take(phone.Length).ToArray();
-                                parse_phone(phone, ref parse_package);
+                                if (!(Offset_to_Phone_Number_Section.Equals(0) && phone_length.Equals(0)))
+                                    parse_phone(phone, ref parse_package);
+                                else
+                                {
+                                    parse_package.Add("target_id", "null");
+                                }
                                 parse_timestamp(timestamp,ref  parse_package);
                                 parse_uid(uid,ref  parse_package);
                                 parse_duration_in_sec(duration_in_sec,ref  parse_package);
