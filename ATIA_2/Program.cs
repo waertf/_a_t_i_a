@@ -1998,6 +1998,73 @@ WHERE
                                         }
                                         sql_client.modify(sql_cmd);
                                         sql_client.disconnect();
+
+                                        if (parse_package.ContainsKey("call_type"))
+                                        {
+                                            switch (parse_package["call_type"].ToString())
+                                            {
+                                                case "Land_to_Mobile": //L uid = null
+                                                    sql_cmd = @"UPDATE 
+  custom.voice_connect
+SET
+  connect_type = '4'
+WHERE
+  custom.voice_connect.serial_no = '"+dev_call_off_status.SN + "\'";
+                                                    while (!sql_client.connect())
+                                                    {
+                                                        Thread.Sleep(300);
+                                                    }
+                                                    sql_client.modify(sql_cmd);
+                                                    sql_client.disconnect();
+                                                    if (parse_package.ContainsKey("target_id"))
+                                                    {
+                                                        sql_cmd = @"UPDATE 
+  custom.voice_connect
+SET
+  target = "+"\'"+parse_package["target_id"].ToString()+ "\'"+@"
+WHERE
+  custom.voice_connect.serial_no = '" + dev_call_off_status.SN + "\'";
+                                                        while (!sql_client.connect())
+                                                        {
+                                                            Thread.Sleep(300);
+                                                        }
+                                                        sql_client.modify(sql_cmd);
+                                                        sql_client.disconnect();
+                                                    }
+                                                    break;
+                                                case "Mobile_to_Land":
+                                                    sql_cmd = @"UPDATE 
+  custom.voice_connect
+SET
+  connect_type = '3'
+WHERE
+  custom.voice_connect.serial_no = '" + dev_call_off_status.SN + "\'";
+                                                    while (!sql_client.connect())
+                                                    {
+                                                        Thread.Sleep(300);
+                                                    }
+                                                    sql_client.modify(sql_cmd);
+                                                    sql_client.disconnect();
+                                                    if (parse_package.ContainsKey("target_id"))
+                                                    {
+                                                        sql_cmd = @"UPDATE 
+  custom.voice_connect
+SET
+  target = " + "\'" + parse_package["target_id"].ToString() + "\'" + @"
+WHERE
+  custom.voice_connect.serial_no = '" + dev_call_off_status.SN + "\'";
+                                                        while (!sql_client.connect())
+                                                        {
+                                                            Thread.Sleep(300);
+                                                        }
+                                                        sql_client.modify(sql_cmd);
+                                                        sql_client.disconnect();
+                                                    }
+                                                    break;
+                                            }
+
+                                        }
+                                        
                                         Call_status.Remove(dev_call_off_status.ID);
                                     }
                                    
