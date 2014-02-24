@@ -2066,8 +2066,8 @@ WHERE
                                             }
 
                                         }
-
-                                        Call_status.Remove(dev_call_off_status.ID + parse_package["call_type"]);
+                                        if (!string.IsNullOrEmpty((parse_package["target_id"])) || !parse_package["target_id"].Equals("0"))
+                                            Call_status.Remove(dev_call_off_status.ID + parse_package["call_type"]);
                                     }
                                    
                                     break;
