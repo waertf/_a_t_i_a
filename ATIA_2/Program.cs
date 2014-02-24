@@ -1601,15 +1601,7 @@ VALUES
                                         break;
                                     }
                                     
-                                    #region
-
-                                    
-                                    if (Call_status.ContainsKey(devCallStatus.ID))
-                                    {
-                                        
-                                    }
-                                    
-                                    #endregion
+                                   
 
                                     string start_call_time = devCallStatus.start_call_time.Substring(0, 4) + "-" + devCallStatus.start_call_time.Substring(4, 2) + "-" +
                                         devCallStatus.start_call_time.Substring(6, 2) + " " + devCallStatus.start_call_time.Substring(8, 2) + ":" +
@@ -1797,7 +1789,7 @@ LIMIT 1";
 
                                     if (CheckIfUidInEquipmentTable(devCallStatus.ID))
                                     {
-                                        if (!Call_status.ContainsKey(devCallStatus.ID))
+                                        if (!Call_status.ContainsKey(devCallStatus.ID + parse_package["call_type"]))
                                         {
                                             if (
                                                 devCallStatus.call_type.Equals("2")
@@ -1873,14 +1865,14 @@ LIMIT 1";
                                             sql_client.disconnect();
 
                                             //Call_status.Add(dev_call_status);
-                                            if (!Call_status.ContainsKey(devCallStatus.ID))
+                                            if (!Call_status.ContainsKey(devCallStatus.ID + parse_package["call_type"]))
                                             {
-                                                Call_status.Add(devCallStatus.ID, devCallStatus);
+                                                Call_status.Add(devCallStatus.ID + parse_package["call_type"], devCallStatus);
                                             }
                                         }
                                         else
                                         {
-                                            var find_dev_call_status = (Device_call_status)Call_status[devCallStatus.ID];
+                                            var find_dev_call_status = (Device_call_status)Call_status[devCallStatus.ID + parse_package["call_type"]];
                                             if (
                                                 (devCallStatus.call_type.Equals("1") ||
                                                 devCallStatus.call_type.Equals("2"))
@@ -1903,7 +1895,15 @@ WHERE
                                         }
                                         
                                     }
+                                    #region
 
+
+                                    if (Call_status.ContainsKey(devCallStatus.ID + parse_package["call_type"]))
+                                    {
+
+                                    }
+
+                                    #endregion
                                     break;
                                 case "end_call":
                                     if (!parse_package.ContainsKey("Radio_Type_Qualifier"))
@@ -1944,9 +1944,9 @@ WHERE
                                         #region
 
                                         Device_call_status find_dev_call_off_sn;
-                                        if (Call_status.ContainsKey(dev_call_off_status.ID))
+                                        if (Call_status.ContainsKey(dev_call_off_status.ID + parse_package["call_type"]))
                                         {
-                                            find_dev_call_off_sn = (Device_call_status)Call_status[dev_call_off_status.ID];
+                                            find_dev_call_off_sn = (Device_call_status)Call_status[dev_call_off_status.ID + parse_package["call_type"]];
                                             lock (endLock)
                                             {
                                                 end_call_sn = dev_call_off_status.SN = find_dev_call_off_sn.SN;
@@ -2007,7 +2007,9 @@ WHERE
                                                     sql_cmd = @"UPDATE 
   custom.voice_connect
 SET
-  connect_type = '4'
+  connect_type = '4',
+target = NULL,
+  ""gTarget"" = NULL
 WHERE
   custom.voice_connect.serial_no = '"+dev_call_off_status.SN + "\'";
                                                     while (!sql_client.connect())
@@ -2016,7 +2018,7 @@ WHERE
                                                     }
                                                     sql_client.modify(sql_cmd);
                                                     sql_client.disconnect();
-                                                    if (parse_package.ContainsKey("target_id"))
+                                                    if (parse_package.ContainsKey("target_id") && false)
                                                     {
                                                         sql_cmd = @"UPDATE 
   custom.voice_connect
@@ -2064,8 +2066,8 @@ WHERE
                                             }
 
                                         }
-                                        
-                                        Call_status.Remove(dev_call_off_status.ID);
+
+                                        Call_status.Remove(dev_call_off_status.ID + parse_package["call_type"]);
                                     }
                                    
                                     break;
@@ -2092,10 +2094,10 @@ WHERE
                                     #region Individual_Call or land<->mobile
 
                                     Device_call_status find_call_state_change_sn;
-                                    if (Call_status.ContainsKey(dev_call_state_change.ID))
+                                    if (Call_status.ContainsKey(dev_call_state_change.ID + parse_package["call_type"]))
                                     {
                                         //Individual_Call
-                                        find_call_state_change_sn = (Device_call_status)Call_status[dev_call_state_change.ID];
+                                        find_call_state_change_sn = (Device_call_status)Call_status[dev_call_state_change.ID + parse_package["call_type"]];
                                         callStateChangeSn = dev_call_state_change.SN = find_call_state_change_sn.SN;
 
                                         sql_table_columns = "custom.voice_connect";
@@ -2151,11 +2153,11 @@ WHERE
                                 #region
 
                                 Device_call_status dev_call_status;
-                                if (Call_status.ContainsKey(parse_package["source_id"]))
+                                if (Call_status.ContainsKey(parse_package["source_id"] + parse_package["call_type"]))
                                 {
                                     lock (LMLock)
                                     {
-                                        dev_call_status = (Device_call_status)Call_status[parse_package["source_id"]];
+                                        dev_call_status = (Device_call_status)Call_status[parse_package["source_id"] + parse_package["call_type"]];
                                     }
                                     
                                     
@@ -2189,9 +2191,12 @@ WHERE
   custom.voice_connect
 SET
   start_time = " +"\'"+start_call_time+"\'"+@",
-  end_time = " + "\'" + end_call_time + "\'" + @"
+  end_time = " + "\'" + end_call_time + "\'" + @",
+connect_type = '4',
+target = NULL,
+  ""gTarget"" = NULL
 WHERE
-  custom.voice_connect.serial_no = '"+dev_call_status.SN+@"'";
+  custom.voice_connect.serial_no = '" + dev_call_status.SN+@"'";
                                         while (!sql_client.connect())
                                         {
                                             Thread.Sleep(300);
@@ -2220,6 +2225,7 @@ WHERE
                                         sql_cmd = @"UPDATE 
   custom.voice_connect
 SET
+connect_type = '3',
   start_time = " + "\'" + start_call_time + "\'" + @",
   end_time = " + "\'" + end_call_time + "\'" + @",
   target = " + "\'" + dev_call_status.targetID + "\'" + @"
@@ -2234,7 +2240,7 @@ WHERE
                                         break;
 
                                 }
-                                Call_status.Remove(parse_package["source_id"]);
+                                Call_status.Remove(parse_package["source_id"] + parse_package["call_type"]);
                             }
 
                             if (parse_package.ContainsKey("call_type") && false)
