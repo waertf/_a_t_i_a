@@ -2751,6 +2751,7 @@ LIMIT 1";
                                 const int Offset_to_Target_Section_Secondary_ID = 0;
                                 const int offset_to_call_section_call_type = 16;
                                 const int offset_to_call_section_Radio_Type_Qualifier = 18;
+                                const int offset_to_Requester_s_Affiliated_Site = 12;
                                 timestamp = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Timestamp).Take(timestamp.Length).Reverse().ToArray();
                                 uid = p.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_req_section_Primary_ID).Take(uid.Length).Reverse().ToArray();
                                 snd_id = p.Skip((int)Offset_to_Target_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Target_Section_Secondary_ID).Take(snd_id.Length).Reverse().ToArray();
@@ -2759,14 +2760,15 @@ LIMIT 1";
                                 Radio_Type_Qualifier = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Radio_Type_Qualifier).Take(Radio_Type_Qualifier.Length).Reverse().ToArray();
                                 //call_status = p[Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_status-1];
                                 //reason_for_busy = p[Offset_to_Busy_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_busy_section_reason_of_busy-1];
+                                site = p.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_Requester_s_Affiliated_Site).Take(site.Length).Reverse().ToArray();
                                 if (!Num_Active_RF_Site_Channels.Equals(0))
                                 {
                                     channel = p.Skip((int)Offset_to_RF_Sites_Section + (int)Offset_to_Active_RFSites_Channel_Info + 4).Take(channel.Length).Reverse().ToArray();
                                     parse_channel(channel, ref parse_package);
-                                    site = p.Skip((int)Offset_to_RF_Sites_Section + (int)Offset_to_Active_RFSites_Channel_Info + 2).Take(site.Length).Reverse().ToArray();
-                                    parse_site(site, ref parse_package);
+                                    //site = p.Skip((int)Offset_to_RF_Sites_Section + (int)Offset_to_Active_RFSites_Channel_Info + 2).Take(site.Length).Reverse().ToArray();
+                                    //parse_site(site, ref parse_package);
                                 }
-                                    
+                                parse_site(site, ref parse_package);    
                                 parse_timestamp(timestamp,ref  parse_package);
                                 parse_uid(uid,ref  parse_package);
                                 parse_snd_id(snd_id,ref  parse_package);
