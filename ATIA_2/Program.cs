@@ -750,8 +750,8 @@ LIMIT 1";
                     {
                         continue;
                     }
-                    Thread accessSql = new Thread(() => AccessSqlServer(ref parse_package));
-                    Thread accessAvls = new Thread(() => AccessAvlsServer(ref parse_package));
+                    Thread accessSql = new Thread(() => AccessSqlServer(parse_package));
+                    Thread accessAvls = new Thread(() => AccessAvlsServer(parse_package));
                     if (bool.Parse(ConfigurationManager.AppSettings["SQL_ACCESS"]))
                     {
                         
@@ -833,8 +833,10 @@ LIMIT 1";
             }
         }
 
-        private static void AccessAvlsServer(ref SortedDictionary<string, string> parse_package)
+        private static void AccessAvlsServer(SortedDictionary<string, string> parsePackage)
             {
+                SortedDictionary<string,
+                           string> parse_package = new SortedDictionary<string, string>(parsePackage);
                 if (CheckIfUidExist(parse_package["source_id"].ToString()))
                 {}
                 else
@@ -1124,13 +1126,14 @@ WHERE
                 
             }
 
-            private static void AccessSqlServer(ref SortedDictionary<string, string> parse_package)
+            private static void AccessSqlServer(SortedDictionary<string, string> parsePackage)
             {
                 lock (SpinLock)
                 {
 
                     {
-                        
+                        SortedDictionary<string,
+                        string> parse_package = new SortedDictionary<string, string>(parsePackage);
                         Console.WriteLine("+AccessSqlServer");
                         string sql_table_columns = string.Empty, sql_table_column_value = string.Empty, sql_cmd = string.Empty;
                         if (parse_package.ContainsKey("result") && (parse_package["result"].ToString().Equals("power_on") || parse_package["result"].ToString().Equals("power_off") || parse_package["result"].ToString().Equals("start_call") || parse_package["result"].ToString().Equals("end_call") || parse_package["result"].ToString().Equals("Call_State_Change") || parse_package["result"].Equals("Start_of_Call")))
