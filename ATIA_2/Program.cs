@@ -2966,7 +2966,7 @@ LIMIT 1";
             }
              */
             char[] flag = Reverse(s).ToCharArray();
-            if (flag[27].Equals('1')) //Interconnect
+            if (flag[27].Equals('1') && false) //Interconnect
             {
                 if (flag[25].Equals('1'))//Landline Call
                 {
@@ -3062,10 +3062,12 @@ LIMIT 1";
                 switch (result)
                 {
                     case "76"://L
+                        break;
                         parse_package.Add("call_type", "Land_to_Mobile");
                         parse_package.Add("result", "end_call");
                         break;
                     case "77"://M
+                        break;
                         parse_package.Add("call_type", "Mobile_to_Land");
                         parse_package.Add("result", "end_call");
                         break;
