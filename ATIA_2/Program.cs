@@ -1808,7 +1808,7 @@ LIMIT 1";
                                             {
                                                 if (parse_package["call_type"].Equals("Group_Call") && parse_package.ContainsKey("channel") && parse_package.ContainsKey("site"))
                                                 {
-                                                    sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,\"gTarget\",channel,site";
+                                                    sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,gtarget,channel,site";
                                                     sql_table_column_value = "\'" + devCallStatus.SN + "\'" + "," + "\'" + devCallStatus.ID + "\'" + "," + "\'" +
                                                         devCallStatus.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'"
                                                         + "," + "\'" + devCallStatus.gTarget + "\'"
@@ -2009,7 +2009,7 @@ WHERE
 SET
   connect_type = '4',
 target = NULL,
-  ""gTarget"" = NULL
+  gtarget = NULL
 WHERE
   custom.voice_connect.serial_no = '"+dev_call_off_status.SN + "\'";
                                                     while (!sql_client.connect())
@@ -2119,7 +2119,7 @@ WHERE
                                     #endregion Individual_Call
                                     break;
                             }
-                            if (parse_package.ContainsKey("Radio_Type_Qualifier"))
+                            //if (parse_package.ContainsKey("Radio_Type_Qualifier"))
                             if (parse_package.ContainsKey("call_type"))
                             {
                                 object LMLock = new object();
@@ -2194,7 +2194,7 @@ SET
   end_time = " + "\'" + end_call_time + "\'" + @",
 connect_type = '4',
 target = NULL,
-  ""gTarget"" = NULL
+  gtarget = NULL
 WHERE
   custom.voice_connect.serial_no = '" + dev_call_status.SN+@"'";
                                         while (!sql_client.connect())
