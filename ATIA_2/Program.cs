@@ -1622,9 +1622,9 @@ VALUES
                                             }
                                             
                                             
-                                            if (parse_package.ContainsKey("Radio_Type_Qualifier"))
+                                            if (parse_package.ContainsKey("call_type"))
                                             {
-                                                switch (parse_package["Radio_Type_Qualifier"])
+                                                switch (parse_package["call_type"])
                                                 {
                                                        // Land_to_Mobile:4
                                                        // Mobile_to_Land:3
@@ -1829,9 +1829,9 @@ LIMIT 1";
 
                                                     }
                                                     */
-                                                    if (parse_package.ContainsKey("Radio_Type_Qualifier"))
+                                                    if (parse_package.ContainsKey("call_type"))
                                                     {
-                                                        switch (parse_package["Radio_Type_Qualifier"])
+                                                        switch (parse_package["call_type"])
                                                         {
                                                             // Land_to_Mobile:4
                                                             // Mobile_to_Land:3
@@ -1906,7 +1906,7 @@ WHERE
                                     #endregion
                                     break;
                                 case "end_call":
-                                    if (!parse_package.ContainsKey("Radio_Type_Qualifier"))
+                                    if (!parse_package.ContainsKey("call_type"))
                                     {
                                         #region access power status
 
@@ -2970,11 +2970,13 @@ LIMIT 1";
             {
                 if (flag[25].Equals('1'))//Landline Call
                 {
-                    parsePackage.Add("Radio_Type_Qualifier", "Land_to_Mobile");
+                    parsePackage.Add("result", "Start_of_Call");
+                    parsePackage.Add("call_type", "Land_to_Mobile");
                 }
                 else
                 {
-                    parsePackage.Add("Radio_Type_Qualifier", "Mobile_to_Land");
+                    parsePackage.Add("result", "Start_of_Call");
+                    parsePackage.Add("call_type", "Mobile_to_Land");
                 }
             }
 
