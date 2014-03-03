@@ -411,7 +411,7 @@ namespace ATIA_2
             {
 
                 byte[] testByte = new byte[]{0x01,0x34};
-                parse_Radio_Type_Qualifier(testByte);
+                //parse_Radio_Type_Qualifier(testByte);
               Console.WriteLine(GetLocalIPAddress());//current ip address
               Console.WriteLine(System.Environment.UserName);//current username
               Console.WriteLine(DateTime.Now.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss"));
