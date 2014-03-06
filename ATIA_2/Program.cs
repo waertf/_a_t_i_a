@@ -1836,24 +1836,28 @@ LIMIT 1";
 
                                                     }
                                                     */
-                                                    if (parse_package.ContainsKey("Radio_Type_Qualifier"))
+                                                    if (parse_package.ContainsKey("Radio_Type_Qualifier") && parse_package.ContainsKey("channel") && parse_package.ContainsKey("site"))
                                                     {
                                                         switch (parse_package["Radio_Type_Qualifier"])
                                                         {
                                                             // Land_to_Mobile:4
                                                             // Mobile_to_Land:3
                                                             case "Land_to_Mobile":
-                                                                sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target";
-                                                                sql_table_column_value = "\'" + devCallStatus.SN + "\'" + "," + "\'" + "null" + "\'" + "," + "\'" +
-                                                                    devCallStatus.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + devCallStatus.ID + "\'";
+                                                                sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target,channel,site";
+                                                                sql_table_column_value = "\'" + devCallStatus.SN + "\'" + "," + "\'" + devCallStatus.ID + "\'" + "," + "\'" +
+                                                                    devCallStatus.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + devCallStatus.ID + "\'"
+                                                                     + "," + "\'" + devCallStatus.channel + "\'"
+                                                        + "," + "\'" + devCallStatus.site + "\'"; ;
                                                                 sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
 
 
                                                                 break;
                                                             case "Mobile_to_Land":
-                                                                sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target";
+                                                                sql_table_columns = "serial_no,uid,connect_type,start_time,create_user,create_ip,target,channel,site";
                                                                 sql_table_column_value = "\'" + devCallStatus.SN + "\'" + "," + "\'" + devCallStatus.ID + "\'" + "," + "\'" +
-                                                                    devCallStatus.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + "null" + "\'";
+                                                                    devCallStatus.call_type + "\'" + "," + "\'" + start_call_time + "\'" + "," + "0" + "," + "\'" + GetLocalIPAddress() + "\'" + "," + "\'" + "null" + "\'"
+                                                                     + "," + "\'" + devCallStatus.channel + "\'"
+                                                        + "," + "\'" + devCallStatus.site + "\'"; ;
                                                                 sql_cmd = "INSERT INTO custom.voice_connect (" + sql_table_columns + ") VALUES (" + sql_table_column_value + ")";
 
 
