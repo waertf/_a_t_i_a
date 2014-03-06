@@ -409,8 +409,7 @@ namespace ATIA_2
             }
             static void Main(string[] args)
             {
-
-                byte[] testByte = new byte[]{0x01,0x34};
+                byte[] testByte = new byte[]{0x04, 0x10,0x00,0x00};
                 parse_Radio_Type_Qualifier(testByte);
               Console.WriteLine(GetLocalIPAddress());//current ip address
               Console.WriteLine(System.Environment.UserName);//current username
@@ -690,7 +689,7 @@ LIMIT 1";
                         mut.ReleaseMutex();
                     }
                     */
-                    log.Info(ByteToHexBitFiddle(receiveBytes));
+                    //log.Info(ByteToHexBitFiddle(receiveBytes));
                     //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+BitConverter.ToString(receiveBytes).Replace("-"," "));
                     //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+ByteToHexBitFiddle(receiveBytes));
 
@@ -787,7 +786,8 @@ LIMIT 1";
                          * */
                         try
                         {
-                            log.Info(s.ToString());
+                            log.Info(s.ToString()+Environment.NewLine+ByteToHexBitFiddle(receiveBytes));
+                            
                           Console.WriteLine(s.ToString());
                         }
                         catch (Exception ex)
@@ -2838,7 +2838,9 @@ LIMIT 1";
                                 snd_id = p.Skip((int)Offset_to_Target_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + Offset_to_Target_Section_Secondary_ID).Take(snd_id.Length).Reverse().ToArray();
                                 ucn = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_ucn).Take(ucn.Length).Reverse().ToArray();
                                 call_type = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_type).Take(call_type.Length).Reverse().ToArray();
-                                Radio_Type_Qualifier = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Radio_Type_Qualifier).Take(Radio_Type_Qualifier.Length).Reverse().ToArray();
+                                Radio_Type_Qualifier = p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Radio_Type_Qualifier).Take(Radio_Type_Qualifier.Length).ToArray();
+
+                                //parse_package.Add("debug:Radio_Type_Qualifier", ByteToHexBitFiddle(p.Skip((int)Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_Radio_Type_Qualifier).Take(Radio_Type_Qualifier.Length).ToArray()));
                                 //call_status = p[Offset_to_Call_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_call_section_call_status-1];
                                 //reason_for_busy = p[Offset_to_Busy_Section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_busy_section_reason_of_busy-1];
                                 site = p.Skip((int)Offset_to_Requester_section + DEVIATION_OF_OFFSET_FIELDS_OF_VALUES + offset_to_Requester_s_Affiliated_Site).Take(site.Length).Reverse().ToArray();
@@ -2965,7 +2967,12 @@ LIMIT 1";
                 Console.WriteLine(VARIABLE);
             }
              */
+            parsePackage.Add("debug:radioTypeQualifier",ByteToHexBitFiddle(radioTypeQualifier));
+            parsePackage.Add("debug:s", s);
             char[] flag = Reverse(s).ToCharArray();
+            //char[] flag = s.ToCharArray();
+            parsePackage.Add("debug:flag",new string(flag));
+            //log.Info(flag);
             if (flag[27].Equals('1') && false) //Interconnect
             {
                 if (flag[25].Equals('1'))//Landline Call
@@ -3003,9 +3010,11 @@ LIMIT 1";
             Console.WriteLine(s.ToCharArray());
             Console.WriteLine(Reverse(s));
             char[] charArray = Reverse(s).ToCharArray();
+            int count = 0;
             foreach (var VARIABLE in charArray)
             {
-                Console.WriteLine(VARIABLE);
+                count++;
+                Console.WriteLine(count+":"+VARIABLE);
             }
         }
         private static void parse_channel(byte[] channel, ref SortedDictionary<string, string> parsePackage)
