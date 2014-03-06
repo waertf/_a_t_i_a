@@ -719,7 +719,7 @@ LIMIT 1";
 
                     parse_data_section(receiveBytes.Skip(4).ToArray(), ref parse_package);//skip first 4 package_length byte
 
-                    if (parse_package.ContainsKey("call_type"))
+                    if (parse_package.ContainsKey("sec"))
                     if (parse_package.ContainsValue("Land_to_Mobile") || parse_package.ContainsValue("Mobile_to_Land"))
                     {
                         //get start call timestamp
@@ -1631,12 +1631,18 @@ VALUES
                                                        // Mobile_to_Land:3
                                                     case "Land_to_Mobile":
                                                         lock (startCallLock)
-                                                        { devCallStatus.call_type = "4"; }
+                                                        {
+                                                            devCallStatus.call_type = "4";
+                                                            parse_package["call_type"] = "Land_to_Mobile";
+                                                        }
                                                         
                                                         break;
                                                     case "Mobile_to_Land":
                                                         lock (startCallLock)
-                                                        { devCallStatus.call_type = "3"; }
+                                                        {
+                                                            devCallStatus.call_type = "3";
+                                                            parse_package["call_type"] = "Mobile_to_Land";
+                                                        }
                                                         
                                                         break;
                                                 }
@@ -1899,15 +1905,12 @@ WHERE
                                     #region
 
 
-                                    if (Call_status.ContainsKey(devCallStatus.ID + parse_package["call_type"]))
-                                    {
-
-                                    }
+                                    
 
                                     #endregion
                                     break;
                                 case "end_call":
-                                    if (!parse_package.ContainsKey("Radio_Type_Qualifier"))
+                                    //if (parse_package.ContainsKey("Radio_Type_Qualifier"))
                                     {
                                         #region access power status
 
@@ -2121,7 +2124,7 @@ WHERE
                                     break;
                             }
                             //if (parse_package.ContainsKey("Radio_Type_Qualifier"))
-                            if (parse_package.ContainsKey("call_type"))
+                            if (parse_package.ContainsKey("call_type") && parse_package.ContainsKey("start_call_time"))
                             {
                                 object LMLock = new object();
                                 #region access power status
@@ -2974,16 +2977,23 @@ LIMIT 1";
             //char[] flag = s.ToCharArray();
             parsePackage.Add("debug:flag",new string(flag));
             //log.Info(flag);
+            parsePackage.Add("Radio_Type_Qualifier", string.Empty);
             if (flag[27].Equals('1')) //Interconnect
             {
                 if (flag[25].Equals('1'))//Landline Call
                 {
-                    parsePackage.Add("Radio_Type_Qualifier", "Land_to_Mobile");
+                    //parsePackage.Add("Radio_Type_Qualifier", "Land_to_Mobile");
+                    parsePackage["Radio_Type_Qualifier"] += "Land_to_Mobile";
                 }
                 else
                 {
-                    parsePackage.Add("Radio_Type_Qualifier", "Mobile_to_Land");
+                    //parsePackage.Add("Radio_Type_Qualifier", "Mobile_to_Land");
+                    parsePackage["Radio_Type_Qualifier"] += "Mobile_to_Land";
                 }
+            }
+            if (flag[20].Equals('1') && false)
+            {
+                parsePackage["Radio_Type_Qualifier"] += "ASTRO call,";
             }
 
         }
@@ -3323,7 +3333,7 @@ LIMIT 1";
                             {
                                 case (ushort)Flexible_End_of_Call_opcode.End_of_Call:
 //                                    parse_package.Add("opcode", "End_of_Call");
-                                    parse_package.Add("result", "end_call");
+                                    //parse_package.Add("result", "end_call");
                                     break;
                                 
                             }
