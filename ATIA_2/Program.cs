@@ -719,6 +719,7 @@ LIMIT 1";
 
                     parse_data_section(receiveBytes.Skip(4).ToArray(), ref parse_package);//skip first 4 package_length byte
 
+                    if (parse_package.ContainsKey("call_type"))
                     if (parse_package.ContainsValue("Land_to_Mobile") || parse_package.ContainsValue("Mobile_to_Land"))
                     {
                         //get start call timestamp
