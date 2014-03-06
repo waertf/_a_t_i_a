@@ -3071,12 +3071,12 @@ LIMIT 1";
                 switch (result)
                 {
                     case "76"://L
-                        break;
+                        //break;
                         parse_package.Add("call_type", "Land_to_Mobile");
                         parse_package.Add("result", "end_call");
                         break;
                     case "77"://M
-                        break;
+                        //break;
                         parse_package.Add("call_type", "Mobile_to_Land");
                         parse_package.Add("result", "end_call");
                         break;
