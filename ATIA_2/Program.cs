@@ -2973,7 +2973,7 @@ LIMIT 1";
             //char[] flag = s.ToCharArray();
             parsePackage.Add("debug:flag",new string(flag));
             //log.Info(flag);
-            if (flag[27].Equals('1') && false) //Interconnect
+            if (flag[27].Equals('1')) //Interconnect
             {
                 if (flag[25].Equals('1'))//Landline Call
                 {
