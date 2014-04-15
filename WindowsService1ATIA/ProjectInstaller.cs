@@ -39,7 +39,7 @@ namespace WindowsService1ATIA
                 startInfo.WindowStyle = ProcessWindowStyle.Hidden;
 
                 // tell Windows that the service should restart if it fails
-                startInfo.Arguments = string.Format("failure \"{0}\" reset= 0 actions= restart/60000", serviceName);
+                startInfo.Arguments = string.Format("failure \"{0}\" reset= 0 actions= restart/0", serviceName);
 
                 process.Start();
                 process.WaitForExit();
