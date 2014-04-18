@@ -1173,6 +1173,7 @@ SET
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                        /*
                                         while (!sql_client.connect())
                                         {
                                             Thread.Sleep(300);
@@ -1180,6 +1181,7 @@ WHERE
 
                                         sql_client.modify(sql_cmd);
                                         sql_client.disconnect();
+                                         * */
                                     }
                                     #endregion
                                     /*SELECT 
@@ -1315,12 +1317,14 @@ SET
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                        /*
                                         while (!sql_client.connect())
                                         {
                                             Thread.Sleep(300);
                                         }
                                         sql_client.modify(sql_cmd);
                                         sql_client.disconnect();
+                                         * */
                                     }
                                     #endregion
                                     string power_off_sn = string.Empty;
@@ -1658,12 +1662,14 @@ SET
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                                /*
                                                 while (!sql_client.connect())
                                                 {
                                                     Thread.Sleep(300);
                                                 }
                                                 sql_client.modify(sql_cmd);
                                                 sql_client.disconnect();
+                                                 * */
                                             }
                                             #endregion
                                             break;
@@ -1689,12 +1695,14 @@ SET
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                                /*
                                                 while (!sql_client.connect())
                                                 {
                                                     Thread.Sleep(300);
                                                 }
                                                 sql_client.modify(sql_cmd);
                                                 sql_client.disconnect();
+                                                 * */
                                             }
                                             #endregion
                                             break;
@@ -1927,12 +1935,14 @@ SET
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                            /*
                                             while (!sql_client.connect())
                                             {
                                                 Thread.Sleep(300);
                                             }
                                             sql_client.modify(sql_cmd);
                                             sql_client.disconnect();
+                                             */
                                         }
                                         #endregion
                                         object endLock = new object();
@@ -2142,12 +2152,14 @@ SET
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
+                                    /*
                                     while (!sql_client.connect())
                                     {
                                         Thread.Sleep(300);
                                     }
                                     sql_client.modify(sql_cmd);
                                     sql_client.disconnect();
+                                     */
                                 }
                                 #endregion
                                 
