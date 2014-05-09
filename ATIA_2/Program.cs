@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Reflection;
@@ -409,6 +410,9 @@ namespace ATIA_2
             }
             static void Main(string[] args)
             {
+                Thread.Sleep(5000);
+                AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);
+                AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
                 byte[] testByte = new byte[]{0x04, 0x10,0x00,0x00};
                 parse_Radio_Type_Qualifier(testByte);
               Console.WriteLine(GetLocalIPAddress());//current ip address
@@ -432,6 +436,38 @@ namespace ATIA_2
                 aTimer.Elapsed += new ElapsedEventHandler(SendToAvlsEventColumnSetNegativeOneIfPowerOff);
                 aTimer.Enabled = false;
                 Console.ReadLine();
+            }
+            private static void Restart()
+            {
+                //Process.Start(AppDomain.CurrentDomain.BaseDirectory + "Client.exe");
+
+                //some time to start the new instance.
+                //Thread.Sleep(2000);
+
+                //Environment.Exit(-1);//Force termination of the current process.
+
+                System.Windows.Forms.Application.Restart();
+                Process.GetCurrentProcess().Kill();
+            }
+            static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+            {
+                var exception = e.ExceptionObject as Exception;
+                if (exception != null)
+                {
+                    log.Fatal("Restart:" + exception.ToString());
+                }
+
+                Environment.Exit(1);
+                //Restart();
+            }
+
+            static void CurrentDomain_ProcessExit(object sender, EventArgs e)
+            {
+                string logMsg = string.Empty;
+                logMsg = "Close time:" + DateTime.Now.ToString("G") + Environment.NewLine +
+                      "Memory usage:" +
+                      Process.GetCurrentProcess().WorkingSet64 / 1024.0 / 1024.0;
+                log.Fatal(logMsg);
             }
 
         private static void SendToAvlsEventColumnSetNegativeOneIfPowerOff(object sender, ElapsedEventArgs e)
