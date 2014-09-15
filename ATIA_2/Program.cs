@@ -1337,6 +1337,7 @@ LIMIT 1";
                                             string yyyyMMdd = sn.Substring(dev_power_status.ID.Length, 8);
                                             string count = sn.Substring(dev_power_status.ID.Length + yyyyMMdd.Length, 3);
 
+                                            /*
                                             if (power_on_today.Equals(yyyyMMdd))
                                             {
                                                 uint addCount = (uint.Parse(count) + 1);
@@ -1348,14 +1349,20 @@ LIMIT 1";
 
                                                 dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
                                             }
-
+                                            */
+                                            dev_power_status.SN = dev_power_status.ID +
+                                                                  DateTime.Now.ToString("yyyyMMddHHmmssfffffff");
+                                            
                                             InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_status, parse_package["result"].ToString(), parse_package);
                                         }
                                         else
                                         {
                                             int iVal = 0;
 
-                                            dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
+                                            //dev_power_status.SN = dev_power_status.ID + power_on_today + iVal.ToString("D3");
+                                            dev_power_status.SN = dev_power_status.ID +
+                                                                  DateTime.Now.ToString("yyyyMMddHHmmssfffffff");
+                                            
                                             InsertPowerOnOffEventToPublicGpsLogAndToAvlsLog(dev_power_status, parse_package["result"].ToString(), parse_package);
 
                                         }
@@ -1622,6 +1629,7 @@ LIMIT 1";
                                                 string yyyyMMdd = sn.Substring(data_table.Rows[0]["uid"].ToString().Length, 8);
                                                 string count = sn.Substring(data_table.Rows[0]["uid"].ToString().Length + yyyyMMdd.Length, 3);
 
+                                                /*
                                                 if (power_off_today.Equals(yyyyMMdd))
                                                 {
                                                     uint addCount = (uint.Parse(count) + 1);
@@ -1633,14 +1641,17 @@ LIMIT 1";
 
                                                     serial_no = data_table.Rows[0]["uid"].ToString() + power_off_today + iVal.ToString("D3");
                                                 }
-
-
+                                                */
+                                                serial_no = data_table.Rows[0]["uid"].ToString() +
+                                                            DateTime.Now.ToString("yyyyMMddHHmmssfffffff");
                                             }
                                             else
                                             {
-                                                int iVal = 0;
+                                                //int iVal = 0;
 
-                                                serial_no = data_table.Rows[0]["uid"].ToString() + power_off_today + iVal.ToString("D3");
+                                                //serial_no = data_table.Rows[0]["uid"].ToString() + power_off_today + iVal.ToString("D3");
+                                                serial_no = data_table.Rows[0]["uid"].ToString() +
+                                                            DateTime.Now.ToString("yyyyMMddHHmmssfffffff");
 
 
                                             }
@@ -1831,6 +1842,7 @@ LIMIT 1";
                                             string yyyyMMdd = sn.Substring(devCallStatus.ID.Length, 8);
                                             string count = sn.Substring(devCallStatus.ID.Length + yyyyMMdd.Length, 5);
 
+                                            /*
                                             if (start_call_today.Equals(yyyyMMdd))
                                             {
                                                 uint addCount = (uint.Parse(count) + 1);
@@ -1849,13 +1861,18 @@ LIMIT 1";
                                                 }
                                                 
                                             }
+                                            */
+                                            lock (startCallLock)
+                                            {
+                                                devCallStatus.SN = devCallStatus.ID + DateTime.Now.ToString("yyyyMMddHHmmssfffffff");
+                                            }
                                         }
                                         else
                                         {
                                             int iVal = 0;
                                             lock (startCallLock)
-                                            { devCallStatus.SN = devCallStatus.ID + start_call_today + iVal.ToString("D5"); }
-                                            
+                                            { devCallStatus.SN = devCallStatus.ID + DateTime.Now.ToString("yyyyMMddHHmmssfffffff"); }
+
                                         }
                                     }
                                     else
