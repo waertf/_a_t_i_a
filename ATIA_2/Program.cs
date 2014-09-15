@@ -18,6 +18,7 @@ using log4net;
 using log4net.Config;
 using System.Globalization;
 using System.Data;
+using NetMQ;
 /*--------------------------------------------------
  * 2014/02/21
  * 
@@ -684,6 +685,7 @@ LIMIT 1";
             {
                 Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-us"); 
                 UdpClient udpClient = new UdpClient(port);
+                udpClient.Client.ReceiveTimeout = int.Parse(ConfigurationManager.AppSettings["udpReceiveTimeOut"].ToString()) * 60 * 1000;
                 //IPEndPoint object will allow us to read datagrams sent from any source.
                 IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
                 //int c = int.Parse(ConfigurationManager.AppSettings["raw_log_counter"].ToString());
@@ -696,13 +698,26 @@ LIMIT 1";
                     Console.WriteLine(DateTime.Now.ToString("O"));
                     Console.ResetColor();
                     // Blocks until a message returns on this socket from a remote host.
-                    Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
-                    byte[] receiveBytes_original = new byte[receiveBytes.Length];
-                    SortedDictionary<string, string> parse_package = new SortedDictionary<string, string>();
-                    Array.Copy(receiveBytes, receiveBytes_original, receiveBytes_original.Length);
+                    Byte[] receiveBytes = null;
+                    try
+                    {
+                        receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        log.Error(e.ToString());
+                        CloseLocalAtiaThenStartRemoteAtia();
+
+                    }
+                    if (receiveBytes != null)
+                    {
+                        byte[] receiveBytes_original = new byte[receiveBytes.Length];
+                        SortedDictionary<string, string> parse_package = new SortedDictionary<string, string>();
+                        Array.Copy(receiveBytes, receiveBytes_original, receiveBytes_original.Length);
                     
-                    //lock (fileStreaWriteLock)
-                    /*
+                        //lock (fileStreaWriteLock)
+                        /*
                     {
                         mut.WaitOne();
                         if (bool.Parse(ConfigurationManager.AppSettings["log_raw_data"]))
@@ -725,94 +740,94 @@ LIMIT 1";
                         mut.ReleaseMutex();
                     }
                     */
-                    //log.Info(ByteToHexBitFiddle(receiveBytes));
-                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+BitConverter.ToString(receiveBytes).Replace("-"," "));
-                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+ByteToHexBitFiddle(receiveBytes));
+                        //log.Info(ByteToHexBitFiddle(receiveBytes));
+                        //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+BitConverter.ToString(receiveBytes).Replace("-"," "));
+                        //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+ByteToHexBitFiddle(receiveBytes));
 
-                    if (receiveBytes.Length != BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0) + 4)
-                    {
-                      Console.WriteLine("size embedded in the packet does not match bytes received");
-                        continue;
-                    }
-
-                    //c++;
-                    //Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                    //configuration.AppSettings.Settings["raw_log_counter"].Value = c.ToString();
-                    //configuration.Save();
-                    //ConfigurationManager.RefreshSection("appSettings");
-
-                    string returnData = Encoding.ASCII.GetString(receiveBytes);
-                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"receive_length=" + receiveBytes.Length);
-                    array_reverse_ATIA_PACKAGE_Header_and_NumOffset(ref receiveBytes);
-                    ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
-                    struct_header = (ATIA_PACKAGE_Header_and_NumOffset)BytesToStruct(receiveBytes, struct_header.GetType());
-                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"package lenght exclude first 4 byte :"+BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0)); 
-
-                    // Uses the IPEndPoint object to determine which of these two hosts responded.
-                    //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"This is the message you received :" +
-                                                 //returnData.ToString());
-                    parse_header_and_numoffset_package(struct_header, ref parse_package);
-
-                    parse_data_section(receiveBytes.Skip(4).ToArray(), ref parse_package);//skip first 4 package_length byte
-
-                    if (parse_package.ContainsKey("sec"))
-                    if (parse_package.ContainsValue("Land_to_Mobile") || parse_package.ContainsValue("Mobile_to_Land"))
-                    {
-                        //get start call timestamp
-                        DateTimeFormatInfo myDateTimeFormat = new CultureInfo("zh-TW", false).DateTimeFormat;
-
-
-                        myDateTimeFormat.FullDateTimePattern = "yyyyMMddHHmmssffff";
-
-
-                        DateTime _EndTime = DateTime.ParseExact(parse_package["timestamp"].ToString(), myDateTimeFormat.FullDateTimePattern, myDateTimeFormat);
-                        double sec = Convert.ToDouble(parse_package["sec"]);
-                        DateTime _StartTime = _EndTime.AddSeconds(0 - sec);
-                        string start_time = _StartTime.ToString("yyyyMMddHHmmssffff");
-                        parse_package.Add("start_call_time", start_time);
-                    }
-                    if (parse_package.ContainsKey("source_id"))
-                    {
-                        if (CheckIfUidExist(parse_package["source_id"].ToString()))
+                        if (receiveBytes.Length != BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0) + 4)
                         {
-                            //do nothing
+                            Console.WriteLine("size embedded in the packet does not match bytes received");
+                            continue;
+                        }
+
+                        //c++;
+                        //Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                        //configuration.AppSettings.Settings["raw_log_counter"].Value = c.ToString();
+                        //configuration.Save();
+                        //ConfigurationManager.RefreshSection("appSettings");
+
+                        string returnData = Encoding.ASCII.GetString(receiveBytes);
+                        //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"receive_length=" + receiveBytes.Length);
+                        array_reverse_ATIA_PACKAGE_Header_and_NumOffset(ref receiveBytes);
+                        ATIA_PACKAGE_Header_and_NumOffset struct_header = new ATIA_PACKAGE_Header_and_NumOffset();
+                        struct_header = (ATIA_PACKAGE_Header_and_NumOffset)BytesToStruct(receiveBytes, struct_header.GetType());
+                        //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"package lenght exclude first 4 byte :"+BitConverter.ToUInt32(receiveBytes.Skip(0).Take(4).Reverse().ToArray(), 0)); 
+
+                        // Uses the IPEndPoint object to determine which of these two hosts responded.
+                        //Console.WriteLine(Thread.CurrentThread.Name+"@"+DateTime.Now.ToString("O")+Environment.NewLine+"This is the message you received :" +
+                        //returnData.ToString());
+                        parse_header_and_numoffset_package(struct_header, ref parse_package);
+
+                        parse_data_section(receiveBytes.Skip(4).ToArray(), ref parse_package);//skip first 4 package_length byte
+
+                        if (parse_package.ContainsKey("sec"))
+                            if (parse_package.ContainsValue("Land_to_Mobile") || parse_package.ContainsValue("Mobile_to_Land"))
+                            {
+                                //get start call timestamp
+                                DateTimeFormatInfo myDateTimeFormat = new CultureInfo("zh-TW", false).DateTimeFormat;
+
+
+                                myDateTimeFormat.FullDateTimePattern = "yyyyMMddHHmmssffff";
+
+
+                                DateTime _EndTime = DateTime.ParseExact(parse_package["timestamp"].ToString(), myDateTimeFormat.FullDateTimePattern, myDateTimeFormat);
+                                double sec = Convert.ToDouble(parse_package["sec"]);
+                                DateTime _StartTime = _EndTime.AddSeconds(0 - sec);
+                                string start_time = _StartTime.ToString("yyyyMMddHHmmssffff");
+                                parse_package.Add("start_call_time", start_time);
+                            }
+                        if (parse_package.ContainsKey("source_id"))
+                        {
+                            if (CheckIfUidExist(parse_package["source_id"].ToString()))
+                            {
+                                //do nothing
+                            }
+                            else
+                            {
+                                continue;
+                            }
                         }
                         else
                         {
                             continue;
                         }
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                    Thread accessSql = new Thread(() => AccessSqlServer(parse_package));
-                    Thread accessAvls = new Thread(() => AccessAvlsServer(parse_package));
-                    if (bool.Parse(ConfigurationManager.AppSettings["SQL_ACCESS"]))
-                    {
+                        Thread accessSql = new Thread(() => AccessSqlServer(parse_package));
+                        Thread accessAvls = new Thread(() => AccessAvlsServer(parse_package));
+                        if (bool.Parse(ConfigurationManager.AppSettings["SQL_ACCESS"]))
+                        {
                         
-                        accessSql.Start();
-                    }
+                            accessSql.Start();
+                        }
                         
-                    if (bool.Parse(ConfigurationManager.AppSettings["AVLS_ACCESS"]))
-                    {
+                        if (bool.Parse(ConfigurationManager.AppSettings["AVLS_ACCESS"]))
+                        {
                         
-                        accessAvls.Start();
-                    }
-                    if (bool.Parse(ConfigurationManager.AppSettings["SQL_ACCESS"]))
-                        accessSql.Join();
-                    if (bool.Parse(ConfigurationManager.AppSettings["AVLS_ACCESS"]))
-                        accessAvls.Join();
+                            accessAvls.Start();
+                        }
+                        if (bool.Parse(ConfigurationManager.AppSettings["SQL_ACCESS"]))
+                            accessSql.Join();
+                        if (bool.Parse(ConfigurationManager.AppSettings["AVLS_ACCESS"]))
+                            accessAvls.Join();
 
 
-                    if (parse_package.Count != 0)
-                    {
-                        StringBuilder s = new StringBuilder();
-                        foreach (var e in parse_package)
-                            s.Append(e.Key + ":" + e.Value + Environment.NewLine);
-                        //s.Append(Environment.NewLine);
-                      Console.WriteLine("####################################################");
-                        /*
+                        if (parse_package.Count != 0)
+                        {
+                            StringBuilder s = new StringBuilder();
+                            foreach (var e in parse_package)
+                                s.Append(e.Key + ":" + e.Value + Environment.NewLine);
+                            //s.Append(Environment.NewLine);
+                            Console.WriteLine("####################################################");
+                            /*
                         using (StreamWriter w = File.AppendText("log.txt"))
                         {
                             //string raw_data_without_first_4_byte = ByteToHexBitFiddle(receiveBytes_original.Skip(4).ToArray());
@@ -821,28 +836,61 @@ LIMIT 1";
                           Console.WriteLine(s.ToString());
                         }
                          * */
-                        try
-                        {
-                            log.Info(s.ToString()+Environment.NewLine+ByteToHexBitFiddle(receiveBytes));
+                            try
+                            {
+                                log.Info(s.ToString()+Environment.NewLine+ByteToHexBitFiddle(receiveBytes));
                             
-                          Console.WriteLine(s.ToString());
+                                Console.WriteLine(s.ToString());
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Error(ex.Message);
+                            }
+                            Console.WriteLine("####################################################");
                         }
-                        catch (Exception ex)
-                        {
-                            log.Error(ex.Message);
-                        }
-                      Console.WriteLine("####################################################");
+
+
+                    
+
+                        parse_package.Clear();
                     }
 
-
-                    
-
-                    parse_package.Clear();
-                    
                     Thread.Sleep(300);
                 }
 
             }
+
+        private static void CloseLocalAtiaThenStartRemoteAtia()
+        {
+            string port = null;
+            port = ConfigurationManager.AppSettings["TriggerPort"];
+            using (NetMQContext context = NetMQContext.Create())
+            {
+                using (NetMQSocket clientSocket = context.CreateRequestSocket())
+                {
+                    clientSocket.Connect("tcp://127.0.0.1:" + port);
+
+                    while (true)
+                    {
+                        //Console.WriteLine("Please enter your message:");
+                        string message = null;
+                        message = System.Reflection.MethodBase.GetCurrentMethod().Name;
+                        Console.WriteLine("send message to trigger:" + message);
+                        log.Info("send message to trigger:" + message);
+                        clientSocket.Send(message);
+
+                        string answer = clientSocket.ReceiveString();
+
+                        Console.WriteLine("Answer from server: {0}", answer);
+
+                        if (answer == "exit")
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
         private static bool CheckIfUidExist(string uid)
         {
