@@ -685,6 +685,7 @@ LIMIT 1";
             {
                 Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-us"); 
                 UdpClient udpClient = new UdpClient(port);
+                if (Thread.CurrentThread.Name.Contains("8601"))
                 udpClient.Client.ReceiveTimeout = int.Parse(ConfigurationManager.AppSettings["udpReceiveTimeOut"].ToString()) * 60 * 1000;
                 //IPEndPoint object will allow us to read datagrams sent from any source.
                 IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
