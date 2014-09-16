@@ -106,12 +106,14 @@ namespace ATIA_2
                     pgSqlConnection.BeginTransaction();
                     //async
                     IAsyncResult cres = command.BeginExecuteNonQuery(null, null);
+                    /*
                     Console.Write("In progress...");
                     while (!cres.IsCompleted)
                     {
                         Console.Write(".");
                         //Perform here any operation you need
                     }
+                    */
                     /*
                     if (cres.IsCompleted)
                         Console.WriteLine("Completed.");
@@ -160,13 +162,14 @@ namespace ATIA_2
                     command.CommandText = cmd;
                     //Console.WriteLine("Starting asynchronous retrieval of data...");
                     IAsyncResult cres = command.BeginExecuteReader();
+                    /*
                     Console.Write("In progress...");
                     while (!cres.IsCompleted)
                     {
                         Console.Write(".");
                         //Perform here any operation you need
                     }
-
+                    */
                     //if (cres.IsCompleted)
                     //Console.WriteLine("Completed.");
                     //else
