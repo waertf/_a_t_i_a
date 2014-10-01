@@ -1398,7 +1398,7 @@ LIMIT 1";
                                         sql_cmd = @"UPDATE 
   custom.atia_device_power_status
 SET
-  power = 'on',
+  power = 'off',
 ""updateTime"" = '" + unsUpdateTimeStamp + @"'::timestamp
 WHERE
   custom.atia_device_power_status.uid = '" + parse_package["source_id"].ToString() + @"'";
